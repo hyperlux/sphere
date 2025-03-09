@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './db/database.types';
 
@@ -115,3 +116,11 @@ export const supabaseAdmin = (() => {
     return null;
   }
 })();
+=======
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+>>>>>>> Stashed changes

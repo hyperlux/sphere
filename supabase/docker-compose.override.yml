@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 version: '3.8'
 services:
   auth:
@@ -24,3 +25,10 @@ services:
       - GOTRUE_MAILER_SITE_URL=http://127.0.0.1:3000
       - GOTRUE_MAILER_SMTP_MAX_CONNECTIONS=5
       - GOTRUE_MAILER_SMTP_CONNECTION_TIMEOUT=10000
+=======
+version: '3'
+services:
+  auth:
+    env_file:
+      - ./docker/auth.env
+>>>>>>> Stashed changes
