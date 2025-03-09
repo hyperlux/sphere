@@ -7,7 +7,8 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
-  // Remove custom webpack configuration
+  // Enable standalone output for Docker
+  output: 'standalone',
 };
 
 module.exports = withPWA(nextConfig);

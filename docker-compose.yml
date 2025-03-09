@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # Next.js web application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://localhost:8000}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+    depends_on:
+      - supabase-db
+      - supabase-api
+      - supabase-auth
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+  # Supabase PostgreSQL database
+  supabase-db:
+    image: supabase/postgres:15.1.0.117
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+  # Supabase API (PostgREST)
+  supabase-api:
+    image: postgrest/postgrest:v11.2.0
+    ports:
+      - "3001:3000"
+    environment:
+      - PGRST_DB_URI=postgres://postgres:postgres@supabase-db:5432/postgres
+      - PGRST_DB_SCHEMA=public,storage
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters
+      - PGRST_DB_USE_LEGACY_GUCS=false
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+  # Supabase Auth (GoTrue)
+  supabase-auth:
+    image: supabase/gotrue:v2.92.1
+    ports:
+      - "9999:9999"
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://postgres:postgres@supabase-db:5432/postgres?search_path=auth
+      - GOTRUE_SITE_URL=https://auroville.social
+      - GOTRUE_URI_ALLOW_LIST=
+      - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=false
+      - GOTRUE_MAILER_AUTOCONFIRM=false
+      - GOTRUE_SMTP_ADMIN_EMAIL=${GOTRUE_SMTP_ADMIN_EMAIL:-notifications@aurovillenetwork.us}
+      - GOTRUE_SMTP_HOST=${GOTRUE_SMTP_HOST:-smtp.ionos.com}
+      - GOTRUE_SMTP_PORT=${GOTRUE_SMTP_PORT:-587}
+      - GOTRUE_SMTP_USER=${GOTRUE_SMTP_USER:-notifications@aurovillenetwork.us}
+      - GOTRUE_SMTP_PASS=${GOTRUE_SMTP_PASS}
+      - GOTRUE_SMTP_SENDER_NAME=${GOTRUE_SMTP_SENDER_NAME:-"Auroville Network"}
+      - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/auth/confirm
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/recovery
+      - GOTRUE_MAILER_URLPATHS_INVITE=/auth/invite
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+  # Supabase Storage
+  supabase-storage:
+    image: supabase/storage-api:v0.40.4
+    ports:
+      - "5000:5000"
+    environment:
+      - ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - POSTGREST_URL=http://supabase-api:3000
+      - PGRST_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters
+      - DATABASE_URL=postgres://postgres:postgres@supabase-db:5432/postgres
+      - PGOPTIONS=-c search_path=storage,public
+      - FILE_SIZE_LIMIT=52428800
+      - STORAGE_BACKEND=file
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+      - TENANT_ID=stub
+      - REGION=stub
+    depends_on:
+      - supabase-db
+      - supabase-api
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+  # Supabase Edge Functions
+  supabase-edge-functions:
+    image: supabase/edge-runtime:v1.22.3
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters
+    restart: unless-stopped
+    networks:
+      - auronet-network
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:
+
+networks:
+  auronet-network:
+    driver: bridge
