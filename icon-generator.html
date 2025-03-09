@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .icon-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .icon-item {
+            text-align: center;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #F97316;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #ea580c;
+        }
+        .download-all {
+            display: block;
+            margin-top: 20px;
+        }
+        .theme-color {
+            width: 30px;
+            height: 30px;
+            background-color: #F97316;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AuroNet PWA Icon Generator</h1>
+    <p>This tool generates the required icons for the AuroNet PWA using the globe.svg as a base.</p>
+    <p>Theme color: <span class="theme-color"></span> #F97316</p>
+    
+    <div>
+        <button id="generateBtn">Generate Icons</button>
+    </div>
+    
+    <div class="icon-container" id="iconContainer"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const themeColor = '#F97316';
+        const svgUrl = '/globe.svg';
+        
+        async function loadSVG(url) {
+            const response = await fetch(url);
+            const svgText = await response.text();
+            return svgText;
+        }
+        
+        function createCanvas(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            return canvas;
+        }
+        
+        function drawIconWithBackground(ctx, size, svgImage) {
+            // Draw background
+            ctx.fillStyle = themeColor;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Calculate size for the SVG (80% of the canvas)
+            const iconSize = size * 0.8;
+            const padding = (size - iconSize) / 2;
+            
+            // Draw the SVG
+            ctx.drawImage(svgImage, padding, padding, iconSize, iconSize);
+        }
+        
+        async function generateIcons() {
+            try {
+                const svgText = await loadSVG(svgUrl);
+                
+                // Create a blob URL for the SVG
+                const blob = new Blob([svgText], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                
+                // Load the SVG as an image
+                const svgImage = new Image();
+                svgImage.src = url;
+                
+                await new Promise(resolve => {
+                    svgImage.onload = resolve;
+                });
+                
+                const iconContainer = document.getElementById('iconContainer');
+                iconContainer.innerHTML = '';
+                
+                // Generate icons for each size
+                for (const size of sizes) {
+                    const canvas = createCanvas(size);
+                    const ctx = canvas.getContext('2d');
+                    
+                    drawIconWithBackground(ctx, size, svgImage);
+                    
+                    // Create download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = canvas.toDataURL('image/png');
+                    downloadLink.download = `icon-${size}x${size}.png`;
+                    
+                    // Create icon preview
+                    const iconItem = document.createElement('div');
+                    iconItem.className = 'icon-item';
+                    
+                    const img = document.createElement('img');
+                    img.src = canvas.toDataURL('image/png');
+                    img.width = Math.min(size, 100);
+                    img.height = Math.min(size, 100);
+                    
+                    const sizeText = document.createElement('div');
+                    sizeText.textContent = `${size}x${size}`;
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.onclick = () => downloadLink.click();
+                    
+                    iconItem.appendChild(img);
+                    iconItem.appendChild(sizeText);
+                    iconItem.appendChild(downloadBtn);
+                    
+                    iconContainer.appendChild(iconItem);
+                }
+                
+                // Clean up
+                URL.revokeObjectURL(url);
+                
+                alert('Icons generated! Click the download buttons to save each icon.');
+            } catch (error) {
+                console.error('Error generating icons:', error);
+                alert('Error generating icons. See console for details.');
+            }
+        }
+        
+        document.getElementById('generateBtn').addEventListener('click', generateIcons);
+    </script>
+</body>
+</html>
