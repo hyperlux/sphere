@@ -36,7 +36,7 @@ export default function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)]">
       <div className="flex items-center py-4 px-4">
-        <img src="/logodark.png" alt="Auroville.COMMUNITY" width={160} height={50} className="mr-auto" />
+        <img src="/logolight.png" alt="Auroville.COMMUNITY" width={160} height={50} className="mr-auto" />
       </div>
 
       <nav className="flex-1 px-4 py-2">
@@ -45,7 +45,7 @@ export default function Sidebar({ user }: SidebarProps) {
             <li key={item.name}>
               <Link
                 href={item.href}
-                className={`sidebar-link ${pathname === item.href ? 'active' : ''}`}
+                className={`sidebar-link ${pathname === item.href ? 'active' : ''} text-[var(--text-primary)]`}
               >
                 <span className="mr-3 text-xl">{item.icon}</span>
                 {t(item.name)}
@@ -63,7 +63,7 @@ export default function Sidebar({ user }: SidebarProps) {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2 px-2"
+                  className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2 px-2 text-[var(--text-primary)]"
                 >
                   <span className="mr-3">{link.icon}</span>
                   {t(link.name)}

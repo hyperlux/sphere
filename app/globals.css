@@ -24,7 +24,7 @@
   --bg-primary: #F9FAFB;
   --bg-secondary: #F3F4F6;
   --bg-tertiary: #E5E7EB;
-  --text-primary: #111827;
+  --text-primary: #000000;
   --text-secondary: #374151;
   --text-muted: #6B7280;
   --border-color: #D1D5DB;
@@ -33,9 +33,13 @@
 
 /* Legacy variables for backward compatibility */
 :root {
-  --navy-dark: #1E293B;
-  --navy-darker: #111827;
-  --navy-light: #334155;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
 }
 
 @layer base {
