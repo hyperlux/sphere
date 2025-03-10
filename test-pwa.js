@@ -59,6 +59,11 @@ function checkManifest() {
 function checkServiceWorker() {
   console.log('\n--- Testing Service Worker ---');
   const swPath = path.join(__dirname, 'public', 'sw.js');
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Skipping service worker check in development mode');
+    return true;
+  }
   
   if (!fs.existsSync(swPath)) {
     console.log('❌ Service worker (sw.js) is missing');

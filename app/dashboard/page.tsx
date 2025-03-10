@@ -11,7 +11,7 @@ import RedirectToLogin from '@/components/RedirectToLogin';
 interface DashboardData {
   announcements: any[];
   events: any[];
-  posts: any[];
+  resources: any[];
 }
 
 export default function Dashboard() {
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData>({
     announcements: [],
     events: [],
-    posts: []
+    resources: []
   });
 
   useEffect(() => {
@@ -35,28 +35,23 @@ export default function Dashboard() {
         setUser(session.user);
 
         // Fetch dashboard data
-        const [announcementsRes, eventsRes, postsRes] = await Promise.all([
-          supabase
-            .from('announcements')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(2),
+        const [eventsRes, resourcesRes] = await Promise.all([
           supabase
             .from('events')
             .select('*')
             .order('date', { ascending: true })
             .limit(3),
           supabase
-            .from('posts')
+            .from('resources')
             .select('*, author:users(name)')
             .order('created_at', { ascending: false })
             .limit(5)
         ]);
 
         setData({
-          announcements: announcementsRes.data || [],
+          announcements: [],
           events: eventsRes.data || [],
-          posts: postsRes.data || []
+          resources: resourcesRes.data || []
         });
       } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -70,7 +65,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#111827] flex items-center justify-center">
         <div className="text-orange-500 text-xl">{t('loading')}...</div>
       </div>
     );
@@ -81,61 +76,167 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#111827]">
       <Sidebar user={user} />
       <Header user={user} visitorCount={1247} />
       
-      <main className="ml-64 pt-16 p-6">
+      <main className="ml-64 pt-24 p-6">
         {/* Important Announcements */}
         <section className="mb-8">
-          <h2 className="dashboard-section-title">{t('important_announcements')}</h2>
+          <h2 className="text-2xl font-semibold text-gray-300 mb-4">{t('important announcements')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.announcements.map((announcement) => (
-              <div key={announcement.id} className="dashboard-card">
-                <h3 className="text-lg font-semibold text-gray-100">{announcement.title}</h3>
-                <p className="mt-2 text-gray-300">{announcement.content}</p>
-                <span className="text-sm text-gray-400 mt-4 block">
-                  {new Date(announcement.created_at).toLocaleDateString()}
-                </span>
+            <div className="announcement-card warning">
+              <div className="flex items-start">
+                <div className="text-orange-500 mr-3 text-xl">⚠️</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-orange-500">Water Conservation Notice</h3>
+                  <p className="mt-2 text-gray-300">Due to reduced rainfall, please minimize water usage. Conservation guidelines in effect.</p>
+                  <span className="text-sm text-gray-400 mt-4 block">1 hour ago</span>
+                </div>
               </div>
-            ))}
+            </div>
+            
+            <div className="announcement-card info">
+              <div className="flex items-start">
+                <div className="text-blue-500 mr-3 text-xl">ℹ️</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-500">New Community Guidelines</h3>
+                  <p className="mt-2 text-gray-300">Updated community participation guidelines have been released.</p>
+                  <span className="text-sm text-gray-400 mt-4 block">3 hours ago</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Today's Events */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="dashboard-section-title mb-0">{t('todays_events')}</h2>
-            <a href="/events" className="text-orange-500 hover:text-orange-400">{t('view_all')}</a>
+            <h2 className="text-xl font-semibold text-gray-300 mb-0">
+              <span className="mr-2">📅</span>
+              {t('todays events')}
+            </h2>
+            <a href="/events" className="view-all-link">
+              {t('view_all')}
+              <span>→</span>
+            </a>
           </div>
           <div className="space-y-4">
-            {data.events.map((event) => (
-              <div key={event.id} className="dashboard-card flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-100">{event.title}</h3>
-                  <p className="text-sm text-gray-400">
-                    {new Date(event.date).toLocaleString()} • {event.location}
+            <div className="event-card">
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <h3 className="text-lg font-semibold text-gray-100">Morning Meditation</h3>
+                  <span className="badge-new">New</span>
+                </div>
+                <div className="flex mt-1 space-x-4">
+                  <p className="event-time">
+                    <span>🕒</span>
+                    06:00 AM
+                  </p>
+                  <p className="event-location">
+                    <span>📍</span>
+                    Matrimandir
                   </p>
                 </div>
-                {event.status && (
-                  <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-sm">
-                    {event.status}
-                  </span>
-                )}
               </div>
-            ))}
+            </div>
+            
+            <div className="event-card">
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <h3 className="text-lg font-semibold text-gray-100">Permaculture Workshop</h3>
+                  <span className="badge-new">New</span>
+                </div>
+                <div className="flex mt-1 space-x-4">
+                  <p className="event-time">
+                    <span>🕒</span>
+                    09:30 AM
+                  </p>
+                  <p className="event-location">
+                    <span>📍</span>
+                    Buddha Garden
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="event-card">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-100">Community Lunch</h3>
+                <div className="flex mt-1 space-x-4">
+                  <p className="event-time">
+                    <span>🕒</span>
+                    12:30 PM
+                  </p>
+                  <p className="event-location">
+                    <span>📍</span>
+                    Solar Kitchen
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Latest Community Posts */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="dashboard-section-title mb-0">{t('latest_community_posts')}</h2>
-            <a href="/community" className="text-orange-500 hover:text-orange-400">{t('view_all')}</a>
+            <h2 className="text-xl font-semibold text-gray-300 mb-0">
+              <span className="mr-2">💬</span>
+              {t('latest community posts')}
+            </h2>
+            <a href="/community" className="view-all-link">
+              {t('view_all')}
+              <span>→</span>
+            </a>
           </div>
           <div className="space-y-6">
-            {data.posts.map((post) => (
-              <ContentCard key={post.id} post={post} />
+            <div className="community-post">
+              <div className="post-header">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
+                  SC
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-gray-100">Sarah Chen</h3>
+                    <span className="text-sm text-gray-400">2 hours ago</span>
+                  </div>
+                  <p className="text-xs text-gray-400">{t('community_member')}</p>
+                </div>
+              </div>
+
+              <p className="mt-2 text-gray-300">
+                Just finished a wonderful permaculture workshop at Buddha Garden. Amazing to see how many community members are interested in sustainable farming!
+              </p>
+
+              <div className="mt-4 rounded-lg overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1674&q=80" 
+                  alt="Vegetables from garden" 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+
+              <div className="post-actions">
+                <button className="post-action">
+                  <span>🤍</span>
+                  <span>45</span>
+                </button>
+
+                <button className="post-action">
+                  <span>💬</span>
+                  <span>12</span>
+                </button>
+
+                <button className="post-action">
+                  <span>↗️</span>
+                  <span>{t('share')}</span>
+                </button>
+              </div>
+            </div>
+            
+            {data.resources.map((resource) => (
+              <ContentCard key={resource.id} post={resource} />
             ))}
           </div>
         </section>

@@ -5,6 +5,7 @@ export interface Database {
         Row: {
           id: string;
           email: string;
+          name: string | null;
           username: string | null;
           created_at: string;
           last_login: string | null;
@@ -12,6 +13,7 @@ export interface Database {
         Insert: {
           id?: string;
           email: string;
+          name?: string | null;
           username?: string | null;
           created_at?: string;
           last_login?: string | null;
@@ -19,9 +21,27 @@ export interface Database {
         Update: {
           id?: string;
           email?: string;
+          name?: string | null;
           username?: string | null;
           created_at?: string;
           last_login?: string | null;
+        };
+      };
+      resource_categories: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
         };
       };
       communities: {
@@ -88,9 +108,10 @@ export interface Database {
           title: string;
           description: string | null;
           url: string | null;
-          type: string | null;
-          community_id: string;
-          created_by: string;
+          file_type: string | null;
+          size_in_bytes: number | null;
+          category_id: string | null;
+          author_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -98,9 +119,10 @@ export interface Database {
           title: string;
           description?: string | null;
           url?: string | null;
-          type?: string | null;
-          community_id: string;
-          created_by: string;
+          file_type?: string | null;
+          size_in_bytes?: number | null;
+          category_id?: string | null;
+          author_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -108,9 +130,10 @@ export interface Database {
           title?: string;
           description?: string | null;
           url?: string | null;
-          type?: string | null;
-          community_id?: string;
-          created_by?: string;
+          file_type?: string | null;
+          size_in_bytes?: number | null;
+          category_id?: string | null;
+          author_id?: string | null;
           created_at?: string;
         };
       };

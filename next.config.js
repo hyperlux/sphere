@@ -3,9 +3,9 @@
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
-  buildExcludes: [/app-build-manifest.json$/],
+  buildExcludes: [/app-build-manifest.json$/, /_next\/static\/chunks\/218-cdcb19fb98f73709\.js$/, /_next\/static\/a5Xu7z2gdLc70Q3tru52n\/_buildManifest\.js$/],
   fallbacks: {
-    image: '/icons/icon-384x384.png'
+    image: 'favicon.png'
   }
 });
 

@@ -3,14 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --earth-orange: #E67E22;
+  --earth-orange: #FF9100;
   --dawn-gold: #F1C40F;
   --sand-light: #ECF0F1;
+  --navy-dark: #1E293B;
+  --navy-darker: #111827;
+  --navy-light: #334155;
 }
 
 @layer base {
   body {
-    @apply min-h-screen bg-gray-900 text-gray-200;
+    @apply min-h-screen bg-[#111827] text-gray-200;
   }
 }
 
@@ -19,19 +22,94 @@
     @apply flex items-center p-2 rounded-lg transition-colors hover:bg-gray-700;
   }
 
+  .dashboard-section-title {
+    margin-bottom: 0;
+    color: #CBD5E1;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    color: #A1A1AA;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-link:hover {
+    background-color: #1E293B;
+    color: #FFF;
+  }
+
   .sidebar-link.active {
-    @apply bg-orange-500 text-white;
+    background-color: var(--earth-orange);
+    color: #FFF;
+  }
+
+  .active-sidebar-link {
+    background-color: var(--earth-orange);
+    color: white;
   }
 
   .dashboard-card {
-    @apply bg-gray-800 p-4 rounded-lg;
+    @apply bg-[#1E293B] p-4 rounded-lg shadow-md;
   }
 
   .dashboard-section-title {
-    @apply text-xl text-orange-500 mb-4;
+    @apply text-xl font-semibold text-gray-300 mb-4;
   }
 
   .avatar {
-    @apply w-8 h-8 bg-orange-500 text-white flex items-center justify-center rounded-full;
+    @apply w-8 h-8 bg-orange-500 text-white flex items-center justify-center rounded-full font-medium;
+  }
+
+  .announcement-card {
+    @apply bg-[#1E293B] p-5 rounded-lg shadow-md border-l-4;
+  }
+
+  .announcement-card.warning {
+    @apply border-l-orange-500;
+  }
+
+  .announcement-card.info {
+    @apply border-l-blue-500;
+  }
+
+  .view-all-link {
+    @apply text-orange-500 hover:text-orange-400 flex items-center gap-1 text-sm font-medium;
+  }
+
+  .event-card {
+    @apply bg-[#1E293B] p-4 rounded-lg shadow-md flex items-center gap-4;
+  }
+
+  .event-time {
+    @apply text-gray-400 text-sm flex items-center gap-1;
+  }
+
+  .event-location {
+    @apply text-gray-400 text-sm flex items-center gap-1;
+  }
+
+  .badge-new {
+    @apply bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full uppercase font-medium;
+  }
+
+  .community-post {
+    @apply bg-[#1E293B] p-5 rounded-lg shadow-md;
+  }
+
+  .post-header {
+    @apply flex items-center gap-3 mb-3;
+  }
+
+  .post-actions {
+    @apply flex items-center gap-6 mt-4;
+  }
+
+  .post-action {
+    @apply flex items-center gap-2 text-gray-400 hover:text-orange-500 transition-colors;
   }
 }

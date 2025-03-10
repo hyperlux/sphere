@@ -55,13 +55,15 @@ i18n.use(initReactI18next).init({
         notifications_denied: 'Notification permission was denied.',
         notifications: 'Notifications',
         no_notifications: 'No new notifications',
-        notification_settings: 'Notification Settings',
+         notification_settings: 'Notification Settings',
         notification_types: {
           events: 'Event notifications',
           community: 'Community updates',
-          messages: 'Direct messages',
-          announcements: 'Important announcements'
-        }
+          messages: 'Direct messages'
+        },
+        todays_events: 'Todays events',
+        latest_community_posts: 'Latest community posts',
+        announcements: 'Important announcements'
       }
     },
     ta: {

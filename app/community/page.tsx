@@ -66,7 +66,7 @@ export default function CommunitySpaces() {
   const loadSpaces = async () => {
     try {
       const { data, error } = await supabase
-        .from('community_spaces')
+        .from('community spaces')
         .select(`
           *,
           creator:users!creator_id(name)
@@ -75,8 +75,8 @@ export default function CommunitySpaces() {
 
       if (error) throw error;
       setSpaces(data || []);
-    } catch (error) {
-      console.error('Error loading spaces:', error);
+    } catch (error: any) {
+      console.error('Error loading spaces:', error.message);
     } finally {
       setLoading(false);
     }
@@ -155,13 +155,13 @@ export default function CommunitySpaces() {
       <main className="ml-64 pt-16 p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-100">
-            {t('community_spaces')}
+            {t('Community Spaces')}
           </h1>
           <button
             onClick={() => setShowCreateForm(true)}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
           >
-            {t('create_space')}
+            {t('Create Space')}
           </button>
         </div>
 
@@ -169,7 +169,7 @@ export default function CommunitySpaces() {
         <div className="mb-6">
           <input
             type="search"
-            placeholder={t('search_spaces')}
+            placeholder={t('Search Spaces')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full max-w-lg px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
