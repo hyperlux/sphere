@@ -83,7 +83,7 @@ export default function ResourcesPage() {
       setError(null);
     } catch (error) {
       console.error('Error loading resources:', error);
-      setError(t('error_loading_resources'));
+      setError(t('error loading resources'));
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ export default function ResourcesPage() {
   };
 
   if (authLoading) {
-    return <div className="min-h-screen bg-gray-900 text-gray-200">{t('loading')}...</div>;
+    return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
   }
 
   if (!user || !userDisplayInfo) {
@@ -144,20 +144,20 @@ export default function ResourcesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen">
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
       <main className="ml-64 pt-16 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-100">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
             {t('resources')}
           </h1>
           <button
             onClick={() => setShowUploadForm(true)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 mt-10"
           >
-            {t('upload_resource')}
+            {t('upload resource')}
           </button>
         </div>
 
@@ -171,15 +171,15 @@ export default function ResourcesPage() {
         <div className="mb-6 flex gap-4">
           <input
             type="search"
-            placeholder={t('search_resources')}
+            placeholder={t('search resources')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-lg px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
+            className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
           />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
+            className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
           >
             <option value="">{t('all_categories')}</option>
             {categories.map(category => (
@@ -192,11 +192,11 @@ export default function ResourcesPage() {
 
         {/* Resources List */}
         {loading ? (
-          <p className="text-gray-400">{t('loading')}...</p>
+          <p className="text-[var(--text-muted)]">{t('loading')}...</p>
         ) : (
           <div className="space-y-4">
             {filteredResources.length === 0 ? (
-              <p className="text-gray-400">{t('no_resources_found')}</p>
+              <p className="text-[var(--text-muted)] pl-5">{t('no resources found')}</p>
             ) : (
               filteredResources.map((resource) => (
                 <ResourceCard

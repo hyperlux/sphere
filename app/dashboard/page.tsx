@@ -65,7 +65,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#111827] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="text-orange-500 text-xl">{t('loading')}...</div>
       </div>
     );
@@ -76,22 +76,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111827]">
+    <div className="min-h-screen">
       <Sidebar user={user} />
       <Header user={user} visitorCount={1247} />
       
       <main className="ml-64 pt-24 p-6">
         {/* Important Announcements */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-300 mb-4">{t('important announcements')}</h2>
+          <h2 className="text-2xl font-semibold text-[var(--text-secondary)] mb-4">{t('important announcements')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="announcement-card warning">
               <div className="flex items-start">
                 <div className="text-orange-500 mr-3 text-xl">⚠️</div>
                 <div>
                   <h3 className="text-lg font-semibold text-orange-500">Water Conservation Notice</h3>
-                  <p className="mt-2 text-gray-300">Due to reduced rainfall, please minimize water usage. Conservation guidelines in effect.</p>
-                  <span className="text-sm text-gray-400 mt-4 block">1 hour ago</span>
+                  <p className="mt-2 text-[var(--text-secondary)]">Due to reduced rainfall, please minimize water usage. Conservation guidelines in effect.</p>
+                  <span className="text-sm text-[var(--text-muted)] mt-4 block">1 hour ago</span>
                 </div>
               </div>
             </div>
@@ -101,8 +101,8 @@ export default function Dashboard() {
                 <div className="text-blue-500 mr-3 text-xl">ℹ️</div>
                 <div>
                   <h3 className="text-lg font-semibold text-blue-500">New Community Guidelines</h3>
-                  <p className="mt-2 text-gray-300">Updated community participation guidelines have been released.</p>
-                  <span className="text-sm text-gray-400 mt-4 block">3 hours ago</span>
+                  <p className="mt-2 text-[var(--text-secondary)]">Updated community participation guidelines have been released.</p>
+                  <span className="text-sm text-[var(--text-muted)] mt-4 block">3 hours ago</span>
                 </div>
               </div>
             </div>
@@ -112,7 +112,7 @@ export default function Dashboard() {
         {/* Today's Events */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-300 mb-0">
+            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0">
               <span className="mr-2">📅</span>
               {t('todays events')}
             </h2>
@@ -125,7 +125,7 @@ export default function Dashboard() {
             <div className="event-card">
               <div className="flex-1">
                 <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold text-gray-100">Morning Meditation</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">Morning Meditation</h3>
                   <span className="badge-new">New</span>
                 </div>
                 <div className="flex mt-1 space-x-4">
@@ -144,7 +144,7 @@ export default function Dashboard() {
             <div className="event-card">
               <div className="flex-1">
                 <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold text-gray-100">Permaculture Workshop</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">Permaculture Workshop</h3>
                   <span className="badge-new">New</span>
                 </div>
                 <div className="flex mt-1 space-x-4">
@@ -162,7 +162,7 @@ export default function Dashboard() {
             
             <div className="event-card">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-100">Community Lunch</h3>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Community Lunch</h3>
                 <div className="flex mt-1 space-x-4">
                   <p className="event-time">
                     <span>🕒</span>
@@ -181,7 +181,7 @@ export default function Dashboard() {
         {/* Latest Community Posts */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-300 mb-0">
+            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0">
               <span className="mr-2">💬</span>
               {t('latest community posts')}
             </h2>
@@ -198,14 +198,14 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-gray-100">Sarah Chen</h3>
-                    <span className="text-sm text-gray-400">2 hours ago</span>
+                    <h3 className="font-semibold text-[var(--text-primary)]">Sarah Chen</h3>
+                    <span className="text-sm text-[var(--text-muted)]">2 hours ago</span>
                   </div>
-                  <p className="text-xs text-gray-400">{t('community_member')}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('community_member')}</p>
                 </div>
               </div>
 
-              <p className="mt-2 text-gray-300">
+              <p className="mt-2 text-[var(--text-secondary)]">
                 Just finished a wonderful permaculture workshop at Buddha Garden. Amazing to see how many community members are interested in sustainable farming!
               </p>
 

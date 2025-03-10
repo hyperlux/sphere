@@ -98,7 +98,7 @@ export default function UploadResourceForm({
   return (
     <div className="bg-gray-800 p-6 rounded-lg">
       <h2 className="text-2xl font-bold text-gray-100 mb-4">
-        {t('upload_resource')}
+        {t('upload resource')}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">

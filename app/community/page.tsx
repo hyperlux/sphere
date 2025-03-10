@@ -66,7 +66,7 @@ export default function CommunitySpaces() {
   const loadSpaces = async () => {
     try {
       const { data, error } = await supabase
-        .from('community spaces')
+        .from('communities')
         .select(`
           *,
           creator:users!creator_id(name)
@@ -135,7 +135,7 @@ export default function CommunitySpaces() {
   };
 
   if (authLoading) {
-    return <div className="min-h-screen bg-gray-900 text-gray-200">{t('loading')}...</div>;
+    return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
   }
 
   if (!user || !userDisplayInfo) {
@@ -148,13 +148,13 @@ export default function CommunitySpaces() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen">
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
       <main className="ml-64 pt-16 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-100">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">
             {t('Community Spaces')}
           </h1>
           <button
@@ -172,13 +172,13 @@ export default function CommunitySpaces() {
             placeholder={t('Search Spaces')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full max-w-lg px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
+            className="w-full max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
           />
         </div>
 
         {/* Spaces List */}
         {loading ? (
-          <p className="text-gray-400">{t('loading')}...</p>
+          <p className="text-[var(--text-muted)]">{t('loading')}...</p>
         ) : (
           <div className="space-y-4">
             {filteredSpaces.map((space) => (

@@ -40,7 +40,7 @@ export default function CommunitySpaceCard({
 
   return (
     <Link href={`/community/${space.id}`}>
-      <div className="dashboard-card hover:bg-gray-700 transition-colors cursor-pointer">
+      <div className="dashboard-card hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer">
         <div className="flex items-start space-x-4">
           {/* Space Image */}
           <div className="flex-shrink-0 w-16 h-16 relative rounded-lg overflow-hidden">
@@ -60,11 +60,11 @@ export default function CommunitySpaceCard({
 
           {/* Space Details */}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-100">{space.name}</h3>
-            <p className="text-sm text-gray-300 line-clamp-2 mb-2">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{space.name}</h3>
+            <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-2">
               {space.description}
             </p>
-            <div className="flex items-center text-sm text-gray-400 space-x-4">
+            <div className="flex items-center text-sm text-[var(--text-muted)] space-x-4">
               <span>{t('members', { count: space.member_count })}</span>
               <span>•</span>
               <span>{t('created_by', { name: space.creator.name })}</span>
@@ -77,7 +77,7 @@ export default function CommunitySpaceCard({
               onClick={handleJoinLeave}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 isMember
-                  ? 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                  ? 'bg-[var(--bg-tertiary)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)]'
                   : 'bg-orange-500 hover:bg-orange-600 text-white'
               }`}
             >

@@ -57,14 +57,14 @@ export default function ContentCard({ post }: { post: Post }) {
 
         <div className="flex-1">
           <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-gray-100">{post.username}</h3>
-            <span className="text-sm text-gray-400">{formatTime(post.created_at)}</span>
+            <h3 className="font-semibold text-[var(--text-primary)]">{post.username}</h3>
+            <span className="text-sm text-[var(--text-muted)]">{formatTime(post.created_at)}</span>
           </div>
-          <p className="text-xs text-gray-400">{t('community_member')}</p>
+          <p className="text-xs text-[var(--text-muted)]">{t('community_member')}</p>
         </div>
       </div>
 
-      <p className="mt-2 text-gray-300">{post.content}</p>
+      <p className="mt-2 text-[var(--text-secondary)]">{post.content}</p>
 
       {post.media_url && (
         <div className="mt-4 rounded-lg overflow-hidden">

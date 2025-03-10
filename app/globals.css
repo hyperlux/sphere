@@ -3,9 +3,36 @@
 @tailwind utilities;
 
 :root {
+  /* Common colors */
   --earth-orange: #FF9100;
   --dawn-gold: #F1C40F;
   --sand-light: #ECF0F1;
+  
+  /* Dark theme colors (default) */
+  --bg-primary: #111827;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --text-primary: #F9FAFB;
+  --text-secondary: #E5E7EB;
+  --text-muted: #9CA3AF;
+  --border-color: #374151;
+  --input-bg: #1F2937;
+}
+
+/* Light theme colors */
+.light-theme {
+  --bg-primary: #F9FAFB;
+  --bg-secondary: #F3F4F6;
+  --bg-tertiary: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --border-color: #D1D5DB;
+  --input-bg: #FFFFFF;
+}
+
+/* Legacy variables for backward compatibility */
+:root {
   --navy-dark: #1E293B;
   --navy-darker: #111827;
   --navy-light: #334155;
@@ -13,7 +40,8 @@
 
 @layer base {
   body {
-    @apply min-h-screen bg-[#111827] text-gray-200;
+    @apply min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)];
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -39,8 +67,8 @@
   }
 
   .sidebar-link:hover {
-    background-color: #1E293B;
-    color: #FFF;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
   }
 
   .sidebar-link.active {
@@ -54,11 +82,11 @@
   }
 
   .dashboard-card {
-    @apply bg-[#1E293B] p-4 rounded-lg shadow-md;
+    @apply bg-[var(--bg-secondary)] p-4 rounded-lg shadow-md;
   }
 
   .dashboard-section-title {
-    @apply text-xl font-semibold text-gray-300 mb-4;
+    @apply text-xl font-semibold text-[var(--text-secondary)] mb-4;
   }
 
   .avatar {
@@ -66,7 +94,7 @@
   }
 
   .announcement-card {
-    @apply bg-[#1E293B] p-5 rounded-lg shadow-md border-l-4;
+    @apply bg-[var(--bg-secondary)] p-5 rounded-lg shadow-md border-l-4;
   }
 
   .announcement-card.warning {
@@ -82,15 +110,15 @@
   }
 
   .event-card {
-    @apply bg-[#1E293B] p-4 rounded-lg shadow-md flex items-center gap-4;
+    @apply bg-[var(--bg-secondary)] p-4 rounded-lg shadow-md flex items-center gap-4;
   }
 
   .event-time {
-    @apply text-gray-400 text-sm flex items-center gap-1;
+    @apply text-[var(--text-muted)] text-sm flex items-center gap-1;
   }
 
   .event-location {
-    @apply text-gray-400 text-sm flex items-center gap-1;
+    @apply text-[var(--text-muted)] text-sm flex items-center gap-1;
   }
 
   .badge-new {
@@ -98,7 +126,7 @@
   }
 
   .community-post {
-    @apply bg-[#1E293B] p-5 rounded-lg shadow-md;
+    @apply bg-[var(--bg-secondary)] p-5 rounded-lg shadow-md;
   }
 
   .post-header {
@@ -110,6 +138,6 @@
   }
 
   .post-action {
-    @apply flex items-center gap-2 text-gray-400 hover:text-orange-500 transition-colors;
+    @apply flex items-center gap-2 text-[var(--text-muted)] hover:text-orange-500 transition-colors;
   }
 }

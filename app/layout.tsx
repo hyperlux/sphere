@@ -7,6 +7,7 @@ import InstallPrompt from '@/components/InstallPrompt';
 import NotificationPrompt from '@/components/NotificationPrompt';
 import NetworkStatus from '@/components/NetworkStatus';
 import { ToastProvider } from '@/components/Toast';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { Suspense, useEffect } from 'react';
 import '../lib/i18n';
 import { useTranslation } from 'react-i18next';
@@ -74,14 +75,16 @@ export default function RootLayout({
       <body className="antialiased">
         <Suspense fallback={<div className="min-h-screen bg-gray-900"></div>}>
           <ToastProvider>
-            <AuthProvider>
-              <NetworkStatus />
-              <div className="flex min-h-screen bg-gray-900">
-                {children}
-              </div>
-              <InstallPrompt />
-              <NotificationPrompt />
-            </AuthProvider>
+            <ThemeProvider>
+              <AuthProvider>
+                <NetworkStatus />
+                <div className="flex min-h-screen">
+                  {children}
+                </div>
+                <InstallPrompt />
+                <NotificationPrompt />
+              </AuthProvider>
+            </ThemeProvider>
           </ToastProvider>
         </Suspense>
       </body>

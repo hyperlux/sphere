@@ -1,6 +1,41 @@
 export interface Database {
   public: {
     Tables: {
+      bazaar_items: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          price: number;
+          condition: string;
+          location: string | null;
+          image_url: string | null;
+          seller_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description: string;
+          price: number;
+          condition: string;
+          location?: string | null;
+          image_url?: string | null;
+          seller_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          price?: number;
+          condition?: string;
+          location?: string | null;
+          image_url?: string | null;
+          seller_id?: string;
+          created_at?: string;
+        };
+      };
       users: {
         Row: {
           id: string;

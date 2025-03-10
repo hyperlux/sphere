@@ -74,24 +74,24 @@ export default function ResourceCard({ resource, onDownload }: ResourceProps) {
   const timeAgo = formatDistanceToNow(new Date(resource.created_at), { addSuffix: true });
 
   return (
-    <div className="dashboard-card hover:bg-gray-700 transition-colors">
+    <div className="dashboard-card hover:bg-[var(--bg-tertiary)] transition-colors">
       <div className="flex items-start space-x-4">
         {/* File Type Icon */}
-        <div className="flex-shrink-0 w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center text-2xl">
+        <div className="flex-shrink-0 w-12 h-12 bg-[var(--bg-tertiary)] rounded-lg flex items-center justify-center text-2xl">
           {getFileIcon(resource.file_type)}
         </div>
 
         {/* Resource Details */}
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-100">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">
             {resource.title}
           </h3>
           {resource.description && (
-            <p className="text-sm text-gray-300 line-clamp-2 mt-1">
+            <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mt-1">
               {resource.description}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mt-2">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)] mt-2">
             {resource.category && (
               <div className="flex items-center">
                 <span className="mr-1">🏷️</span>

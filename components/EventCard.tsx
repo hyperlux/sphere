@@ -37,7 +37,7 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
 
   return (
     <Link href={`/events/${event.id}`}>
-      <div className="dashboard-card hover:bg-gray-700 transition-colors">
+      <div className="dashboard-card hover:bg-[var(--bg-tertiary)] transition-colors">
         <div className="flex items-start space-x-4">
           {/* Calendar Icon */}
           <div className="flex-shrink-0 w-16">
@@ -53,13 +53,13 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
 
           {/* Event Details */}
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-100">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
               {event.title}
             </h3>
-            <p className="text-sm text-gray-300 line-clamp-2 mb-2">
+            <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-2">
               {event.description}
             </p>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
               <div className="flex items-center">
                 <span className="mr-1">🕒</span>
                 {formattedTime}
@@ -92,7 +92,7 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
                 className={`px-4 py-1 rounded text-sm transition-colors ${
                   userStatus === 'attending'
                     ? 'bg-green-500 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-green-500/20'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-green-500/20'
                 }`}
               >
                 {t('attending')}
@@ -105,7 +105,7 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
                 className={`px-4 py-1 rounded text-sm transition-colors ${
                   userStatus === 'maybe'
                     ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-yellow-500/20'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-yellow-500/20'
                 }`}
               >
                 {t('maybe')}
@@ -118,7 +118,7 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
                 className={`px-4 py-1 rounded text-sm transition-colors ${
                   userStatus === 'not_attending'
                     ? 'bg-red-500 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-red-500/20'
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-red-500/20'
                 }`}
               >
                 {t('not_attending')}

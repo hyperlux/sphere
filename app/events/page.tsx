@@ -65,12 +65,7 @@ export default function EventsPage() {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select(`
-          *,
-          category:event_categories(id, name),
-          creator:users!creator_id(name),
-          attendees_count:event_attendees(count)
-        `)
+        .select('*')
         .order('date', { ascending: true });
 
       if (error) throw error;
@@ -152,7 +147,7 @@ export default function EventsPage() {
   };
 
   if (authLoading) {
-    return <div className="min-h-screen bg-gray-900 text-gray-200">{t('loading')}...</div>;
+    return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
   }
 
   if (!user || !userDisplayInfo) {
@@ -167,13 +162,13 @@ export default function EventsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen">
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
       <main className="ml-64 pt-16 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-100">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">
             {t('events')}
           </h1>
           <button
@@ -191,12 +186,12 @@ export default function EventsPage() {
             placeholder={t('search_events')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-lg px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
+            className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
           />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:border-orange-500"
+            className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
           >
             <option value="">{t('all_categories')}</option>
             {categories.map(category => (
@@ -209,7 +204,7 @@ export default function EventsPage() {
 
         {/* Events List */}
         {loading ? (
-          <p className="text-gray-400">{t('loading')}...</p>
+          <p className="text-[var(--text-muted)]">{t('loading')}...</p>
         ) : (
           <div className="space-y-4">
             {filteredEvents.map((event) => (
