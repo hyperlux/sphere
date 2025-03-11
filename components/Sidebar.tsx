@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface SidebarProps {
   user: {
@@ -15,6 +16,7 @@ interface SidebarProps {
 export default function Sidebar({ user }: SidebarProps) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const { theme } = useTheme();
 
   const navigation = [
     { name: 'dashboard', href: '/dashboard', icon: '🗂️' },
@@ -36,7 +38,13 @@ export default function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)]">
       <div className="flex items-center py-4 px-4">
-        <img src="/logolight.png" alt="Auroville.COMMUNITY" width={160} height={50} className="mr-auto" />
+        <img 
+          src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
+          alt="Auroville.COMMUNITY" 
+          width={160} 
+          height={50} 
+          className="mr-auto" 
+        />
       </div>
 
       <nav className="flex-1 px-4 py-2">
