@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 
 interface CreateEventFormProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface CreateEventFormProps {
 
 export default function CreateEventForm({ onClose, onSuccess, categories }: CreateEventFormProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -31,6 +33,12 @@ export default function CreateEventForm({ onClose, onSuccess, categories }: Crea
     setError(null);
     setLoading(true);
 
+    if (!user) {
+      setError('You must be logged in to create an event');
+      setLoading(false);
+      return;
+    }
+
     try {
       // Combine date and time
       const dateTime = new Date(`${formData.date}T${formData.time}`);
@@ -43,7 +51,8 @@ export default function CreateEventForm({ onClose, onSuccess, categories }: Crea
           description: formData.description,
           date: dateTime.toISOString(),
           location: formData.location,
-          category_id: formData.category_id || null
+          category_id: formData.category_id || null,
+          created_by: user.id
         })
         .select()
         .single();
@@ -56,6 +65,7 @@ export default function CreateEventForm({ onClose, onSuccess, categories }: Crea
           .from('event_attendees')
           .insert({
             event_id: eventData.id,
+            user_id: user.id,
             status: 'attending'
           });
 

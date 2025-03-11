@@ -1,8 +1,10 @@
 'use client';
 
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { Clock, MapPin, Tag, Users } from 'lucide-react';
 
 interface EventProps {
   event: {
@@ -61,21 +63,21 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
             </p>
             <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
               <div className="flex items-center">
-                <span className="mr-1">🕒</span>
+                <Clock className="w-4 h-4 mr-1" />
                 {formattedTime}
               </div>
               <div className="flex items-center">
-                <span className="mr-1">📍</span>
+                <MapPin className="w-4 h-4 mr-1" />
                 {event.location}
               </div>
               {event.category && (
                 <div className="flex items-center">
-                  <span className="mr-1">🏷️</span>
+                  <Tag className="w-4 h-4 mr-1" />
                   {event.category.name}
                 </div>
               )}
               <div className="flex items-center">
-                <span className="mr-1">👥</span>
+                <Users className="w-4 h-4 mr-1" />
                 {t('attendees', { count: event.attendees_count })}
               </div>
             </div>

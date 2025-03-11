@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS public.communities (
     name TEXT NOT NULL,
     description TEXT,
     created_by UUID REFERENCES public.users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    image_url TEXT
 );
 
 -- Events table

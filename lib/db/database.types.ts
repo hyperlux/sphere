@@ -86,6 +86,7 @@ export interface Database {
           description: string | null;
           created_by: string;
           created_at: string;
+          image_url: string | null;
         };
         Insert: {
           id?: string;
@@ -93,12 +94,37 @@ export interface Database {
           description?: string | null;
           created_by: string;
           created_at?: string;
+          image_url?: string | null;
         };
         Update: {
           id?: string;
           name?: string;
           description?: string | null;
           created_by?: string;
+          created_at?: string;
+          image_url?: string | null;
+        };
+      };
+      space_members: {
+        Row: {
+          id: string;
+          space_id: string;
+          user_id: string;
+          role: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          space_id: string;
+          user_id: string;
+          role: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          space_id?: string;
+          user_id?: string;
+          role?: string;
           created_at?: string;
         };
       };

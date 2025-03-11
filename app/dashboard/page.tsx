@@ -7,6 +7,7 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ContentCard from '@/components/ContentCard';
 import RedirectToLogin from '@/components/RedirectToLogin';
+import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare } from 'lucide-react';
 
 interface DashboardData {
   announcements: any[];
@@ -80,14 +81,16 @@ export default function Dashboard() {
       <Sidebar user={user} />
       <Header user={user} visitorCount={1247} />
       
-      <main className="ml-64 pt-24 p-6">
+      <main className="ml-80 pt-32 p-6">
         {/* Important Announcements */}
         <section className="mb-8">
           <h2 className="text-2xl font-semibold text-[var(--text-secondary)] mb-4">{t('important announcements')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="announcement-card warning">
               <div className="flex items-start">
-                <div className="text-orange-500 mr-3 text-xl">⚠️</div>
+                <div className="text-orange-500 mr-3">
+                  <AlertTriangle size={24} />
+                </div>
                 <div>
                   <h3 className="text-lg font-semibold text-orange-500">Water Conservation Notice</h3>
                   <p className="mt-2 text-[var(--text-secondary)]">Due to reduced rainfall, please minimize water usage. Conservation guidelines in effect.</p>
@@ -98,7 +101,9 @@ export default function Dashboard() {
             
             <div className="announcement-card info">
               <div className="flex items-start">
-                <div className="text-blue-500 mr-3 text-xl">ℹ️</div>
+                <div className="text-blue-500 mr-3">
+                  <Info size={24} />
+                </div>
                 <div>
                   <h3 className="text-lg font-semibold text-blue-500">New Community Guidelines</h3>
                   <p className="mt-2 text-[var(--text-secondary)]">Updated community participation guidelines have been released.</p>
@@ -112,8 +117,8 @@ export default function Dashboard() {
         {/* Today's Events */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0">
-              <span className="mr-2">📅</span>
+            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0 flex items-center">
+              <Calendar className="mr-2" size={20} />
               {t('todays events')}
             </h2>
             <a href="/events" className="view-all-link">
@@ -129,12 +134,12 @@ export default function Dashboard() {
                   <span className="badge-new">New</span>
                 </div>
                 <div className="flex mt-1 space-x-4">
-                  <p className="event-time">
-                    <span>🕒</span>
+                  <p className="event-time flex items-center">
+                    <Clock className="mr-1" size={16} />
                     06:00 AM
                   </p>
-                  <p className="event-location">
-                    <span>📍</span>
+                  <p className="event-location flex items-center">
+                    <MapPin className="mr-1" size={16} />
                     Matrimandir
                   </p>
                 </div>
@@ -148,12 +153,12 @@ export default function Dashboard() {
                   <span className="badge-new">New</span>
                 </div>
                 <div className="flex mt-1 space-x-4">
-                  <p className="event-time">
-                    <span>🕒</span>
+                  <p className="event-time flex items-center">
+                    <Clock className="mr-1" size={16} />
                     09:30 AM
                   </p>
-                  <p className="event-location">
-                    <span>📍</span>
+                  <p className="event-location flex items-center">
+                    <MapPin className="mr-1" size={16} />
                     Buddha Garden
                   </p>
                 </div>
@@ -164,12 +169,12 @@ export default function Dashboard() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-[var(--text-primary)]">Community Lunch</h3>
                 <div className="flex mt-1 space-x-4">
-                  <p className="event-time">
-                    <span>🕒</span>
+                  <p className="event-time flex items-center">
+                    <Clock className="mr-1" size={16} />
                     12:30 PM
                   </p>
-                  <p className="event-location">
-                    <span>📍</span>
+                  <p className="event-location flex items-center">
+                    <MapPin className="mr-1" size={16} />
                     Solar Kitchen
                   </p>
                 </div>
@@ -181,8 +186,8 @@ export default function Dashboard() {
         {/* Latest Community Posts */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0">
-              <span className="mr-2">💬</span>
+            <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0 flex items-center">
+              <MessageSquare className="mr-2" size={20} />
               {t('latest community posts')}
             </h2>
             <a href="/community" className="view-all-link">

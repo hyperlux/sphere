@@ -69,7 +69,7 @@ export default function CommunitySpaces() {
         .from('communities')
         .select(`
           *,
-          creator:users!creator_id(name)
+          creator:users!created_by(name)
         `)
         .order('created_at', { ascending: false });
 
@@ -152,10 +152,10 @@ export default function CommunitySpaces() {
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
-      <main className="ml-64 pt-16 p-6">
+      <main className="ml-80 pt-32 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-            {t('Community Spaces')}
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mr-4">
+            {t('Forum')}
           </h1>
           <button
             onClick={() => setShowCreateForm(true)}

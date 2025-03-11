@@ -119,10 +119,10 @@ export default function BazaarPage() {
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
-      <main className="ml-64 pt-16 p-6">
+      <main className="ml-80 pt-24 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
-            {t('bazaar')}
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8 mr-4">
+            {t('Bazaar')}
           </h1>
           <button
             onClick={() => setShowListForm(true)}

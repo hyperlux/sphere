@@ -65,7 +65,12 @@ export default function EventsPage() {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          category:category_id(id, name),
+          creator:created_by(name),
+          attendees_count:event_attendees(count)
+        `)
         .order('date', { ascending: true });
 
       if (error) throw error;
@@ -166,7 +171,7 @@ export default function EventsPage() {
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
-      <main className="ml-64 pt-16 p-6">
+      <main className="ml-80 pt-32 p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-[var(--text-primary)]">
             {t('events')}

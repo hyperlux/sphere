@@ -1,8 +1,10 @@
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Heart, MessageSquare, Share2 } from 'lucide-react';
 
 interface Post {
   id: string;
@@ -83,17 +85,17 @@ export default function ContentCard({ post }: { post: Post }) {
           onClick={() => setLiked(!liked)}
           className="post-action"
         >
-          <span>{liked ? '❤️' : '🤍'}</span>
+          <Heart className={`w-5 h-5 ${liked ? 'fill-current text-red-500' : ''}`} />
           <span>{liked ? post.likes + 1 : post.likes}</span>
         </button>
 
         <button className="post-action">
-          <span>💬</span>
+          <MessageSquare className="w-5 h-5" />
           <span>{post.comments}</span>
         </button>
 
         <button className="post-action">
-          <span>↗️</span>
+          <Share2 className="w-5 h-5" />
           <span>{t('share')}</span>
         </button>
       </div>

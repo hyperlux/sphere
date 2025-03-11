@@ -1,10 +1,21 @@
 'use client';
 
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/components/ThemeProvider';
+import { 
+  LayoutGrid, 
+  MessageSquare, 
+  Calendar, 
+  ShoppingBag, 
+  Building2, 
+  FileText, 
+  Settings,
+  ExternalLink
+} from 'lucide-react';
 
 interface SidebarProps {
   user: {
@@ -19,30 +30,30 @@ export default function Sidebar({ user }: SidebarProps) {
   const { theme } = useTheme();
 
   const navigation = [
-    { name: 'dashboard', href: '/dashboard', icon: '🗂️' },
-    { name: 'forums', href: '/community', icon: '💬' },
-    { name: 'events_page', href: '/events', icon: '📅' },
-    { name: 'bazaar', href: '/bazaar', icon: '🛒' },
-    { name: 'services', href: '/services', icon: '🔧' },
-    { name: 'resources_page', href: '/resources', icon: '📚' },
-    { name: 'settings', href: '/settings', icon: '⚙️' },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+    { name: 'Forums', href: '/community', icon: MessageSquare },
+    { name: 'Events', href: '/events', icon: Calendar },
+    { name: 'Bazaar', href: '/bazaar', icon: ShoppingBag },
+    { name: 'Services', href: '/services', icon: Building2 },
+    { name: 'Resources', href: '/resources', icon: FileText },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   const externalLinks = [
-    { name: 'auroville_foundation', href: 'https://auroville.org', icon: '🔗' },
-    { name: 'directory', href: '/directory', icon: '📖' },
-    { name: 'media_portal', href: '/media', icon: '📰' },
-    { name: 'wiki', href: '/wiki', icon: '📝' },
+    { name: 'auroville_foundation', href: 'https://auroville.org', icon: ExternalLink },
+    { name: 'directory', href: '/directory', icon: ExternalLink },
+    { name: 'media_portal', href: '/media', icon: ExternalLink },
+    { name: 'wiki', href: '/wiki', icon: ExternalLink },
   ];
 
   return (
     <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)]">
-      <div className="flex items-center py-4 px-4">
+      <div className="flex items-center py-4 pl-7">
         <img 
           src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
           alt="Auroville.COMMUNITY" 
-          width={160} 
-          height={50} 
+          width={200} 
+          height={100} 
           className="mr-auto" 
         />
       </div>
@@ -55,7 +66,9 @@ export default function Sidebar({ user }: SidebarProps) {
                 href={item.href}
                 className={`sidebar-link ${pathname === item.href ? 'active' : ''} text-[var(--text-primary)]`}
               >
-                <span className="mr-3 text-xl">{item.icon}</span>
+                <span className="mr-3 text-[var(--text-primary)]">
+                  {React.createElement(item.icon, { size: 20 })}
+                </span>
                 {t(item.name)}
               </Link>
             </li>
@@ -73,7 +86,9 @@ export default function Sidebar({ user }: SidebarProps) {
                   href={link.href}
                   className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2 px-2 text-[var(--text-primary)]"
                 >
-                  <span className="mr-3">{link.icon}</span>
+                  <span className="mr-3 text-[var(--text-muted)]">
+                    {React.createElement(link.icon, { size: 16 })}
+                  </span>
                   {t(link.name)}
                 </Link>
               </li>

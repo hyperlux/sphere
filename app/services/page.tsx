@@ -28,9 +28,9 @@ export default function ServicesPage() {
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
       
-      <main className="ml-64 pt-16 p-6">
+      <main className="ml-80 pt-24 p-6">
         <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
-          {t('services')}
+          {t('Services')}
         </h1>
         <p className="text-[var(--text-secondary)]">
           {t('find local services in Auroville')}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 
 interface CreateSpaceFormProps {
   onClose: () => void;
@@ -12,6 +13,7 @@ interface CreateSpaceFormProps {
 
 export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -38,13 +40,20 @@ export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormP
     setError(null);
     setLoading(true);
 
+    if (!user) {
+      setError('You must be logged in to create a space');
+      setLoading(false);
+      return;
+    }
+
     try {
       // First, create the community space
       const { data: spaceData, error: spaceError } = await supabase
-        .from('community_spaces')
+        .from('communities')
         .insert({
           name: formData.name,
-          description: formData.description
+          description: formData.description,
+          created_by: user.id
         })
         .select()
         .single();
@@ -64,7 +73,7 @@ export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormP
 
         // Update the space with the image URL
         const { error: updateError } = await supabase
-          .from('community_spaces')
+          .from('communities')
           .update({
             image_url: filePath
           })
@@ -78,6 +87,7 @@ export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormP
         .from('space_members')
         .insert({
           space_id: spaceData.id,
+          user_id: user.id,
           role: 'admin'
         });
 
