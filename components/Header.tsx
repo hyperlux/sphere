@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/components/AuthProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 import { useTheme } from '@/components/ThemeProvider';
 import { Search, Bell, Sun, Moon, Users } from 'lucide-react';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { supabase } from '@/lib/supabase';
+import { formatDistanceToNow } from 'date-fns';
 
 interface HeaderProps {
   user: {
@@ -15,10 +18,42 @@ interface HeaderProps {
   visitorCount?: number;
 }
 
+interface Notification {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+}
+
 export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const notificationButtonRef = useRef(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useClickOutside(notificationButtonRef, () => {
+    setIsNotificationMenuOpen(false);
+  });
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, description, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+      } else {
+        setNotifications(data || []);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <header className="fixed top-0 right-0 left-64 h-24 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] px-6 flex items-center justify-between z-10">
@@ -37,7 +72,7 @@ export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
       {/* Visitor Count */}
       <div className="flex items-center mx-6 text-amber-500">
         <Users className="w-5 h-5 mr-2" />
-        <span className="text-sm font-medium">{visitorCount} {t('visitors_today')}</span>
+        <span className="text-sm font-medium">{visitorCount} {t('visitors today')}</span>
       </div>
 
       {/* Right Section */}
@@ -56,9 +91,45 @@ export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-          <Bell className="w-6 h-6" />
-        </button>
+        <div ref={notificationButtonRef} className="relative">
+          <button
+            onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)}
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] mt-1"
+          >
+            <Bell className="w-6 h-6" />
+          </button>
+
+          {isNotificationMenuOpen && (
+            <div className="absolute right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden z-20">
+              <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] divide-y divide-[var(--border-color)]">
+                {notifications.map((notification) => (
+                  <a
+                    key={notification.id}
+                    href="#"
+                    className="flex items-center px-4 py-3 hover:bg-[var(--bg-primary)] transition-colors duration-150"
+                  >
+                    <div className="pl-3">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        {notification.title}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+                <div className="py-2 text-center">
+                  <a
+                    href="#"
+                    className="block text-sm text-[var(--text-primary)] hover:text-orange-500 transition-colors duration-200"
+                  >
+                    {t('See all notifications')}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Menu */}
         {user && (

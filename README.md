@@ -36,6 +36,8 @@ AuroNet is a digital platform designed to foster collaboration and community eng
 
 ## Getting Started
 
+### Option 1: Standard Setup
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/auroville/auronet.git
@@ -49,7 +51,7 @@ AuroNet is a digital platform designed to foster collaboration and community eng
 
 3. Copy the environment file and update with your Supabase credentials:
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env
    ```
 
 4. Initialize the database:
@@ -67,6 +69,38 @@ AuroNet is a digital platform designed to foster collaboration and community eng
    ```
 
 6. Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+### Option 2: Docker + Supabase CLI Setup
+
+This project supports a streamlined local development using Docker for the Next.js app and Supabase CLI for the backend services.
+
+#### Prerequisites
+- Docker and Docker Compose installed
+- Supabase CLI installed (`npm install -g supabase`)
+
+#### Setup Process
+
+1. Use the provided setup script to initialize everything with a single command:
+   ```bash
+   ./setup.sh
+   ```
+
+   This script will:
+   - Start local Supabase services using the CLI
+   - Apply database schema and seed data
+   - Build and start the Next.js app in Docker
+
+2. Access the services:
+   - Next.js app: [http://localhost:3000](http://localhost:3000)
+   - Supabase API: [http://localhost:54321](http://localhost:54321)
+   - Supabase Studio: [http://localhost:54323](http://localhost:54323)
+
+#### Shutdown Process
+
+To properly shut down all services:
+```bash
+./teardown.sh
+```
 
 ## Project Structure
 
