@@ -69,12 +69,21 @@ export default function CommunitySpaces() {
         .from('communities')
         .select(`
           *,
-          creator:users!created_by(name)
+          creator:users!created_by(id, email, username)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSpaces(data || []);
+      
+      // Transform the data to include a name property for the creator
+      const transformedData = data?.map(space => ({
+        ...space,
+        creator: {
+          name: space.creator.username || space.creator.email.split('@')[0] || 'Unknown'
+        }
+      }));
+      
+      setSpaces(transformedData || []);
     } catch (error: any) {
       console.error('Error loading spaces:', error.message);
     } finally {

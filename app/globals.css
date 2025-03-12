@@ -144,4 +144,47 @@ body {
   .post-action {
     @apply flex items-center gap-2 text-[var(--text-muted)] hover:text-orange-500 transition-colors;
   }
+  
+  /* Auroville Forum Styles */
+  .auroville-post-card {
+    @apply bg-[var(--bg-secondary)];
+    transition: all 0.3s ease;
+  }
+  
+  .auroville-post-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .auroville-post-card.pulse-effect {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 183, 77, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(255, 183, 77, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 183, 77, 0);
+    }
+  }
+  
+  .vote-section button {
+    transition: transform 0.2s ease;
+  }
+  
+  .vote-section button:hover {
+    transform: scale(1.2);
+  }
+  
+  /* Earthy color palette for Auroville theme */
+  :root {
+    --auroville-terracotta: #E07A5F;
+    --auroville-sage: #81B29A;
+    --auroville-ochre: #F2CC8F;
+    --auroville-indigo: #3D405B;
+    --auroville-sand: #F4F1DE;
+  }
 }

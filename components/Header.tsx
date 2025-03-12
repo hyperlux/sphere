@@ -29,7 +29,7 @@ export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
         </div>
         <input
           type="search"
-          placeholder={t('search_placeholder')}
+          placeholder={t('Search')}
           className="w-full pl-10 pr-4 py-3 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
         />
       </div>
