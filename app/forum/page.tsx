@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,8 +9,6 @@ import ForumSidebar from '@/components/ForumSidebar';
 import ForumCategoryCard from '@/components/ForumCategoryCard';
 import Header from '@/components/Header';
 import { useAuth } from '@/components/AuthProvider';
-
-// Mock data for demonstration
 import { mockAurovillePosts } from '@/data/mockData';
 
 // Generate latest activity from mock posts
@@ -105,7 +104,7 @@ const latestActivity = generateLatestActivity();
 const topicCounts = getTopicCounts();
 const trendingCategories = determineTrending();
 
-// Enhanced mock data with dynamic information from our posts
+// Enhanced mock data with dynamic information
 const mockCategories = [
   {
     id: '1',
@@ -205,7 +204,7 @@ const popularTags = [
   'volunteering', 'education', 'art', 'technology', 'farming'
 ];
 
-export default function ForumsPage() {
+export default function ForumPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -249,22 +248,24 @@ export default function ForumsPage() {
   }, [searchQuery, sortBy, filterTrending]);
   
   const handleCreateTopic = () => {
-    router.push('/forums/new');
+    router.push('/forum/new');
   };
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-primary)]">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <ForumSidebar 
         categories={mockCategories}
         popularTags={popularTags}
         onCreateTopic={handleCreateTopic}
       />
       
-      <div className="flex-1 ml-[280px]">
+      <div className="transition-all duration-300 w-full" style={{ marginLeft: '280px' }} id="content-wrapper">
+        <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
+        <link rel="stylesheet" href="/forum/forum-layout.css" />
         <Header user={user ? { email: user.email || '', name: user.user_metadata?.name } : null} />
         
-        <main className="p-6">
-          <div className="mb-6 flex flex-col gap-4">
+        <main className="p-6 container mx-auto max-w-full">
+          <div className="mb-8 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                 Forum Categories
@@ -350,7 +351,7 @@ export default function ForumsPage() {
               <p className="text-[var(--text-muted)] text-lg">No categories found matching your search.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 forum-category-grid">
               {filteredCategories.map((category) => (
                 <ForumCategoryCard
                   key={category.id}

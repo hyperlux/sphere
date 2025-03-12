@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS public.communities (
     image_url TEXT
 );
 
+-- Event Categories table
+CREATE TABLE IF NOT EXISTS public.event_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL
+);
+
 -- Events table
 CREATE TABLE IF NOT EXISTS public.events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -39,6 +45,7 @@ CREATE TABLE IF NOT EXISTS public.events (
     location TEXT,
     community_id UUID REFERENCES public.communities(id),
     created_by UUID REFERENCES public.users(id),
+    category_id UUID REFERENCES public.event_categories(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

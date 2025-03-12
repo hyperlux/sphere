@@ -9,6 +9,7 @@ import ForumTopicCard from '@/components/ForumTopicCard';
 import Header from '@/components/Header';
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
+import { mockAurovillePosts } from '@/data/mockData';
 
 // Mock data for demonstration
 const mockCategories = [
@@ -251,8 +252,8 @@ export default function CategoryPage() {
     setFilteredTopics(filtered);
   }, [topics, searchQuery, sortBy, filterMood]);
   
-  const handleCreateTopic = () => {
-    router.push(`/forums/${categoryId}/new`);
+ const handleCreateTopic = () => {
+    router.push(`/forum/${categoryId}/new`);
   };
 
   if (!category) {
@@ -277,7 +278,7 @@ export default function CategoryPage() {
         <main className="p-6">
           <div className="mb-6 flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <Link href="/forums" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              <Link href="/forum" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                 <ArrowLeft size={20} />
               </Link>
               
@@ -321,7 +322,9 @@ export default function CategoryPage() {
                   className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   <PlusCircle size={18} />
+                  <Link href={`/forum/${categoryId}/new`}>
                   <span>New Topic</span>
+                  </Link>
                 </button>
               </div>
             </div>

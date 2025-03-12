@@ -84,35 +84,47 @@ export default function ForumSidebar({
     <motion.aside
       initial={{ width: 280 }}
       animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="bg-[var(--bg-secondary)] h-full border-r border-[var(--border-color)] flex flex-col relative"
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-[var(--bg-secondary)] h-screen border-r border-[var(--border-color)] border-opacity-30 flex flex-col fixed left-0 top-0 bottom-0 z-10 sidebar-container"
+      style={{ 
+        boxShadow: '8px 0 30px -15px rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(8px)',
+        width: isCollapsed ? '80px' : '280px',
+        transition: 'width 0.4s ease'
+      }}
     >
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={toggleSidebar}
-        className="absolute -right-3 top-20 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-full p-1 shadow-md z-10 hover:bg-orange-500 transition-colors"
+        className="absolute -right-4 top-20 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full p-1.5 shadow-lg z-10 transition-colors toggle-sidebar-button"
+        style={{ boxShadow: '0 0 15px rgba(255, 149, 0, 0.4)' }}
       >
         {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
+      </motion.button>
       
-      <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between">
+      <div className="p-4 border-b border-[var(--border-color)] border-opacity-30 flex items-center justify-between sidebar-header">
         <AnimatePresence>
           {!isCollapsed && (
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-lg font-semibold text-[var(--text-primary)]"
+              className="text-xl font-bold text-[var(--text-primary)] tracking-tight"
             >
-              Forums
+              Auro<span className="text-amber-500">Forum</span>
             </motion.h2>
           )}
         </AnimatePresence>
         
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={onCreateTopic}
-          className={`flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors ${
+          className={`flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg shadow-md transition-colors ${
             isCollapsed ? 'p-2 w-10 h-10 justify-center' : 'px-4 py-2'
           }`}
+          style={{ boxShadow: '0 4px 12px -2px rgba(255, 149, 0, 0.3)' }}
         >
           <PlusCircle size={isCollapsed ? 20 : 16} />
           <AnimatePresence>
@@ -127,42 +139,43 @@ export default function ForumSidebar({
               </motion.span>
             )}
           </AnimatePresence>
-        </button>
+        </motion.button>
       </div>
       
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="p-4 border-b border-[var(--border-color)]"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-3 border-b border-[var(--border-color)] border-opacity-30 search-container"
           >
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
               <input
                 type="text"
                 placeholder="Search forums..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                className="w-full bg-[var(--bg-primary)] bg-opacity-50 border border-[var(--border-color)] border-opacity-30 rounded-lg py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                style={{ boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)' }}
               />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
       
-      <div className="flex-1 overflow-y-auto">
-        <div className={`py-2 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-          <div className="mb-4">
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-2`}>
+      <div className="flex-1 overflow-y-auto sidebar-content">
+        <div className={`py-3 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+          <div className="mb-5">
+            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-3`}>
               <AnimatePresence>
                 {!isCollapsed && (
                   <motion.h3
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-xs uppercase text-[var(--text-muted)] font-medium tracking-wider"
+                    className="text-xs uppercase text-amber-500 font-semibold tracking-widest"
                   >
                     Browse
                   </motion.h3>
@@ -170,21 +183,31 @@ export default function ForumSidebar({
               </AnimatePresence>
               
               {!isCollapsed && (
-                <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <motion.button 
+                  whileHover={{ scale: 1.1, rotate: 15 }} 
+                  className="text-[var(--text-muted)] hover:text-amber-500 transition-colors"
+                >
                   <Filter size={14} />
-                </button>
+                </motion.button>
               )}
             </div>
             
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               <li>
                 <Link
-                  href="/forums"
+                  href="/forum"
                   className={`flex items-center ${
-                    isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
-                  } rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors ${
-                    pathname === '/forums' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
+                    isCollapsed ? 'justify-center p-2' : 'px-3 py-2.5'
+                  } rounded-lg hover:bg-[var(--bg-tertiary)] hover:bg-opacity-50 transition-all ${
+                    pathname === '/forum' 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium shadow-md' 
+                      : 'text-[var(--text-primary)]'
                   }`}
+                  style={{
+                    boxShadow: pathname === '/forums' 
+                      ? '0 4px 12px -2px rgba(255, 149, 0, 0.3)' 
+                      : undefined
+                  }}
                 >
                   <MessageSquare size={isCollapsed ? 20 : 16} className="flex-shrink-0" />
                   <AnimatePresence>
@@ -203,11 +226,11 @@ export default function ForumSidebar({
               </li>
               <li>
                 <Link
-                  href="/forums/trending"
+                  href="/forum/trending"
                   className={`flex items-center ${
                     isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
                   } rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors ${
-                    pathname === '/forums/trending' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
+                    pathname === '/forum/trending' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
                   }`}
                 >
                   <TrendingUp size={isCollapsed ? 20 : 16} className="flex-shrink-0" />
@@ -227,11 +250,11 @@ export default function ForumSidebar({
               </li>
               <li>
                 <Link
-                  href="/forums/recent"
+                  href="/forum/recent"
                   className={`flex items-center ${
                     isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
                   } rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors ${
-                    pathname === '/forums/recent' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
+                    pathname === '/forum/recent' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
                   }`}
                 >
                   <Clock size={isCollapsed ? 20 : 16} className="flex-shrink-0" />
@@ -251,11 +274,11 @@ export default function ForumSidebar({
               </li>
               <li>
                 <Link
-                  href="/forums/bookmarks"
+                  href="/forum/bookmarks"
                   className={`flex items-center ${
                     isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
                   } rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors ${
-                    pathname === '/forums/bookmarks' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
+                    pathname === '/forum/bookmarks' ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
                   }`}
                 >
                   <Bookmark size={isCollapsed ? 20 : 16} className="flex-shrink-0" />
@@ -276,29 +299,31 @@ export default function ForumSidebar({
             </ul>
           </div>
           
-          <div className="mb-4">
+          <div className="mb-5">
             <AnimatePresence>
               {!isCollapsed && (
                 <motion.h3
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-xs uppercase text-[var(--text-muted)] font-medium tracking-wider mb-2"
+                  className="text-xs uppercase text-amber-500 font-semibold tracking-widest mb-3"
                 >
                   Categories
                 </motion.h3>
               )}
             </AnimatePresence>
             
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               {filteredCategories.map((category) => (
                 <li key={category.id}>
                   <Link
-                    href={`/forums/${category.id}`}
+                    href={`/forum/${category.id}`}
                     className={`flex items-center ${
-                      isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
-                    } rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors ${
-                      pathname === `/forums/${category.id}` ? 'bg-[var(--bg-tertiary)] text-orange-500' : 'text-[var(--text-primary)]'
+                      isCollapsed ? 'justify-center p-2' : 'px-3 py-2.5'
+                    } rounded-lg hover:bg-[var(--bg-tertiary)] hover:bg-opacity-50 transition-all ${
+                      pathname === `/forums/${category.id}` 
+                        ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-500 font-medium border border-amber-500/20' 
+                        : 'text-[var(--text-primary)]'
                     }`}
                   >
                     <span className="flex-shrink-0">{category.icon}</span>
@@ -311,8 +336,8 @@ export default function ForumSidebar({
                           className="ml-3 flex-1 min-w-0"
                         >
                           <div className="flex justify-between items-center">
-                            <span className="text-sm truncate">{category.name}</span>
-                            <span className="text-xs text-[var(--text-muted)]">{category.topicCount}</span>
+                            <span className="text-sm truncate font-medium">{category.name}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-[var(--bg-tertiary)] bg-opacity-50 text-[var(--text-muted)]">{category.topicCount}</span>
                           </div>
                         </motion.div>
                       )}
@@ -329,24 +354,35 @@ export default function ForumSidebar({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="mb-4"
+                className="mb-5"
               >
-                <h3 className="text-xs uppercase text-amber-600 font-medium tracking-wider mb-2 flex items-center gap-1">
-                  <Flame size={14} />
+                <h3 className="text-xs uppercase text-amber-500 font-semibold tracking-widest mb-3 flex items-center gap-1">
+                  <Flame size={14} className="text-orange-500" />
                   Community Pulse
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {trending.map((post) => (
                     <Link
                       key={post.id}
-                      href={`/forums/topics/${post.topicId}`}
-                      className="block p-2 rounded-lg bg-[rgba(255,183,77,0.1)] hover:bg-[rgba(255,183,77,0.2)] transition-colors"
+                      href={`/forum/topics/${post.topicId}`}
+                      className="block p-3 rounded-xl bg-gradient-to-r from-amber-500/5 to-orange-500/10 border border-amber-500/10 hover:border-amber-500/30 transition-all pulse-item relative overflow-hidden"
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-[var(--text-primary)] line-clamp-1">{post.title}</span>
-                        <span className="text-xs text-amber-600 font-medium">{getNetScore(post)} resonance</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/5 to-transparent pulse-glow"></div>
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-[var(--text-primary)] line-clamp-1 leading-tight pulse-title">{post.title}</span>
+                          <div className="flex items-center text-xs text-[var(--text-muted)] mt-1.5">
+                            <span>by </span>
+                            <span className="text-amber-500 font-medium ml-1">{post.author}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <div className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-xs font-medium flex items-center gap-1">
+                            <TrendingUp size={10} />
+                            <span>{getNetScore(post)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-[var(--text-muted)] mt-1">by {post.author}</div>
                     </Link>
                   ))}
                 </div>
@@ -361,18 +397,18 @@ export default function ForumSidebar({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <h3 className="text-xs uppercase text-[var(--text-muted)] font-medium tracking-wider mb-2">
+                <h3 className="text-xs uppercase text-amber-500 font-semibold tracking-widest mb-3">
                   Popular Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {popularTags.map((tag) => (
                     <Link
                       key={tag}
-                      href={`/forums/tags/${tag}`}
-                      className="flex items-center gap-1 px-2 py-1 bg-[var(--bg-tertiary)] text-[var(--text-muted)] rounded-md text-xs hover:bg-orange-500 hover:text-white transition-colors"
+                      href={`/forum/tags/${tag}`}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-[var(--bg-tertiary)] to-[var(--bg-secondary)] text-[var(--text-muted)] rounded-full text-xs hover:from-amber-500 hover:to-orange-500 hover:text-white transition-all forum-tag"
                     >
-                      <Tag size={12} />
-                      {tag}
+                      <Tag size={10} />
+                      <span className="forum-tag-text">{tag}</span>
                     </Link>
                   ))}
                 </div>

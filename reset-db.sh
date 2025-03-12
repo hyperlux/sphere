@@ -4,7 +4,7 @@
 echo "Resetting database and applying schema changes..."
 
 # Reset the database
-./reset-supabase.sh
+./reset-supabase.sh -f supabase/updated-seed.sql
 
 # Apply the space_members schema
 echo "Applying space_members schema..."

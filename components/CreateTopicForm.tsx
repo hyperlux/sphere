@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Image, Paperclip, Smile, Send, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -27,6 +28,7 @@ export default function CreateTopicForm({
   categories,
   isLoading = false
 }: CreateTopicFormProps) {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(categoryId || '');
@@ -103,6 +105,9 @@ export default function CreateTopicForm({
       setContent('');
       setTags([]);
       setCurrentTag('');
+      
+      // Redirect to the category page
+      router.push(`/forum/${categoryId}`);
     } catch (err) {
       setError('Failed to create topic. Please try again.');
       console.error(err);

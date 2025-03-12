@@ -56,7 +56,7 @@ export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
   }, []);
 
   return (
-    <header className="fixed top-0 right-0 left-64 h-24 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] px-6 flex items-center justify-between z-10">
+    <header className="sticky top-0 w-full h-24 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] px-6 flex items-center justify-between z-5" style={{ width: '100%', marginLeft: '0' }}>
       {/* Search Bar */}
       <div className="flex-1 max-w-2xl relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -10,7 +10,7 @@ import CreatePostForm from '@/components/CreatePostForm';
 import Header from '@/components/Header';
 import { useAuth } from '@/components/AuthProvider';
 import Link from 'next/link';
-import { mockAurovillePosts, getNetScore, isTrendingPost } from '@/data/mockData';
+import { mockAurovillePosts, getNetScore, isTrendingPost, getPostEngagementColor } from '@/data/mockData';
 
 // Mock data for demonstration
 const mockCategories = [
@@ -188,8 +188,13 @@ export default function TopicPage() {
   
   // Fetch topic, category, and posts
   useEffect(() => {
-    // Find the post that matches the topicId
-    const matchingPost = mockAurovillePosts.find(post => post.topicId === topicId || post.id === topicId);
+    // Find post by looking for exact match of topicId or a match with the topics prefix
+    const matchingPost = mockAurovillePosts.find(
+      post => post.topicId === topicId || 
+              post.id === topicId ||
+              // Also match based on topic prefix
+              post.topicId === `${getCategoryFromId(topicId)}`
+    );
     
     if (matchingPost) {
       const mockTopic = createMockTopic(matchingPost);
@@ -199,16 +204,26 @@ export default function TopicPage() {
       setCategory(mockCategories.find(cat => cat.id === mockTopic.categoryId));
       setPosts(mockPosts);
     } else {
-      // Fallback to first post if no match
-      const firstPost = mockAurovillePosts[0];
-      const mockTopic = createMockTopic(firstPost);
-      const mockPosts = createMockPosts(firstPost);
+      // Fallback to first post if no match, prioritizing posts with replies
+      const firstPostWithReplies = mockAurovillePosts.find(post => post.replies && post.replies.length > 0) || mockAurovillePosts[0];
+      const mockTopic = createMockTopic(firstPostWithReplies);
+      const mockPosts = createMockPosts(firstPostWithReplies);
       
       setTopic(mockTopic);
       setCategory(mockCategories.find(cat => cat.id === mockTopic.categoryId) || mockCategories[0]);
       setPosts(mockPosts);
     }
   }, [topicId]);
+  
+  // Helper to get category from topic ID
+  const getCategoryFromId = (id: string): string => {
+    // Extract category prefix if possible
+    const prefixMatch = id.match(/^(announcements|general|sustainability|volunteer|cultural|spiritual)/);
+    if (prefixMatch) {
+      return prefixMatch[0];
+    }
+    return 'general1'; // Default
+  };
   
   const handleReply = (postId: string) => {
     setReplyingTo(postId);

@@ -31,7 +31,7 @@ export default function Sidebar({ user }: SidebarProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
-    { name: 'Forums', href: '/community', icon: MessageSquare },
+    { name: 'Forums', href: '/forum', icon: MessageSquare },
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Bazaar', href: '/bazaar', icon: ShoppingBag },
     { name: 'Services', href: '/services', icon: Building2 },

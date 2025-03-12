@@ -7,7 +7,8 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ContentCard from '@/components/ContentCard';
 import RedirectToLogin from '@/components/RedirectToLogin';
-import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare, ChevronUp, Heart } from 'lucide-react';
+import { mockAurovillePosts, getNetScore } from '@/data/mockData';
 
 interface DashboardData {
   announcements: any[];
@@ -190,55 +191,61 @@ export default function Dashboard() {
               <MessageSquare className="mr-2" size={20} />
               {t('latest community posts')}
             </h2>
-            <a href="/community" className="view-all-link">
+            <a href="/forums" className="view-all-link">
               {t('view_all')}
               <span>→</span>
             </a>
           </div>
           <div className="space-y-6">
-            <div className="community-post">
-              <div className="post-header">
-                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                  SC
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-[var(--text-primary)]">Sarah Chen</h3>
-                    <span className="text-sm text-[var(--text-muted)]">2 hours ago</span>
+            {/* Display the top 3 forum posts from our mock data, sorted by engagement */}
+            {mockAurovillePosts
+              .sort((a, b) => getNetScore(b) - getNetScore(a))
+              .slice(0, 3)
+              .map((post) => (
+                <div key={post.id} className="community-post forum-post-card">
+                  <div className="post-header">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-lg font-semibold">
+                      {post.author.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-[var(--text-primary)] post-title">{post.title}</h3>
+                          <p className="text-xs text-[var(--text-muted)]">{post.author}</p>
+                        </div>
+                        <span className="text-sm text-[var(--text-muted)] timestamp">
+                          {new Date(post.timestamp).toLocaleDateString(undefined, { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">{t('community_member')}</p>
+
+                  <p className="mt-2 text-[var(--text-secondary)] post-content line-clamp-3">
+                    {post.content}
+                  </p>
+
+                  <div className="post-actions">
+                    <div className="post-action">
+                      <ChevronUp size={18} className={getNetScore(post) > 0 ? 'text-amber-500' : ''} />
+                      <span className={getNetScore(post) > 0 ? 'text-amber-500 font-medium' : ''}>{getNetScore(post)}</span>
+                    </div>
+
+                    <div className="post-action">
+                      <MessageSquare size={18} />
+                      <span>{post.replies?.length || 0}</span>
+                    </div>
+
+                    <a href={`/forums/topics/${post.topicId}`} className="post-action text-amber-500 hover:underline">
+                      <span>View Discussion →</span>
+                    </a>
+                  </div>
                 </div>
-              </div>
-
-              <p className="mt-2 text-[var(--text-secondary)]">
-                Just finished a wonderful permaculture workshop at Buddha Garden. Amazing to see how many community members are interested in sustainable farming!
-              </p>
-
-              <div className="mt-4 rounded-lg overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1674&q=80" 
-                  alt="Vegetables from garden" 
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-
-              <div className="post-actions">
-                <button className="post-action">
-                  <span>🤍</span>
-                  <span>45</span>
-                </button>
-
-                <button className="post-action">
-                  <span>💬</span>
-                  <span>12</span>
-                </button>
-
-                <button className="post-action">
-                  <span>↗️</span>
-                  <span>{t('share')}</span>
-                </button>
-              </div>
-            </div>
+              ))}
             
             {data.resources.map((resource) => (
               <ContentCard key={resource.id} post={resource} />

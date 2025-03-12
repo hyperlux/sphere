@@ -132,14 +132,14 @@ export default function NewTopicPage() {
         <main className="p-6">
           <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
-              <Link href={`/forums/${categoryId}`} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              <Link href={`/forum/${categoryId}`} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
                 <ArrowLeft size={20} />
               </Link>
               
               <div>
                 <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                   <span className="text-xl">{category.icon}</span>
-                  <Link href={`/forums/${categoryId}`} className="hover:text-[var(--text-primary)] transition-colors">
+                  <Link href={`/forum/${categoryId}`} className="hover:text-[var(--text-primary)] transition-colors">
                     {category.name}
                   </Link>
                 </div>

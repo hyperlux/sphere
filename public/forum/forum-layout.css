@@ -1,0 +1,50 @@
+/* Forum layout styles for responsive behavior */
+
+/* Base layout */
+body {
+  overflow-x: hidden;
+}
+
+/* Content wrapper adjustments */
+#content-wrapper {
+  transition: margin-left 0.4s ease, width 0.4s ease;
+  will-change: margin-left, width;
+}
+
+/* Sidebar collapsed state */
+body.sidebar-collapsed #content-wrapper {
+  margin-left: 80px !important;
+  width: calc(100% - 80px) !important;
+}
+
+/* Category card grid */
+.forum-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-gap: 2rem;
+  width: 100%;
+}
+
+/* Make the header match the content area width */
+header {
+  transition: margin-left 0.4s ease, width 0.4s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .forum-category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  .forum-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1281px) {
+  .forum-category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

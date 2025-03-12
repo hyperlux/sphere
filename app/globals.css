@@ -145,46 +145,511 @@ body {
     @apply flex items-center gap-2 text-[var(--text-muted)] hover:text-orange-500 transition-colors;
   }
   
-  /* Auroville Forum Styles */
-  .auroville-post-card {
+  /* Auronet 2025 Forum Styles */
+  .forum-post-card {
     @apply bg-[var(--bg-secondary)];
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
   }
   
-  .auroville-post-card:hover {
-    transform: translateY(-2px);
+  .forum-post-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+    z-index: 0;
+    pointer-events: none;
   }
   
-  .auroville-post-card.pulse-effect {
-    animation: pulse 2s infinite;
+  .forum-post-card > * {
+    position: relative;
+    z-index: 1;
   }
   
-  @keyframes pulse {
+  .forum-post-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 
+      0 14px 28px -10px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 0 20px 1px var(--glow-color, rgba(255, 145, 0, 0.15));
+    --glow-color: rgba(255, 145, 0, 0.15);
+  }
+  
+  /* Post mood styling */
+  .trending-post {
+    --glow-color: rgba(255, 145, 0, 0.2);
+    border-color: rgba(255, 145, 0, 0.3);
+  }
+  
+  .trending-post:hover {
+    --glow-color: rgba(255, 145, 0, 0.3);
+  }
+  
+  .popular-post {
+    --glow-color: rgba(236, 201, 75, 0.2);
+  }
+  
+  .controversial-post {
+    --glow-color: rgba(59, 130, 246, 0.2);
+  }
+  
+  .solution-post {
+    --glow-color: rgba(16, 185, 129, 0.2);
+  }
+  
+  /* Pulse animation for trending posts - enhanced for 2025 */
+  .forum-post-card.pulse-effect {
+    animation: forum-pulse 4s infinite;
+  }
+  
+  .forum-post-card.pulse-effect::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.1), rgba(255, 107, 107, 0.05));
+    opacity: 0;
+    z-index: 0;
+    animation: glow-pulse 4s infinite alternate;
+  }
+  
+  @keyframes forum-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgba(255, 183, 77, 0.4);
+      box-shadow: 0 0 0 0 rgba(255, 183, 77, 0.6);
     }
     70% {
-      box-shadow: 0 0 0 10px rgba(255, 183, 77, 0);
+      box-shadow: 0 0 0 12px rgba(255, 183, 77, 0);
     }
     100% {
       box-shadow: 0 0 0 0 rgba(255, 183, 77, 0);
     }
   }
   
-  .vote-section button {
-    transition: transform 0.2s ease;
+  @keyframes glow-pulse {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0;
+    }
   }
   
-  .vote-section button:hover {
-    transform: scale(1.2);
+  /* Vote section styling - 2025 enhancement */
+  .vote-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 28px;
+    background: rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
   
-  /* Earthy color palette for Auroville theme */
+  .vote-section::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 65%;
+    background: linear-gradient(
+      to bottom, 
+      rgba(245, 158, 11, 0.3),
+      rgba(59, 130, 246, 0.3)
+    );
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 0;
+  }
+  
+  .vote-button {
+    position: relative;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin: 2px 0;
+  }
+  
+  .vote-button:hover {
+    transform: scale(1.15);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 12px var(--glow-color, rgba(255, 255, 255, 0.15));
+  }
+  
+  .vote-button:active {
+    transform: scale(0.95);
+  }
+  
+  .vote-icon {
+    transition: all 0.2s ease;
+    stroke-width: 2.5px;
+  }
+  
+  .vote-score {
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin: 0.25rem 0;
+    text-shadow: 0 0 8px var(--glow-color, rgba(255, 255, 255, 0.1));
+    position: relative;
+    z-index: 1;
+    color: var(--auroville-amber);
+  }
+  
+  /* Post content styling - 2025 enhancement */
+  .post-title {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(255, 149, 0, 0.15);
+    transition: all 0.3s ease;
+  }
+  
+  .forum-post-card:hover .post-title {
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 12px rgba(255, 149, 0, 0.25);
+  }
+  
+  .post-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  
+  .post-content p {
+    margin-bottom: 1rem;
+  }
+  
+  /* Enhanced typography for markdown content */
+  .post-content h1, .post-content h2, .post-content h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .post-content code {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0.15em 0.3em;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+  }
+  
+  .post-content pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .post-content blockquote {
+    border-left: 4px solid var(--auroville-amber);
+    padding-left: 1rem;
+    margin-left: 0;
+    font-style: italic;
+    color: var(--text-muted);
+  }
+  
+  .post-content a {
+    color: var(--auroville-amber);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--auroville-amber);
+    transition: all 0.2s ease;
+  }
+  
+  .post-content a:hover {
+    border-bottom: 1px solid var(--auroville-amber);
+    color: var(--auroville-coral);
+  }
+  
+  /* Author styling - 2025 enhancement */
+  .author-name {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  .forum-post-card:hover .author-name {
+    color: var(--auroville-amber);
+  }
+  
+  .avatar-wrapper {
+    box-shadow: 0 0 10px rgba(255, 145, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .forum-post-card:hover .avatar-wrapper {
+    box-shadow: 0 0 15px rgba(255, 145, 0, 0.3);
+    transform: scale(1.05);
+  }
+  
+  .avatar-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .forum-post-card:hover .avatar-wrapper::after {
+    opacity: 1;
+  }
+  
+  /* Timestamp styling */
+  .timestamp {
+    color: var(--text-muted);
+    letter-spacing: 0.01em;
+  }
+  
+  /* Action buttons styling - 2025 enhancement */
+  .post-actions {
+    margin-top: 1.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: flex-start;
+    gap: 1.5rem;
+  }
+  
+  .action-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: transparent;
+  }
+  
+  .action-button:hover {
+    color: var(--earth-orange);
+    background: rgba(255, 145, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .action-button:active {
+    transform: translateY(0px);
+  }
+  
+  .action-button svg {
+    transition: all 0.3s ease;
+  }
+  
+  .action-button:hover svg {
+    transform: scale(1.1);
+  }
+  
+  /* Reply preview styling - 2025 enhancement */
+  .reply-preview {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    padding: 1rem;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+  
+  .reply-preview::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    width: 16px;
+    height: 16px;
+    background-color: rgba(255, 255, 255, 0.03);
+    transform: rotate(45deg);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 0;
+  }
+  
+  .reply-preview:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Reaction popup styling */
+  .reaction-popup {
+    background-color: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Enhanced color palette for Auroville 2025 theme */
   :root {
     --auroville-terracotta: #E07A5F;
     --auroville-sage: #81B29A;
     --auroville-ochre: #F2CC8F;
     --auroville-indigo: #3D405B;
     --auroville-sand: #F4F1DE;
+    
+    /* New 2025 colors */
+    --auroville-amber: #FF9500;
+    --auroville-coral: #FF6B6B;
+    --auroville-teal: #4ECDC4;
+    --auroville-lavender: #A06CD5;
+    --auroville-mint: #2CCCBB;
+    
+    /* Gradients */
+    --gradient-warm: linear-gradient(135deg, #FF9500, #FF6B6B);
+    --gradient-cool: linear-gradient(135deg, #4ECDC4, #A06CD5);
+    --gradient-neutral: linear-gradient(135deg, #81B29A, #F2CC8F);
+  }
+  
+  /* Media integration */
+  .media-preview {
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  
+  .media-preview img, 
+  .media-preview video {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  
+  /* Community Pulse styles */
+  .pulse-item {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .pulse-item .pulse-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+      90deg, 
+      transparent, 
+      rgba(255, 149, 0, 0.1), 
+      transparent
+    );
+    animation: pulse-sweep 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-sweep {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  .pulse-title {
+    position: relative;
+  }
+  
+  /* Forum topic card styles */
+  .forum-topic-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+  }
+  
+  .forum-topic-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    opacity: 0;
+    background: radial-gradient(circle at top right, var(--glow-color, rgba(255, 145, 0, 0.15)), transparent 70%);
+  }
+  
+  .forum-topic-card:hover::after {
+    opacity: 1;
+  }
+  
+  .trending-topic {
+    box-shadow: 0 0 15px rgba(255, 145, 0, 0.2);
+  }
+  
+  .popular-topic {
+    box-shadow: 0 0 15px rgba(236, 201, 75, 0.15);
+  }
+  
+  .topic-action-indicator {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Forum tags styling */
+  .forum-tag {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  }
+  
+  .forum-tag:hover {
+    box-shadow: 0 2px 8px rgba(255, 145, 0, 0.3);
+  }
+  
+  .forum-tag-text {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--auroville-amber);
+    background: linear-gradient(180deg, var(--auroville-amber), var(--auroville-terracotta));
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--auroville-terracotta);
   }
 }

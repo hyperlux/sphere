@@ -11,6 +11,25 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: '/community',
+        destination: '/forum',
+        permanent: true,
+      },
+      {
+        source: '/forums',
+        destination: '/forum',
+        permanent: true,
+      },
+      {
+        source: '/forums/:path*',
+        destination: '/forum/:path*',
+        permanent: true,
+      }
+    ]
+  }
   // Remove custom webpack configuration
 };
 
