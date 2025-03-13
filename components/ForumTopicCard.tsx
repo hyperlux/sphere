@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MessageSquare, Eye, Clock, Pin, Lock, Heart, TrendingUp, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -43,6 +43,25 @@ export default function ForumTopicCard({
   mood = 'default'
 }: ForumTopicProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  
+  // Track screen size for responsive design
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 640);
+      setIsTablet(window.innerWidth >= 640 && window.innerWidth < 1024);
+    };
+    
+    // Set initial value
+    checkScreenSize();
+    
+    // Add event listener
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   
   // Dynamic color based on mood
   const getMoodColor = () => {
@@ -117,83 +136,85 @@ export default function ForumTopicCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link href={`/forums/topics/${id}`} className="block h-full">
-        <div className="p-6 flex flex-col h-full">
-          <div className="flex items-start gap-4">
-            <div className="avatar-wrapper w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold shadow-lg" 
+        <div className={`${isMobile ? 'p-4' : isTablet ? 'p-5' : 'p-6'} flex flex-col h-full`}>
+          <div className={`flex items-start ${isMobile ? 'gap-3' : 'gap-4'}`}>
+            <div className={`avatar-wrapper ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-full flex items-center justify-center text-white font-semibold shadow-lg flex-shrink-0`} 
                  style={{ background: getMoodGradient() }}>
               {author.name.charAt(0).toUpperCase()}
             </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex gap-2 items-center flex-wrap">
+              <div className={`flex flex-col ${isMobile ? 'mb-1.5' : 'mb-2'}`}>
+                <div className="flex gap-1.5 items-center flex-wrap mb-1">
                   {topicPopularity() === 'trending' && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500 bg-opacity-20 text-amber-500 text-xs rounded-full">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-500 bg-opacity-20 text-amber-500 text-xs rounded-full">
                       <TrendingUp size={10} className="animate-pulse" />
-                      <span>Trending</span>
+                      <span>{isMobile ? '' : 'Trending'}</span>
                     </span>
                   )}
                   
                   {isPinned && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500 bg-opacity-20 text-orange-500 text-xs rounded-full">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-orange-500 bg-opacity-20 text-orange-500 text-xs rounded-full">
                       <Pin size={10} />
-                      <span>Pinned</span>
+                      <span>{isMobile ? '' : 'Pinned'}</span>
                     </span>
                   )}
                   
                   {isLocked && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-500 bg-opacity-20 text-gray-400 text-xs rounded-full">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-500 bg-opacity-20 text-gray-400 text-xs rounded-full">
                       <Lock size={10} />
-                      <span>Locked</span>
+                      <span>{isMobile ? '' : 'Locked'}</span>
                     </span>
                   )}
                   
                   {getMoodIcon().icon && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-opacity-20 text-xs rounded-full"
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-opacity-20 text-xs rounded-full"
                           style={{ 
                             backgroundColor: `${getMoodColor()}30`,
                             color: getMoodColor()
                           }}>
                       <span>{getMoodIcon().icon}</span>
-                      <span>{getMoodIcon().label}</span>
+                      <span>{isMobile ? '' : getMoodIcon().label}</span>
                     </span>
                   )}
                 </div>
                 
-                <h3 className="text-xl font-semibold text-[var(--text-primary)] truncate mt-1 topic-title">
+                <h3 className={`${isMobile ? 'text-base' : isTablet ? 'text-lg' : 'text-xl'} font-semibold text-[var(--text-primary)] line-clamp-2 topic-title`}>
                   {title}
                 </h3>
               </div>
               
-              <div className="flex items-center text-xs text-[var(--text-muted)] mb-3">
-                <span className="font-medium text-[var(--text-secondary)]">{author.name}</span>
-                <span className="mx-2">•</span>
+              <div className="flex flex-wrap items-center text-xs text-[var(--text-muted)] mb-2">
+                <span className="font-medium text-[var(--text-secondary)] truncate max-w-[120px]">{author.name}</span>
+                <span className="mx-1.5">•</span>
                 <Clock size={12} className="mr-1" />
                 <span>{formatTimeAgo(createdAt)}</span>
               </div>
               
-              <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-4 topic-excerpt">
+              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-[var(--text-secondary)] line-clamp-2 ${isMobile ? 'mb-2.5' : 'mb-4'} topic-excerpt`}>
                 {content}
               </p>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--bg-tertiary)] bg-opacity-50">
-                    <MessageSquare size={12} />
-                    <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className={`flex flex-wrap items-center ${isMobile ? 'gap-1.5' : 'gap-2'} text-xs text-[var(--text-muted)]`}>
+                  <div className={`flex items-center gap-1 ${isMobile ? 'px-1.5 py-0.5' : 'px-2 py-1'} rounded-full bg-[var(--bg-tertiary)] bg-opacity-50`}>
+                    <MessageSquare size={10} />
+                    <span>{replyCount}{isMobile ? '' : replyCount === 1 ? ' reply' : ' replies'}</span>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--bg-tertiary)] bg-opacity-50">
-                    <Eye size={12} />
-                    <span>{viewCount} {viewCount === 1 ? 'view' : 'views'}</span>
+                  <div className={`flex items-center gap-1 ${isMobile ? 'px-1.5 py-0.5' : 'px-2 py-1'} rounded-full bg-[var(--bg-tertiary)] bg-opacity-50`}>
+                    <Eye size={10} />
+                    <span>{viewCount}{isMobile ? '' : viewCount === 1 ? ' view' : ' views'}</span>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--bg-tertiary)] bg-opacity-50">
-                    <Heart size={12} />
-                    <span>{Math.floor(viewCount / 10)} likes</span>
-                  </div>
+                  {!isMobile && (
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--bg-tertiary)] bg-opacity-50`}>
+                      <Heart size={10} />
+                      <span>{Math.floor(viewCount / 10)} likes</span>
+                    </div>
+                  )}
                 </div>
                 
                 <motion.div 
-                  className="topic-action-indicator"
+                  className="topic-action-indicator hidden sm:block"
                   animate={{ scale: isHovered ? 1 : 0.8, opacity: isHovered ? 1 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
@@ -203,14 +224,14 @@ export default function ForumTopicCard({
             </div>
           </div>
           
-          {lastReply && (
-            <div className="mt-4 pt-3 border-t border-[var(--border-color)] border-opacity-20 text-xs">
+          {lastReply && !isMobile && (
+            <div className={`mt-3 pt-2.5 border-t border-[var(--border-color)] border-opacity-20 text-xs`}>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs"
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0"
                      style={{ background: getMoodGradient() }}>
                   {lastReply.author.name.charAt(0).toUpperCase()}
                 </div>
-                <p className="text-[var(--text-muted)]">
+                <p className="text-[var(--text-muted)] truncate">
                   Last reply by <span className="text-[var(--text-primary)] font-medium">{lastReply.author.name}</span> • {formatTimeAgo(lastReply.timestamp)}
                 </p>
               </div>

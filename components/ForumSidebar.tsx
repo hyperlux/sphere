@@ -17,6 +17,7 @@ import {
   Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '@/components/ThemeProvider';
 import { mockAurovillePosts, getNetScore } from '@/data/mockData';
 
 interface Category {
@@ -46,6 +47,7 @@ export default function ForumSidebar({
   onCreateTopic,
   trendingPosts
 }: ForumSidebarProps) {
+  const { theme } = useTheme();
   // If no trending posts are provided, use the mock data
   const [trending, setTrending] = useState<Array<{
     id: string;
@@ -71,6 +73,22 @@ export default function ForumSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
+  
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setIsCollapsed(true);
+      }
+    };
+    
+    // Set initial state
+    handleResize();
+    
+    // Update on resize
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -112,58 +130,17 @@ export default function ForumSidebar({
               exit={{ opacity: 0 }}
               className="text-xl font-bold text-[var(--text-primary)] tracking-tight"
             >
-              Auro<span className="text-amber-500">Forum</span>
+              <img 
+                src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
+                alt="Auroville.COMMUNITY" 
+                width={200} 
+                height={100} 
+                className="mr-auto" 
+              />
             </motion.h2>
           )}
         </AnimatePresence>
-        
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onCreateTopic}
-          className={`flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg shadow-md transition-colors ${
-            isCollapsed ? 'p-2 w-10 h-10 justify-center' : 'px-4 py-2'
-          }`}
-          style={{ boxShadow: '0 4px 12px -2px rgba(255, 149, 0, 0.3)' }}
-        >
-          <PlusCircle size={isCollapsed ? 20 : 16} />
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="text-sm font-medium whitespace-nowrap"
-              >
-                New Topic
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
       </div>
-      
-      <AnimatePresence>
-        {!isCollapsed && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 border-b border-[var(--border-color)] border-opacity-30 search-container"
-          >
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
-              <input
-                type="text"
-                placeholder="Search forums..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--bg-primary)] bg-opacity-50 border border-[var(--border-color)] border-opacity-30 rounded-lg py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
-                style={{ boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)' }}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       
       <div className="flex-1 overflow-y-auto sidebar-content">
         <div className={`py-3 ${isCollapsed ? 'px-2' : 'px-4'}`}>
