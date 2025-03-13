@@ -15,6 +15,18 @@ body {
   will-change: margin-left, width;
   padding: 1rem;
   box-sizing: border-box;
+  width: 100%;
+}
+
+/* Class-based styling for sidebar states */
+#content-wrapper.sidebar-collapsed {
+  margin-left: 80px;
+  width: calc(100% - 80px);
+}
+
+#content-wrapper.sidebar-expanded {
+  margin-left: 280px;
+  width: calc(100% - 280px);
 }
 
 /* Sidebar styles */
@@ -26,15 +38,25 @@ body {
   z-index: 40;
 }
 
-/* Sidebar collapsed state */
+/* Sidebar collapsed state - using !important only when necessary */
 body.sidebar-collapsed #content-wrapper {
-  margin-left: 80px !important;
-  width: calc(100% - 80px) !important;
+  margin-left: 80px;
+  width: calc(100% - 80px);
 }
 
 body.sidebar-hidden #content-wrapper {
-  margin-left: 0 !important;
-  width: 100% !important;
+  margin-left: 0;
+  width: 100%;
+}
+
+/* Responsive sidebar */
+@media (max-width: 767px) {
+  #content-wrapper, 
+  #content-wrapper.sidebar-collapsed,
+  #content-wrapper.sidebar-expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
 }
 
 /* Category card grid */

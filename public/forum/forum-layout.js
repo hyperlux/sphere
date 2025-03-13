@@ -55,15 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebar.style.transform = '';
       }
       
-      // Adjust sidebar and content area
-      if (isSidebarCollapsed) {
-        // When sidebar is collapsed
-        contentWrapper.style.marginLeft = '80px';
-        contentWrapper.style.width = 'calc(100% - 80px)';
-      } else {
-        // When sidebar is expanded
-        contentWrapper.style.marginLeft = '280px';
-        contentWrapper.style.width = 'calc(100% - 280px)';
+      // Let CSS handle the sidebar and content positioning via classes
+      if (contentWrapper) {
+        contentWrapper.classList.toggle('sidebar-collapsed', isSidebarCollapsed);
+        contentWrapper.classList.toggle('sidebar-expanded', !isSidebarCollapsed);
+        // Remove inline styles that could interfere with CSS
+        contentWrapper.style.marginLeft = '';
+        contentWrapper.style.width = '';
       }
     }
     

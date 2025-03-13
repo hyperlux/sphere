@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Responsive breakpoints */
+/* xs: 0-639px, sm: 640px-767px, md: 768px-1023px, lg: 1024px-1279px, xl: 1280px+ */
+:root {
+  --screen-xs: 0px;
+  --screen-sm: 640px;
+  --screen-md: 768px; 
+  --screen-lg: 1024px;
+  --screen-xl: 1280px;
+}
+
 :root {
   /* Common colors */
   --earth-orange: #FF9100;

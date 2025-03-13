@@ -253,14 +253,14 @@ export default function ForumsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[var(--bg-primary)]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)]">
       <ForumSidebar 
         categories={mockCategories}
         popularTags={popularTags}
         onCreateTopic={handleCreateTopic}
       />
       
-      <div className="flex-1 ml-[280px]">
+      <div className="flex-1 ml-0 md:ml-[280px] w-full transition-all duration-300">
         <Header user={user ? { email: user.email || '', name: user.user_metadata?.name } : null} />
         
         <main className="p-6">

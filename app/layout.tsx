@@ -55,7 +55,7 @@ export default function RootLayout({
     <html lang={i18n.language} dir={i18n.dir()}>
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <title>AuroNet</title>
         <meta name="description" content="Auroville's Digital Community Platform" />
         <link rel="manifest" href="/manifest.json" />
@@ -78,7 +78,7 @@ export default function RootLayout({
             <ThemeProvider>
               <AuthProvider>
                 <NetworkStatus />
-                <div className="flex min-h-screen">
+                <div className="flex flex-col md:flex-row min-h-screen w-full">
                   {children}
                 </div>
                 <InstallPrompt />

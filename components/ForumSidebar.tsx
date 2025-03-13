@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { 
   ChevronRight, 
   ChevronLeft, 
-  PlusCircle, 
+  CirclePlus, 
   TrendingUp, 
   Clock, 
   Bookmark, 
@@ -14,11 +14,13 @@ import {
   Filter,
   Search,
   Tag,
-  Flame
+  Flame,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '@/components/ThemeProvider';
 import { mockAurovillePosts, getNetScore } from '@/data/mockData';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface Category {
   id: string;
@@ -47,7 +49,7 @@ export default function ForumSidebar({
   onCreateTopic,
   trendingPosts
 }: ForumSidebarProps) {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   // If no trending posts are provided, use the mock data
   const [trending, setTrending] = useState<Array<{
     id: string;
@@ -103,7 +105,7 @@ export default function ForumSidebar({
       initial={{ width: 280 }}
       animate={{ width: isCollapsed ? 80 : 280 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-[var(--bg-secondary)] h-screen border-r border-[var(--border-color)] border-opacity-30 flex flex-col fixed left-0 top-0 bottom-0 z-10 sidebar-container"
+      className="bg-[var(--bg-secondary)] h-screen border-r border-[var(--border-color)] border-opacity-30 flex flex-col fixed left-0 top-0 bottom-0 z-10 sidebar-container xs:w-0 sm:w-auto overflow-x-hidden"
       style={{ 
         boxShadow: '8px 0 30px -15px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(8px)',
@@ -124,23 +126,85 @@ export default function ForumSidebar({
       <div className="p-4 border-b border-[var(--border-color)] border-opacity-30 flex items-center justify-between sidebar-header">
         <AnimatePresence>
           {!isCollapsed && (
-            <motion.h2
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-xl font-bold text-[var(--text-primary)] tracking-tight"
             >
-              <img 
-                src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
-                alt="Auroville.COMMUNITY" 
-                width={200} 
-                height={100} 
-                className="mr-auto" 
-              />
-            </motion.h2>
+              <Link href="/">
+                <img 
+                  src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
+                  alt="Auroville.COMMUNITY" 
+                  width={200} 
+                  height={100} 
+                  className="mr-auto" 
+                />
+              </Link>
+            </motion.div>
           )}
         </AnimatePresence>
+        
+        <button 
+          onClick={toggleTheme}
+          className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? (
+            <Moon className="w-5 h-5" />
+          ) : (
+            <Sun className="w-5 h-5" />
+          )}
+        </button>
       </div>
+      
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="py-3 border-b border-[var(--border-color)] border-opacity-30"
+          >
+            <div className="flex items-center justify-center px-4">
+              <div className="relative w-full">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-500" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="border-b border-[var(--border-color)] border-opacity-30"
+          >
+            <div className="px-4 py-3">
+              <button
+                onClick={onCreateTopic}
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg shadow-md transition-colors px-4 py-2 w-full justify-center"
+                style={{ boxShadow: '0 4px 12px -2px rgba(255, 149, 0, 0.3)' }}
+                tabIndex={0}
+              >
+                <CirclePlus size={16} />
+                <span className="text-sm font-medium whitespace-nowrap">
+                  New Topic
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <div className="flex-1 overflow-y-auto sidebar-content">
         <div className={`py-3 ${isCollapsed ? 'px-2' : 'px-4'}`}>

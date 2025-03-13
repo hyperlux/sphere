@@ -47,18 +47,19 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)]">
-      <div className="flex items-center py-4 pl-7">
+    <aside className="w-64 md:w-64 sm:w-20 xs:w-0 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
+      <div className="h-[28px]"></div> {/* Reduced spacer height for better alignment with search bar */}
+      <div className="flex items-center py-1 pl-5 pb-5">
         <img 
           src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
           alt="Auroville.COMMUNITY" 
           width={200} 
-          height={100} 
-          className="mr-auto" 
+          height={120} 
+          className="mr-auto -mt-5" 
         />
       </div>
 
-      <nav className="flex-1 px-4 py-2">
+      <nav className="flex-1 px-4 py-2 pb-4">
         <ul className="space-y-1">
           {navigation.map((item) => (
             <li key={item.name}>

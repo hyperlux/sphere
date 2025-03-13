@@ -252,14 +252,14 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)]">
       <ForumSidebar 
         categories={mockCategories}
         popularTags={popularTags}
         onCreateTopic={handleCreateTopic}
       />
       
-      <div className="transition-all duration-300 w-full" style={{ marginLeft: '280px' }} id="content-wrapper">
+      <div className="transition-all duration-300 w-full ml-0 md:ml-[280px] xs:w-full" id="content-wrapper">
         <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
         <link rel="stylesheet" href="/forum/forum-layout.css" />
         <Header user={user ? { email: user.email || '', name: user.user_metadata?.name } : null} />
