@@ -44,9 +44,9 @@ fi
 
 # Configuration variables - edit these before running
 DOMAIN="auroville.social"
-EMAIL="your-email@example.com" # For SSL certificate
+EMAIL="polletkiro@gmail.com" # For SSL certificate
 APP_DIR="/opt/auronet"
-GITHUB_REPO="https://github.com/yourusername/auronet.git" # Replace with your actual repo URL
+GITHUB_REPO="https://github.com/hyperlux/auronet.git" # Replace with your actual repo URL
 SERVER_IP=$(hostname -I | awk '{print $1}')
 
 # Get user confirmation for configuration
