@@ -55,7 +55,7 @@ export default function Header({ user, visitorCount = 1247 }: HeaderProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex flex-col sm:flex-row items-center justify-between py-3 px-4 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md transition-all duration-300 ml-0 md:ml-64 sm:ml-20">
+    <header className="sticky top-0 z-50 flex flex-col sm:flex-row items-center justify-between py-3 px-4 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md transition-all duration-300">
       <div className="w-full sm:w-auto flex-1 max-w-2xl mb-4 sm:mb-0 pl-3 pt-2">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -212,7 +212,7 @@ export default function ForumPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'activity' | 'topics'>('activity');
   const [filterTrending, setFilterTrending] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(280); // Default to expanded width
+  // Remove dynamic sidebarWidth state
 
   // Filter and sort categories based on search query and sort option
   useEffect(() => {
@@ -258,28 +258,16 @@ export default function ForumPage() {
         categories={mockCategories}
         popularTags={popularTags}
         onCreateTopic={handleCreateTopic}
-        onWidthChange={setSidebarWidth}
       />
       
-      <div className={`flex-1 w-full transition-all duration-300`} id="content-wrapper">
+      <div className="flex-1 w-full md:ml-64 sm:ml-20 transition-all duration-300" id="content-wrapper">
         <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
         <link rel="stylesheet" href="/forum/forum-layout.css" />
-        <div 
-          className="sm:ml-20 transition-all duration-300"
-          style={{ marginLeft: `${sidebarWidth}px` }}
-        >
-          <Header 
-            user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null}
-          />
-        </div>
+        <Header 
+          user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null}
+        />
         
-        <main 
-          className="p-6 container mx-auto max-w-full sm:ml-20 w-[calc(100%-64px)] sm:w-[calc(100%-80px)] transition-all duration-300"
-          style={{ 
-            marginLeft: `${sidebarWidth}px`,
-            width: `calc(100% - ${sidebarWidth}px)`
-          }}
-        >
+        <main className="p-6">
           <div className="mb-8 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-[var(--text-primary)]">
@@ -366,7 +354,7 @@ export default function ForumPage() {
               <p className="text-[var(--text-muted)] text-lg">No categories found matching your search.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 forum-category-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
               {filteredCategories.map((category) => (
                 <ForumCategoryCard
                   key={category.id}

@@ -80,10 +80,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <Sidebar user={user} />
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
         <Header user={user} visitorCount={1247} />
         
-        <main className="ml-0 md:ml-64 sm:ml-20 p-6 w-[calc(100%-64px)] md:w-[calc(100%-256px)] sm:w-[calc(100%-80px)] transition-all duration-300">
+        <main className="p-6 w-full transition-all duration-300">
           {/* Important Announcements */}
           <section className="mb-8">
             <div className="flex justify-between items-center mb-4">
