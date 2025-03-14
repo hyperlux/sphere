@@ -47,16 +47,17 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 md:w-64 sm:w-20 xs:w-0 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
-      <div className="h-[28px]"></div> {/* Reduced spacer height for better alignment with search bar */}
-      <div className="flex items-center py-1 pl-5 pb-5">
-        <img 
-          src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
-          alt="Auroville.COMMUNITY" 
-          width={200} 
-          height={120} 
-          className="mr-auto -mt-5" 
-        />
+    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
+      <div className="flex items-center py-2 pl-5 pb-5 border-b border-[var(--border-color)]">
+        <Link href="/dashboard">
+          <Image 
+            src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
+            alt="Auroville.COMMUNITY" 
+            width={200} 
+            height={120} 
+            className="mr-auto" 
+          />
+        </Link>
       </div>
 
       <nav className="flex-1 px-4 py-2 pb-4">
@@ -65,9 +66,13 @@ export default function Sidebar({ user }: SidebarProps) {
             <li key={item.name}>
               <Link
                 href={item.href}
-                className={`sidebar-link ${pathname === item.href ? 'active' : ''} text-[var(--text-primary)]`}
+                className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
+                  pathname === item.href 
+                    ? 'bg-amber-500 text-white' 
+                    : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                }`}
               >
-                <span className="mr-3 text-[var(--text-primary)]">
+                <span className="mr-3">
                   {React.createElement(item.icon, { size: 20 })}
                 </span>
                 {t(item.name)}
@@ -85,10 +90,14 @@ export default function Sidebar({ user }: SidebarProps) {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2 px-2 text-[var(--text-primary)]"
+                  className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
+                    pathname === link.href 
+                      ? 'bg-amber-500 text-white' 
+                      : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                  }`}
                 >
-                  <span className="mr-3 text-[var(--text-muted)]">
-                    {React.createElement(link.icon, { size: 16 })}
+                  <span className="mr-3">
+                    {React.createElement(link.icon, { size: 20 })}
                   </span>
                   {t(link.name)}
                 </Link>
@@ -101,8 +110,10 @@ export default function Sidebar({ user }: SidebarProps) {
       {user && (
         <div className="p-4 mt-auto border-t border-[var(--border-color)] bg-[var(--bg-tertiary)]">
           <div className="flex items-center">
-            <div className="avatar bg-amber-500">
-              <span className="text-sm">TA</span>
+            <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+              <span className="text-sm text-white">
+                {user.name ? user.name.charAt(0) : user.email.charAt(0)}
+              </span>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-[var(--text-primary)]">
