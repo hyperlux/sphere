@@ -212,7 +212,8 @@ export default function ForumPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'activity' | 'topics'>('activity');
   const [filterTrending, setFilterTrending] = useState(false);
-  
+  const [sidebarWidth, setSidebarWidth] = useState(280); // Default to expanded width
+
   // Filter and sort categories based on search query and sort option
   useEffect(() => {
     let filtered = mockCategories;
@@ -252,19 +253,33 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)] overflow-hidden">
       <ForumSidebar 
         categories={mockCategories}
         popularTags={popularTags}
         onCreateTopic={handleCreateTopic}
+        onWidthChange={setSidebarWidth}
       />
       
-      <div className="transition-all duration-300 w-full ml-0 md:ml-[280px] xs:w-full" id="content-wrapper">
+      <div className={`flex-1 w-full transition-all duration-300`} id="content-wrapper">
         <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
         <link rel="stylesheet" href="/forum/forum-layout.css" />
-        <Header user={user ? { email: user.email || '', name: user.user_metadata?.name } : null} />
+        <div 
+          className="sm:ml-20 transition-all duration-300"
+          style={{ marginLeft: `${sidebarWidth}px` }}
+        >
+          <Header 
+            user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null}
+          />
+        </div>
         
-        <main className="p-6 container mx-auto max-w-full">
+        <main 
+          className="p-6 container mx-auto max-w-full sm:ml-20 w-[calc(100%-64px)] sm:w-[calc(100%-80px)] transition-all duration-300"
+          style={{ 
+            marginLeft: `${sidebarWidth}px`,
+            width: `calc(100% - ${sidebarWidth}px)`
+          }}
+        >
           <div className="mb-8 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-[var(--text-primary)]">

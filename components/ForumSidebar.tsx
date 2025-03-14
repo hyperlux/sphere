@@ -33,6 +33,7 @@ interface ForumSidebarProps {
   categories: Category[];
   popularTags?: string[];
   onCreateTopic?: () => void;
+  onWidthChange?: (width: number) => void;
   trendingPosts?: Array<{
     id: string;
     title: string;
@@ -47,6 +48,7 @@ export default function ForumSidebar({
   categories, 
   popularTags = [], 
   onCreateTopic,
+  onWidthChange,
   trendingPosts
 }: ForumSidebarProps) {
   const { theme, toggleTheme } = useTheme();
@@ -93,8 +95,21 @@ export default function ForumSidebar({
   }, []);
   
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    
+    // Call onWidthChange prop with the new width
+    if (onWidthChange) {
+      onWidthChange(newCollapsedState ? 80 : 280);
+    }
   };
+  
+  // Call onWidthChange on initial render
+  useEffect(() => {
+    if (onWidthChange) {
+      onWidthChange(isCollapsed ? 80 : 280);
+    }
+  }, [isCollapsed, onWidthChange]);
   
   const filteredCategories = categories.filter(category => 
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
