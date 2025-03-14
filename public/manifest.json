@@ -1,0 +1,32 @@
+{
+  "name": "AuroNet",
+  "short_name": "AuroNet",
+  "description": "Auroville's Digital Community Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#F97316",
+  "orientation": "portrait",
+  "categories": ["community", "social"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your dashboard"
+    },
+    {
+      "name": "Events",
+      "url": "/events",
+      "description": "Browse community events"
+    },
+    {
+      "name": "Resources",
+      "url": "/resources",
+      "description": "Access community resources"
+    }
+  ]
+}
