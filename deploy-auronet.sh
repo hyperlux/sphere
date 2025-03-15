@@ -188,7 +188,7 @@ echo "Website: https://$DOMAIN"
 echo
 echo "To view logs: docker compose logs -f"
 echo "To restart: docker compose restart"
-echo "To update: git pull && docker compose down && docker compose build --no-cache && docker compose up -d"
+echo "To update: git pull --tags origin LUCKY && docker compose down && docker compose build --no-cache && docker compose up -d"
 echo
 echo "Important files:"
 echo "- Application files: $APP_DIR"
