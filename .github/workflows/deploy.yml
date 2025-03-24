@@ -1,0 +1,110 @@
+name: Deploy Application
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint check
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+
+  deploy:
+    needs: test-and-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_PATH: /opt/auronet
+    steps:
+      - name: Set environment variables
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+
+            # Update docker-compose.yml for the specific environment
+            cat > docker-compose.${{ github.ref_name }}.yml <<EOL
+            version: '3.9'
+            services:
+              auronet-${{ github.ref_name }}:
+                image: ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+                environment:
+                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                labels:
+                  - "traefik.enable=true"
+                  - "traefik.http.routers.${{ github.ref_name }}-secure.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+                  - "traefik.http.routers.${{ github.ref_name }}-secure.entrypoints=websecure"
+                  - "traefik.http.routers.${{ github.ref_name }}-secure.tls=true"
+                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.server.port=3000"
+                networks:
+                  - web
+            networks:
+              web:
+                external: true
+            EOL
+
+            # Pull latest image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+
+            # Deploy using docker compose
+            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate

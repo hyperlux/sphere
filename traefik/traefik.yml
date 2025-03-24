@@ -1,0 +1,29 @@
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: default
+        domains:
+          - main: "auroville.social"
+
+certificatesResolvers:
+  default:
+    acme:
+      email: "notifications@aurovillenetwork.us"
+      storage: "/certs/acme.json"
+      tlsChallenge: {}
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: web
+
+api:
+  dashboard: false
+
+log:
+  level: INFO

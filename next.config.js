@@ -11,6 +11,22 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    domains: ['auroville.social'],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Host',
+            value: 'auroville.social'
+          }
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       {

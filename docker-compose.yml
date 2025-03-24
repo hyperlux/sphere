@@ -1,12 +1,29 @@
 version: '3.9'
 
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/certs:/certs"
+      - "./traefik/traefik.yml:/traefik.yml:ro"
+    networks:
+      - web
+
   auronet-app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -14,3 +31,26 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     env_file:
       - .env
+    labels:
+      - "traefik.enable=true"
+      # Domain configuration
+      - "traefik.http.routers.auronet-secure.rule=Host(`auroville.social`)"
+      - "traefik.http.routers.auronet-secure.entrypoints=websecure"
+      - "traefik.http.routers.auronet-secure.tls=true"
+      - "traefik.http.routers.auronet-secure.tls.certresolver=default"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.routers.auronet-domain.rule=Host(`auroville.social`)"
+      - "traefik.http.routers.auronet-domain.entrypoints=web"
+      - "traefik.http.routers.auronet-domain.middlewares=redirect-to-https"
+      # IP access configuration
+      - "traefik.http.routers.auronet-ip.rule=Host(`159.65.157.82`)"
+      - "traefik.http.routers.auronet-ip.entrypoints=web"
+      # Common configuration
+      - "traefik.http.services.auronet.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
