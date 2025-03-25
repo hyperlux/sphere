@@ -180,7 +180,11 @@ Automated deployment via GitHub Actions:
 - Push to `main` → deploys to production
 - Push to `develop` → deploys to staging
 
-[Test Timestamp: 2025-03-25 11:34]
+[Test Timestamp: 2025-03-25 12:50]
+
+### Deployment Status
+- Production: [![Production Status](https://img.shields.io/website?url=https%3A%2F%2Fauroville.social)](https://auroville.social)
+- Staging: [![Staging Status](https://img.shields.io/website?url=https%3A%2F%2Fstaging.auroville.social)](https://staging.auroville.social)
 
 ## License
 
