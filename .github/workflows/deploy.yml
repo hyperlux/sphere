@@ -87,6 +87,12 @@ jobs:
             # Ensure docker network exists
             docker network inspect web >/dev/null 2>&1 || docker network create web
 
+            # Verify Traefik is running
+            if ! docker ps | grep -q traefik; then
+              echo "Error: Traefik container is not running"
+              exit 1
+            fi
+
             # Update docker-compose.yml for the specific environment
             cat > docker-compose.${{ github.ref_name }}.yml <<EOL
             version: '3.9'
