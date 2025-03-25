@@ -77,7 +77,12 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Create deployment directory if it doesn't exist
+            mkdir -p ${{ env.DEPLOY_PATH }}
             cd ${{ env.DEPLOY_PATH }}
+
+            # Ensure proper Docker Compose version
+            docker compose version
 
             # Update docker-compose.yml for the specific environment
             cat > docker-compose.${{ github.ref_name }}.yml <<EOL
@@ -106,5 +111,8 @@ jobs:
             # Pull latest image
             docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
 
-            # Deploy using docker compose
-            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate
+            # Deploy using docker compose with explicit compose command
+            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate --remove-orphans
+
+            # Print container status
+            docker compose -f docker-compose.${{ github.ref_name }}.yml ps
