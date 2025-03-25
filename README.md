@@ -163,6 +163,25 @@ npm run deploy
 
 For support, please contact the AuroNet team or open an issue on GitHub.
 
+## Deployment
+
+### Production Architecture
+- Next.js application containerization
+- Traefik reverse proxy for SSL and routing
+- Automatic Let's Encrypt certificate management
+- Multi-environment support (production/staging)
+
+### Access Methods
+- Production: https://auroville.social
+- Staging: https://staging.auroville.social
+
+### Deployment Process
+Automated deployment via GitHub Actions:
+- Push to `main` → deploys to production
+- Push to `develop` → deploys to staging
+
+[Test Timestamp: 2025-03-25 11:34]
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
