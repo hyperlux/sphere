@@ -77,18 +77,82 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Create deployment directory if it doesn't exist
-            mkdir -p ${{ env.DEPLOY_PATH }}
+            # Create deployment directory and required subdirectories
+            mkdir -p ${{ env.DEPLOY_PATH }}/traefik
+            mkdir -p /opt/traefik-data/certs
             cd ${{ env.DEPLOY_PATH }}
 
             # Ensure proper Docker Compose version
             docker-compose version
 
-            # Ensure docker network exists
+            # Setup Traefik config
+            cat > traefik/traefik.yml <<EOL
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: default
+        domains:
+          - main: "${{ env.DEPLOY_DOMAIN }}"
+
+certificatesResolvers:
+  default:
+    acme:
+      email: "notifications@aurovillenetwork.us"
+      storage: "/certs/acme.json"
+      tlsChallenge: {}
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: web
+
+api:
+  dashboard: false
+
+log:
+  level: INFO
+EOL
+
+            # Set proper permissions
+            touch /opt/traefik-data/certs/acme.json
+            chmod 600 /opt/traefik-data/certs/acme.json
+            chmod 600 /var/run/docker.sock || true
+
+            # Create or ensure docker network exists
             docker network inspect web >/dev/null 2>&1 || docker network create web
 
-            # Ensure Traefik service is running (using the main compose file)
-            # Assumes docker-compose.yml and traefik/ config exist in ${{ env.DEPLOY_PATH }}
+            # Create Traefik docker-compose file
+            cat > docker-compose.yml <<EOL
+version: '3.9'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/opt/traefik-data/certs:/certs"
+      - "./traefik/traefik.yml:/traefik.yml:ro"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+EOL
+
+            # Start Traefik service
             echo "Ensuring Traefik service is running..."
             docker-compose -f docker-compose.yml up -d traefik
 
