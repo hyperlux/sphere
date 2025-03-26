@@ -167,27 +167,27 @@ EOL
 
             # Update docker-compose.yml for the specific environment
             cat > docker-compose.${{ github.ref_name }}.yml <<EOL
-            version: '3.9'
-            services:
-              auronet-${{ github.ref_name }}:
-                image: ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
-                environment:
-                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-                labels:
-                  - "traefik.enable=true"
-                  - "traefik.http.routers.${{ github.ref_name }}-secure.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
-                  - "traefik.http.routers.${{ github.ref_name }}-secure.entrypoints=websecure"
-                  - "traefik.http.routers.${{ github.ref_name }}-secure.tls=true"
-                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.server.port=3000"
-                networks:
-                  - web
-            networks:
-              web:
-                external: true
-            EOL
+version: '3.9'
+services:
+  auronet-${{ github.ref_name }}:
+    image: ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+    environment:
+      - DATABASE_URL=${{ secrets.DATABASE_URL }}
+      - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+      - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${{ github.ref_name }}-secure.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+      - "traefik.http.routers.${{ github.ref_name }}-secure.entrypoints=websecure"
+      - "traefik.http.routers.${{ github.ref_name }}-secure.tls=true"
+      - "traefik.http.services.${{ github.ref_name }}.loadbalancer.server.port=3000"
+    networks:
+      - web
+networks:
+  web:
+    external: true
+EOL
 
             # Pull latest image
             docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
