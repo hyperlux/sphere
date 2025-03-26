@@ -168,8 +168,9 @@ For support, please contact the AuroNet team or open an issue on GitHub.
 ### Production Architecture
 - Next.js application containerization
 - Traefik reverse proxy for SSL and routing
-- Automatic Let's Encrypt certificate management
+- Automatic Let's Encrypt certificate management with persistent storage (/opt/traefik-data/certs)
 - Multi-environment support (production/staging)
+- Zero-downtime deployments with container orchestration
 
 ### Access Methods
 - Production: https://auroville.social
