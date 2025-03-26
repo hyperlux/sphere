@@ -87,10 +87,18 @@ jobs:
             # Ensure docker network exists
             docker network inspect web >/dev/null 2>&1 || docker network create web
 
-            # Verify Traefik is running
+            # Ensure Traefik service is running (using the main compose file)
+            # Assumes docker-compose.yml and traefik/ config exist in ${{ env.DEPLOY_PATH }}
+            echo "Ensuring Traefik service is running..."
+            docker-compose -f docker-compose.yml up -d traefik
+
+            # Verify Traefik is running after attempting to start it
+            echo "Verifying Traefik container status..."
             if ! docker ps | grep -q traefik; then
-              echo "Error: Traefik container is not running"
+              echo "Error: Traefik container failed to start or is not running"
               exit 1
+            else
+              echo "Traefik container is running."
             fi
 
             # Update docker-compose.yml for the specific environment
