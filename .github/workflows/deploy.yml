@@ -82,7 +82,7 @@ jobs:
             cd ${{ env.DEPLOY_PATH }}
 
             # Ensure proper Docker Compose version
-            docker compose version
+            docker-compose version
 
             # Ensure docker network exists
             docker network inspect web >/dev/null 2>&1 || docker network create web
@@ -121,7 +121,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
 
             # Deploy using docker compose with explicit compose command
-            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate --remove-orphans
+            docker-compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate --remove-orphans
 
             # Print container status
-            docker compose -f docker-compose.${{ github.ref_name }}.yml ps
+            docker-compose -f docker-compose.${{ github.ref_name }}.yml ps
