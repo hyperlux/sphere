@@ -8,6 +8,7 @@ entryPoints:
         certResolver: default
         domains:
           - main: "auroville.social"
+          - main: "staging.auroville.social"
 
 certificatesResolvers:
   default:

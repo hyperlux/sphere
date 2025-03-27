@@ -112,12 +112,28 @@ jobs:
                   - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
                   - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
                   - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                restart: unless-stopped
+                healthcheck:
+                  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+                  start_period: 40s
                 labels:
                   - "traefik.enable=true"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.entrypoints=websecure"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.tls=true"
+                  - "traefik.http.routers.${{ github.ref_name }}-secure.tls.certresolver=default"
+                  - "traefik.http.middlewares.${{ github.ref_name }}-redirect.redirectscheme.scheme=https"
+                  - "traefik.http.middlewares.${{ github.ref_name }}-redirect.redirectscheme.permanent=true"
+                  - "traefik.http.routers.${{ github.ref_name }}-http.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+                  - "traefik.http.routers.${{ github.ref_name }}-http.entrypoints=web"
+                  - "traefik.http.routers.${{ github.ref_name }}-http.middlewares=${{ github.ref_name }}-redirect"
                   - "traefik.http.services.${{ github.ref_name }}.loadbalancer.server.port=3000"
+                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.path=/api/health"
+                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.interval=10s"
+                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.timeout=5s"
                 networks:
                   - web
             networks:
