@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  auronet-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    container_name: auronet-staging
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.staging-secure.rule=Host(`staging.auroville.social`)"
+      - "traefik.http.routers.staging-secure.entrypoints=websecure"
+      - "traefik.http.routers.staging-secure.tls=true"
+      - "traefik.http.routers.staging-secure.tls.certresolver=default"
+      - "traefik.http.routers.staging.rule=Host(`staging.auroville.social`)"
+      - "traefik.http.routers.staging.entrypoints=web"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.routers.staging.middlewares=redirect-to-https@docker"
+      - "traefik.http.services.staging.loadbalancer.server.port=3000"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.timeout=10s"
+      - "traefik.http.routers.staging-secure.middlewares=staging-retry@docker"
+      - "traefik.http.middlewares.staging-retry.retry.attempts=3"
+      - "traefik.http.middlewares.staging-retry.retry.initialinterval=100ms"
+    networks:
+      - web
+    ports:
+      - "127.0.0.1:3000:3000"
+
+networks:
+  web:
+    external: true

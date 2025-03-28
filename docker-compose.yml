@@ -17,13 +17,10 @@ services:
     networks:
       - web
 
-  auronet-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+  auronet-prod:
+    image: ${DOCKER_USERNAME:-user}/auronet:main
+    container_name: auronet-prod
+    restart: unless-stopped
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -31,23 +28,25 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     labels:
       - "traefik.enable=true"
-      # Domain configuration
-      - "traefik.http.routers.auronet-secure.rule=Host(`auroville.social`)"
-      - "traefik.http.routers.auronet-secure.entrypoints=websecure"
-      - "traefik.http.routers.auronet-secure.tls=true"
-      - "traefik.http.routers.auronet-secure.tls.certresolver=default"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      - "traefik.http.routers.auronet-domain.rule=Host(`auroville.social`)"
-      - "traefik.http.routers.auronet-domain.entrypoints=web"
-      - "traefik.http.routers.auronet-domain.middlewares=redirect-to-https"
-      # IP access configuration
-      - "traefik.http.routers.auronet-ip.rule=Host(`159.65.157.82`)"
-      - "traefik.http.routers.auronet-ip.entrypoints=web"
-      # Common configuration
-      - "traefik.http.services.auronet.loadbalancer.server.port=3000"
+      - "traefik.http.routers.prod-secure.rule=Host(`auroville.social`)"
+      - "traefik.http.routers.prod-secure.entrypoints=websecure"
+      - "traefik.http.routers.prod-secure.tls=true"
+      - "traefik.http.routers.prod-secure.tls.certresolver=default"
+      - "traefik.http.routers.prod.rule=Host(`auroville.social`)"
+      - "traefik.http.routers.prod.entrypoints=web"
+      - "traefik.http.routers.prod.middlewares=redirect-to-https"
+      - "traefik.http.services.prod.loadbalancer.server.port=3000"
+      - "traefik.http.services.prod.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.prod.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.prod.loadbalancer.healthcheck.timeout=5s"
     networks:
       - web
 

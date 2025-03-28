@@ -1,55 +1,63 @@
 #!/bin/bash
 
-# Create directory for test deployment
-DEPLOY_DIR="test-deployment"
-mkdir -p $DEPLOY_DIR
+# Make script exit on any error
+set -e
 
-# Function to cleanup on exit
-cleanup() {
-    echo "Cleaning up..."
-    docker-compose -f $DEPLOY_DIR/docker-compose.test.yml down 2>/dev/null
-    rm -rf $DEPLOY_DIR
-}
-trap cleanup EXIT
+echo "=== Testing Deployment Status ==="
 
-# Copy necessary files
-cp docker-compose.yml $DEPLOY_DIR/docker-compose.test.yml
-cp .env $DEPLOY_DIR/.env 2>/dev/null || :
+# Check if docker network exists
+echo "Checking docker network..."
+if docker network inspect web >/dev/null 2>&1; then
+    echo "✅ Web network exists"
+else
+    echo "❌ Web network not found"
+    exit 1
+fi
 
-# Navigate to test directory
-cd $DEPLOY_DIR
+# Check Traefik container
+echo -e "\nChecking Traefik status..."
+if docker ps | grep -q traefik; then
+    echo "✅ Traefik container is running"
+else
+    echo "❌ Traefik container not found"
+    echo "Checking Traefik logs..."
+    docker logs traefik
+    exit 1
+fi
 
-# Test different scenarios
-echo "Testing deployment scenarios..."
+# Check certificate file
+echo -e "\nChecking SSL certificate status..."
+if [ -f "./traefik/certs/acme.json" ]; then
+    if [ -s "./traefik/certs/acme.json" ]; then
+        echo "✅ acme.json exists and is not empty"
+    else
+        echo "❌ acme.json exists but is empty"
+    fi
+else
+    echo "❌ acme.json not found"
+fi
 
-# 1. Test basic deployment
-echo "1. Testing basic deployment..."
-docker-compose -f docker-compose.test.yml up -d
+# Check staging container
+echo -e "\nChecking staging container status..."
+if docker ps | grep -q "auronet-develop"; then
+    echo "✅ Staging container is running"
+    
+    # Check health status
+    HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker ps -q --filter name=auronet-develop))
+    echo "Health status: $HEALTH_STATUS"
+    
+    # Get container logs if not healthy
+    if [ "$HEALTH_STATUS" != "healthy" ]; then
+        echo "❌ Container is not healthy. Last health check logs:"
+        docker inspect --format='{{json .State.Health}}' $(docker ps -q --filter name=auronet-develop) | python -m json.tool
+    fi
+else
+    echo "❌ Staging container not found"
+fi
 
-# Wait for services to start
-echo "Waiting for services to start..."
-sleep 10
+# Test domains
+echo -e "\nTesting domain connectivity..."
+echo "Testing staging.auroville.social..."
+curl -I -k https://staging.auroville.social
 
-# 2. Test HTTP access
-echo -e "\n2. Testing HTTP access..."
-curl -v http://localhost
-
-# 3. Test HTTPS access (requires local SSL setup)
-echo -e "\n3. Testing HTTPS access..."
-curl -vk https://localhost
-
-# 4. Test environment variables
-echo -e "\n4. Testing environment variables..."
-docker-compose -f docker-compose.test.yml exec -T auronet-app env | grep -E "NEXT_PUBLIC_|DATABASE_URL"
-
-# 5. Test container health
-echo -e "\n5. Testing container health..."
-docker-compose -f docker-compose.test.yml ps
-
-# 6. Test logs
-echo -e "\n6. Container logs:"
-docker-compose -f docker-compose.test.yml logs
-
-# Cleanup happens automatically via trap
-
-echo -e "\nTests completed."
+echo -e "\n=== Test Complete ==="
