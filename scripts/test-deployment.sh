@@ -39,17 +39,17 @@ fi
 
 # Check staging container
 echo -e "\nChecking staging container status..."
-if docker ps | grep -q "auronet-develop"; then
+if docker ps | grep -q "auronet-staging"; then
     echo "✅ Staging container is running"
     
     # Check health status
-    HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker ps -q --filter name=auronet-develop))
+    HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker ps -q --filter name=auronet-staging))
     echo "Health status: $HEALTH_STATUS"
     
     # Get container logs if not healthy
     if [ "$HEALTH_STATUS" != "healthy" ]; then
         echo "❌ Container is not healthy. Last health check logs:"
-        docker inspect --format='{{json .State.Health}}' $(docker ps -q --filter name=auronet-develop) | python -m json.tool
+        docker inspect --format='{{json .State.Health}}' $(docker ps -q --filter name=auronet-staging) | python -m json.tool
     fi
 else
     echo "❌ Staging container not found"
@@ -59,5 +59,9 @@ fi
 echo -e "\nTesting domain connectivity..."
 echo "Testing staging.auroville.social..."
 curl -I -k https://staging.auroville.social
+echo -e "\nChecking Traefik routing..."
+docker exec traefik traefik service ls
+echo -e "\nChecking container logs..."
+docker logs auronet-staging --tail 20
 
 echo -e "\n=== Test Complete ==="
