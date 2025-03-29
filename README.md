@@ -16,7 +16,7 @@ test
 - Event categories and filtering
 - Calendar view of upcoming events
 
-### Resources !
+### Resources
 - Upload and share community resources
 - Categorized document management
 - File preview and download
