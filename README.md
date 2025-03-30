@@ -49,12 +49,7 @@ test
    npm install
    ```
 
-3. Copy the environment file and update with your Supabase credentials:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Initialize the database:
+3. Initialize the database:
    ```bash
    # Run these commands in Supabase SQL editor
    # 1. Create tables and policies
@@ -119,12 +114,20 @@ auronet/
 
 ## Configuration
 
-### Environment Variables
+### Security and Environment Variables
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
+⚠️ **IMPORTANT: This is a public repository**
+- Never commit sensitive information or environment files (.env) to the repository
+- All sensitive configuration must be managed through GitHub repository secrets
+- Local development should use environment variables set in your system
+
+### Required Environment Variables
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- DATABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+
+For local development, set these variables in your shell or use your IDE's environment configuration.
 
 ### Supabase Setup
 
@@ -181,12 +184,12 @@ For support, please contact the AuroNet team or open an issue on GitHub.
 1. **Production Environment**
    - Domain: auroville.social
    - Database: Production Supabase instance
-   - Configuration: Uses `.env` and production GitHub secrets
+   - Configuration: Uses production GitHub secrets
 
 2. **Staging Environment**
    - Domain: staging.auroville.social
    - Database: Staging Supabase instance
-   - Configuration: Uses `.env.staging` and staging GitHub secrets
+   - Configuration: Uses staging GitHub secrets
 
 #### GitHub Actions Workflow
 The deployment process is fully automated using GitHub Actions (`.github/workflows/deploy.yml`):
@@ -232,9 +235,18 @@ The deployment process is fully automated using GitHub Actions (`.github/workflo
    - `docker-compose.staging.yml`: Staging configuration
 
 5. **Local Development**
-   - Production: `docker-compose up`
-   - Staging: `docker-compose -f docker-compose.staging.yml up`
-   - Uses corresponding `.env` or `.env.staging` files
+   ```bash
+   # Export required environment variables first
+   export NEXT_PUBLIC_SUPABASE_URL=your-url
+   export NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
+   export DATABASE_URL=your-db-url
+   export SUPABASE_SERVICE_ROLE_KEY=your-key
+
+   # Then run Docker Compose
+   docker-compose up  # For production
+   # OR
+   docker-compose -f docker-compose.staging.yml up  # For staging
+   ```
 
 6. **Health Checks**
    - Endpoint: `/api/health`
