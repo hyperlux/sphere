@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  auronet-staging:
+    image: lightvibrations/auronet:develop
+    container_name: auronet-staging
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres.vrdzdeqkrxzowzcttsgn:${SUPABASE_SERVICE_ROLE_KEY}@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.staging-secure.rule=Host(`staging.auroville.social`)"
+      - "traefik.http.routers.staging-secure.entrypoints=websecure"
+      - "traefik.http.routers.staging-secure.tls=true"
+      - "traefik.http.routers.staging-secure.tls.certresolver=default"
+      # HTTP router with redirect
+      - "traefik.http.routers.staging.rule=Host(`staging.auroville.social`)"
+      - "traefik.http.routers.staging.entrypoints=web"
+      - "traefik.http.routers.staging.middlewares=redirect-to-https"
+      # Redirect middleware
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      # Service configuration
+      - "traefik.http.services.staging.loadbalancer.server.port=3000"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.interval=30s"
+      - "traefik.http.services.staging.loadbalancer.healthcheck.timeout=10s"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
