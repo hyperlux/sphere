@@ -175,12 +175,98 @@ For support, please contact the AuroNet team or open an issue on GitHub.
 - Production: https://auroville.social
 - Staging: https://staging.auroville.social
 
-### Deployment Process
-Automated deployment via GitHub Actions:
-- Push to `main` → deploys to production
-- Push to `develop` → deploys to staging
+### CI/CD Infrastructure
 
-[Test Timestamp: 2025-03-25 12:50]
+#### Environment Setup
+1. **Production Environment**
+   - Domain: auroville.social
+   - Database: Production Supabase instance
+   - Configuration: Uses `.env` and production GitHub secrets
+
+2. **Staging Environment**
+   - Domain: staging.auroville.social
+   - Database: Staging Supabase instance
+   - Configuration: Uses `.env.staging` and staging GitHub secrets
+
+#### GitHub Actions Workflow
+The deployment process is fully automated using GitHub Actions (`.github/workflows/deploy.yml`):
+
+1. **Trigger Conditions**
+   - Production: Push to `main` branch
+   - Staging: Push to `develop` branch
+   - Pull Requests: Runs tests but doesn't deploy
+
+2. **Pipeline Stages**
+   ```yaml
+   jobs:
+     test-and-build:
+       # Build and test the application
+       - Run type checking
+       - Run linting
+       - Build Next.js application
+       - Build and push Docker image
+     
+     deploy:
+       # Deploy to appropriate environment
+       - Determine deployment environment
+       - Update Docker Compose configuration
+       - Deploy using Docker Compose
+   ```
+
+3. **Environment Variables**
+   - **Production Secrets**
+     - DATABASE_URL
+     - SUPABASE_URL
+     - SUPABASE_ANON_KEY
+     - SUPABASE_SERVICE_ROLE_KEY
+
+   - **Staging Secrets**
+     - STAGING_DATABASE_URL
+     - STAGING_SUPABASE_URL
+     - STAGING_SUPABASE_ANON_KEY
+     - STAGING_SUPABASE_SERVICE_ROLE_KEY
+
+4. **Docker Configuration**
+   - `Dockerfile`: Multi-stage build for Next.js application
+   - `docker-compose.yml`: Production configuration
+   - `docker-compose.staging.yml`: Staging configuration
+
+5. **Local Development**
+   - Production: `docker-compose up`
+   - Staging: `docker-compose -f docker-compose.staging.yml up`
+   - Uses corresponding `.env` or `.env.staging` files
+
+6. **Health Checks**
+   - Endpoint: `/api/health`
+   - Interval: 10s
+   - Timeout: 5s
+   - Retries: 5
+
+#### Infrastructure Components
+
+1. **Traefik Reverse Proxy**
+   - SSL/TLS termination
+   - Automatic Let's Encrypt certificate management
+   - HTTP to HTTPS redirection
+   - Load balancing
+   - Health check monitoring
+
+2. **Docker Networks**
+   - External `web` network for Traefik communication
+   - Internal container networking
+
+3. **Monitoring**
+   - Container health checks
+   - Traefik health checks
+   - GitHub Actions build status
+
+### Deployment Process
+1. Code is pushed to either `main` or `develop` branch
+2. GitHub Actions workflow is triggered
+3. Application is built and tested
+4. Docker image is built and pushed to registry
+5. New image is deployed to appropriate environment
+6. Health checks confirm successful deployment
 
 ### Deployment Status
 - Production: [![Production Status](https://img.shields.io/website?url=https%3A%2F%2Fauroville.social)](https://auroville.social)
