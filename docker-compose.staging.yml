@@ -16,8 +16,6 @@ services:
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - NODE_ENV=production
-    env_file:
-      - .env
     expose:
       - "3000"
     healthcheck:
@@ -29,26 +27,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
-      - "traefik.http.services.staging.loadbalancer.server.port=3000"
       - "traefik.http.routers.staging.rule=Host(`staging.auroville.social`)"
       - "traefik.http.routers.staging.entrypoints=web"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       - "traefik.http.routers.staging.middlewares=redirect-to-https@docker"
       - "traefik.http.routers.staging-secure.rule=Host(`staging.auroville.social`)"
       - "traefik.http.routers.staging-secure.entrypoints=websecure"
       - "traefik.http.routers.staging-secure.tls=true"
       - "traefik.http.routers.staging-secure.tls.certresolver=default"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      - "traefik.http.services.staging.loadbalancer.healthcheck.path=/api/health"
-      - "traefik.http.services.staging.loadbalancer.healthcheck.interval=10s"
-      - "traefik.http.services.staging.loadbalancer.healthcheck.timeout=10s"
-    network_mode: "host"
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    extra_hosts:
-      - "staging.auroville.social:127.0.0.1"
+      - "traefik.http.services.staging.loadbalancer.server.port=3000"
+    networks:
+      - web
 
 networks:
   web:
+    name: web
     external: true

@@ -49,12 +49,7 @@ test
    npm install
    ```
 
-3. Copy the environment file and update with your Supabase credentials:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Initialize the database:
+3. Initialize the database:
    ```bash
    # Run these commands in Supabase SQL editor
    # 1. Create tables and policies
@@ -119,12 +114,20 @@ auronet/
 
 ## Configuration
 
-### Environment Variables
+### Security and Environment Variables
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
+⚠️ **IMPORTANT: This is a public repository**
+- Never commit sensitive information or environment files (.env) to the repository
+- All sensitive configuration must be managed through GitHub repository secrets
+- Local development should use environment variables set in your system
+
+### Required Environment Variables
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- DATABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+
+For local development, set these variables in your shell or use your IDE's environment configuration.
 
 ### Supabase Setup
 
@@ -175,12 +178,107 @@ For support, please contact the AuroNet team or open an issue on GitHub.
 - Production: https://auroville.social
 - Staging: https://staging.auroville.social
 
-### Deployment Process
-Automated deployment via GitHub Actions:
-- Push to `main` → deploys to production
-- Push to `develop` → deploys to staging
+### CI/CD Infrastructure
 
-[Test Timestamp: 2025-03-25 12:50]
+#### Environment Setup
+1. **Production Environment**
+   - Domain: auroville.social
+   - Database: Production Supabase instance
+   - Configuration: Uses production GitHub secrets
+
+2. **Staging Environment**
+   - Domain: staging.auroville.social
+   - Database: Staging Supabase instance
+   - Configuration: Uses staging GitHub secrets
+
+#### GitHub Actions Workflow
+The deployment process is fully automated using GitHub Actions (`.github/workflows/deploy.yml`):
+
+1. **Trigger Conditions**
+   - Production: Push to `main` branch
+   - Staging: Push to `develop` branch
+   - Pull Requests: Runs tests but doesn't deploy
+
+2. **Pipeline Stages**
+   ```yaml
+   jobs:
+     test-and-build:
+       # Build and test the application
+       - Run type checking
+       - Run linting
+       - Build Next.js application
+       - Build and push Docker image
+     
+     deploy:
+       # Deploy to appropriate environment
+       - Determine deployment environment
+       - Update Docker Compose configuration
+       - Deploy using Docker Compose
+   ```
+
+3. **Environment Variables**
+   - **Production Secrets**
+     - DATABASE_URL
+     - SUPABASE_URL
+     - SUPABASE_ANON_KEY
+     - SUPABASE_SERVICE_ROLE_KEY
+
+   - **Staging Secrets**
+     - STAGING_DATABASE_URL
+     - STAGING_SUPABASE_URL
+     - STAGING_SUPABASE_ANON_KEY
+     - STAGING_SUPABASE_SERVICE_ROLE_KEY
+
+4. **Docker Configuration**
+   - `Dockerfile`: Multi-stage build for Next.js application
+   - `docker-compose.yml`: Production configuration
+   - `docker-compose.staging.yml`: Staging configuration
+
+5. **Local Development**
+   ```bash
+   # Export required environment variables first
+   export NEXT_PUBLIC_SUPABASE_URL=your-url
+   export NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
+   export DATABASE_URL=your-db-url
+   export SUPABASE_SERVICE_ROLE_KEY=your-key
+
+   # Then run Docker Compose
+   docker-compose up  # For production
+   # OR
+   docker-compose -f docker-compose.staging.yml up  # For staging
+   ```
+
+6. **Health Checks**
+   - Endpoint: `/api/health`
+   - Interval: 10s
+   - Timeout: 5s
+   - Retries: 5
+
+#### Infrastructure Components
+
+1. **Traefik Reverse Proxy**
+   - SSL/TLS termination
+   - Automatic Let's Encrypt certificate management
+   - HTTP to HTTPS redirection
+   - Load balancing
+   - Health check monitoring
+
+2. **Docker Networks**
+   - External `web` network for Traefik communication
+   - Internal container networking
+
+3. **Monitoring**
+   - Container health checks
+   - Traefik health checks
+   - GitHub Actions build status
+
+### Deployment Process
+1. Code is pushed to either `main` or `develop` branch
+2. GitHub Actions workflow is triggered
+3. Application is built and tested
+4. Docker image is built and pushed to registry
+5. New image is deployed to appropriate environment
+6. Health checks confirm successful deployment
 
 ### Deployment Status
 - Production: [![Production Status](https://img.shields.io/website?url=https%3A%2F%2Fauroville.social)](https://auroville.social)
