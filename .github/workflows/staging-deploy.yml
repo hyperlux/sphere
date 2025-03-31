@@ -79,11 +79,28 @@ jobs:
           script: |
             cd /opt/auronet
             
-            # Create docker-compose file with proper environment variables
+            # Update docker-compose.staging.yml with new environment variables but keep existing structure
             cat > docker-compose.staging.yml <<EOL
             version: '3.9'
+
             services:
-              auronet-staging:
+              traefik:
+                image: traefik:v2.10
+                container_name: traefik
+                restart: unless-stopped
+                security_opt:
+                  - no-new-privileges:true
+                ports:
+                  - "80:80"
+                  - "443:443"
+                volumes:
+                  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+                  - "./traefik/certs:/certs"
+                  - "./traefik/traefik.yml:/traefik.yml:ro"
+                networks:
+                  - web
+
+              staging:
                 image: ${DOCKER_IMAGE}:${DOCKER_TAG}
                 container_name: auronet-staging
                 restart: unless-stopped
@@ -92,41 +109,48 @@ jobs:
                   - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
                   - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
                   - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  - NODE_ENV=production
+                expose:
+                  - "3000"
                 healthcheck:
-                  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-                  interval: 30s
+                  test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+                  interval: 10s
                   timeout: 10s
                   retries: 3
-                  start_period: 90s
+                  start_period: 30s
                 labels:
                   - "traefik.enable=true"
+                  - "traefik.docker.network=web"
+                  - "traefik.http.routers.staging.rule=Host(\`staging.auroville.social\`)"
+                  - "traefik.http.routers.staging.entrypoints=web"
+                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+                  - "traefik.http.routers.staging.middlewares=redirect-to-https@docker"
                   - "traefik.http.routers.staging-secure.rule=Host(\`staging.auroville.social\`)"
                   - "traefik.http.routers.staging-secure.entrypoints=websecure"
                   - "traefik.http.routers.staging-secure.tls=true"
                   - "traefik.http.routers.staging-secure.tls.certresolver=default"
-                  - "traefik.http.routers.staging.rule=Host(\`staging.auroville.social\`)"
-                  - "traefik.http.routers.staging.entrypoints=web"
-                  - "traefik.http.routers.staging.middlewares=redirect-to-https"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
                   - "traefik.http.services.staging.loadbalancer.server.port=3000"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.path=/api/health"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.interval=30s"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.timeout=10s"
                 networks:
                   - web
+
             networks:
               web:
+                name: web
                 external: true
             EOL
 
-            # Ensure web network exists
-            docker network inspect web >/dev/null 2>&1 || docker network create web
-            
             # Deploy using the new compose file
             docker compose -f docker-compose.staging.yml pull
             docker compose -f docker-compose.staging.yml up -d --force-recreate
 
-            # Print container status and logs
-            docker compose -f docker-compose.staging.yml ps
+            # Wait for containers to start
+            sleep 10
+
+            # Check container status and logs
+            echo "Container Status:"
+            docker ps -a
+            echo "Container Logs:"
             docker logs auronet-staging --tail 50
+            echo "Traefik Logs:"
+            docker logs traefik --tail 20

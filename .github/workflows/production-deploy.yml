@@ -80,59 +80,83 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: root  # Usually root for DigitalOcean droplets
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/auronet
             
-            # Create docker-compose file with proper environment variables
+            # Update docker-compose.yml with new environment variables but keep existing structure
             cat > docker-compose.yml <<EOL
             version: '3.9'
+
             services:
-              auronet:
+              traefik:
+                image: traefik:v2.10
+                container_name: traefik
+                restart: unless-stopped
+                security_opt:
+                  - no-new-privileges:true
+                ports:
+                  - "80:80"
+                  - "443:443"
+                volumes:
+                  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+                  - "./traefik/certs:/certs"
+                  - "./traefik/traefik.yml:/traefik.yml:ro"
+                networks:
+                  - web
+
+              auronet-prod:
                 image: ${DOCKER_IMAGE}:${DOCKER_TAG}
-                container_name: auronet
+                container_name: auronet-prod
                 restart: unless-stopped
                 environment:
                   - DATABASE_URL=${{ secrets.DATABASE_URL }}
                   - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
                   - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
                   - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  - NODE_ENV=production
+                expose:
+                  - "3000"
                 healthcheck:
-                  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-                  interval: 30s
+                  test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+                  interval: 10s
                   timeout: 10s
                   retries: 3
-                  start_period: 90s
+                  start_period: 30s
                 labels:
                   - "traefik.enable=true"
-                  - "traefik.http.routers.auronet-secure.rule=Host(\`auroville.social\`)"
-                  - "traefik.http.routers.auronet-secure.entrypoints=websecure"
-                  - "traefik.http.routers.auronet-secure.tls=true"
-                  - "traefik.http.routers.auronet-secure.tls.certresolver=default"
-                  - "traefik.http.routers.auronet.rule=Host(\`auroville.social\`)"
-                  - "traefik.http.routers.auronet.entrypoints=web"
-                  - "traefik.http.routers.auronet.middlewares=redirect-to-https"
+                  - "traefik.docker.network=web"
+                  - "traefik.http.routers.prod.rule=Host(\`auroville.social\`)"
+                  - "traefik.http.routers.prod.entrypoints=web"
                   - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
                   - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-                  - "traefik.http.services.auronet.loadbalancer.server.port=3000"
-                  - "traefik.http.services.auronet.loadbalancer.healthcheck.path=/api/health"
-                  - "traefik.http.services.auronet.loadbalancer.healthcheck.interval=30s"
-                  - "traefik.http.services.auronet.loadbalancer.healthcheck.timeout=10s"
+                  - "traefik.http.routers.prod.middlewares=redirect-to-https@docker"
+                  - "traefik.http.routers.prod-secure.rule=Host(\`auroville.social\`)"
+                  - "traefik.http.routers.prod-secure.entrypoints=websecure"
+                  - "traefik.http.routers.prod-secure.tls=true"
+                  - "traefik.http.routers.prod-secure.tls.certresolver=default"
+                  - "traefik.http.services.prod.loadbalancer.server.port=3000"
                 networks:
                   - web
+
             networks:
               web:
+                name: web
                 external: true
             EOL
 
-            # Ensure web network exists
-            docker network inspect web >/dev/null 2>&1 || docker network create web
-            
             # Deploy using the new compose file
             docker compose pull
             docker compose up -d --force-recreate
 
-            # Print container status and logs
-            docker compose ps
-            docker logs auronet --tail 50
+            # Wait for containers to start
+            sleep 10
+
+            # Check container status and logs
+            echo "Container Status:"
+            docker ps -a
+            echo "Container Logs:"
+            docker logs auronet-prod --tail 50
+            echo "Traefik Logs:"
+            docker logs traefik --tail 20
