@@ -10,28 +10,46 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the hash fragment from the URL
-        const hash = window.location.hash;
-        if (!hash) {
-          router.push('/login?error=no_token');
+        // Get URL parameters including hash
+        const fullHash = window.location.hash || window.location.search;
+        
+        if (!fullHash) {
+          console.error('No authentication parameters found');
+          router.push('/login?error=no_params');
           return;
         }
 
-        // Parse the hash fragment
-        const params = new URLSearchParams(hash.substring(1));
+        // Remove the leading # or ? and parse parameters
+        const params = new URLSearchParams(fullHash.substring(1));
+        
+        // Handle both hash-based and query-based parameters
+        const session = await supabase.auth.getSession();
+        
+        if (session.data.session) {
+          // Session already exists, redirect to dashboard
+          router.push('/dashboard');
+          return;
+        }
+
         const access_token = params.get('access_token');
         const refresh_token = params.get('refresh_token');
 
         if (!access_token || !refresh_token) {
+          console.error('Missing tokens in URL');
           router.push('/login?error=invalid_tokens');
           return;
         }
 
-        // Set the session
+        // Set the session with error handling
         const { data, error } = await supabase.auth.setSession({
           access_token,
           refresh_token
         });
+
+        if (error) {
+          console.error('Session error:', error.message);
+          throw error;
+        }
 
         if (error) {
           console.error('Auth callback error:', error);
