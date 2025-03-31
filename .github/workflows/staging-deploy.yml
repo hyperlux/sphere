@@ -100,7 +100,7 @@ jobs:
                 networks:
                   - web
 
-              staging:
+              auronet-staging:
                 image: ${DOCKER_IMAGE}:${DOCKER_TAG}
                 container_name: auronet-staging
                 restart: unless-stopped
@@ -123,14 +123,16 @@ jobs:
                   - "traefik.docker.network=web"
                   - "traefik.http.routers.staging.rule=Host(\`staging.auroville.social\`)"
                   - "traefik.http.routers.staging.entrypoints=web"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-                  - "traefik.http.routers.staging.middlewares=redirect-to-https@docker"
+                  - "traefik.http.services.auronet-staging.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.staging.service=auronet-staging"
                   - "traefik.http.routers.staging-secure.rule=Host(\`staging.auroville.social\`)"
                   - "traefik.http.routers.staging-secure.entrypoints=websecure"
                   - "traefik.http.routers.staging-secure.tls=true"
                   - "traefik.http.routers.staging-secure.tls.certresolver=default"
-                  - "traefik.http.services.staging.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.staging-secure.service=auronet-staging"
+                  - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+                  - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+                  - "traefik.http.routers.staging.middlewares=redirect-https"
                 networks:
                   - web
 
@@ -139,6 +141,47 @@ jobs:
                 name: web
                 external: true
             EOL
+
+            # Ensure directory for Traefik configuration exists
+            mkdir -p traefik/certs
+            
+            # Create or update Traefik configuration
+            cat > traefik/traefik.yml <<EOL
+            entryPoints:
+              web:
+                address: ":80"
+              websecure:
+                address: ":443"
+                http:
+                  tls:
+                    certResolver: default
+                    domains:
+                      - main: "auroville.social"
+                      - main: "staging.auroville.social"
+
+            certificatesResolvers:
+              default:
+                acme:
+                  email: "notifications@aurovillenetwork.us"
+                  storage: "/certs/acme.json"
+                  tlsChallenge: {}
+
+            providers:
+              docker:
+                endpoint: "unix:///var/run/docker.sock"
+                exposedByDefault: false
+                network: web
+
+            api:
+              dashboard: false
+
+            log:
+              level: INFO
+            EOL
+
+            # Make sure acme.json exists with correct permissions
+            touch traefik/certs/acme.json
+            chmod 600 traefik/certs/acme.json
 
             # Deploy using the new compose file
             docker compose -f docker-compose.staging.yml pull
@@ -153,4 +196,8 @@ jobs:
             echo "Container Logs:"
             docker logs auronet-staging --tail 50
             echo "Traefik Logs:"
-            docker logs traefik --tail 20
+            docker logs traefik --tail 50
+            
+            # Check if services are properly connected
+            echo "Traefik Docker Provider Info:"
+            docker logs traefik 2>&1 | grep -A 5 "Provider connection established"

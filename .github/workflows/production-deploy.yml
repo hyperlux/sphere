@@ -129,14 +129,16 @@ jobs:
                   - "traefik.docker.network=web"
                   - "traefik.http.routers.prod.rule=Host(\`auroville.social\`)"
                   - "traefik.http.routers.prod.entrypoints=web"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-                  - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-                  - "traefik.http.routers.prod.middlewares=redirect-to-https@docker"
+                  - "traefik.http.services.auronet-prod.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.prod.service=auronet-prod"
                   - "traefik.http.routers.prod-secure.rule=Host(\`auroville.social\`)"
                   - "traefik.http.routers.prod-secure.entrypoints=websecure"
                   - "traefik.http.routers.prod-secure.tls=true"
                   - "traefik.http.routers.prod-secure.tls.certresolver=default"
-                  - "traefik.http.services.prod.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.prod-secure.service=auronet-prod"
+                  - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+                  - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+                  - "traefik.http.routers.prod.middlewares=redirect-https"
                 networks:
                   - web
 
@@ -145,6 +147,49 @@ jobs:
                 name: web
                 external: true
             EOL
+
+            # Ensure directory for Traefik configuration exists
+            mkdir -p traefik/certs
+            
+            # Create or update Traefik configuration if it doesn't exist
+            if [ ! -f traefik/traefik.yml ]; then
+              cat > traefik/traefik.yml <<EOL
+              entryPoints:
+                web:
+                  address: ":80"
+                websecure:
+                  address: ":443"
+                  http:
+                    tls:
+                      certResolver: default
+                      domains:
+                        - main: "auroville.social"
+                        - main: "staging.auroville.social"
+
+              certificatesResolvers:
+                default:
+                  acme:
+                    email: "notifications@aurovillenetwork.us"
+                    storage: "/certs/acme.json"
+                    tlsChallenge: {}
+
+              providers:
+                docker:
+                  endpoint: "unix:///var/run/docker.sock"
+                  exposedByDefault: false
+                  network: web
+
+              api:
+                dashboard: false
+
+              log:
+                level: INFO
+              EOL
+            fi
+
+            # Make sure acme.json exists with correct permissions
+            touch traefik/certs/acme.json
+            chmod 600 traefik/certs/acme.json
 
             # Deploy using the new compose file
             docker compose pull
@@ -159,4 +204,8 @@ jobs:
             echo "Container Logs:"
             docker logs auronet-prod --tail 50
             echo "Traefik Logs:"
-            docker logs traefik --tail 20
+            docker logs traefik --tail 50
+            
+            # Check if services are properly connected
+            echo "Traefik Docker Provider Info:"
+            docker logs traefik 2>&1 | grep -A 5 "Provider connection established"
