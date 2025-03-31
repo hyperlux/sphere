@@ -1,13 +1,14 @@
-name: Staging Deployment
+name: Production Deployment
 
 on:
   push:
     branches:
-      - develop
+      - main
+  workflow_dispatch:  # Allow manual triggers
 
 env:
   DOCKER_IMAGE: lightvibrations/auronet
-  DOCKER_TAG: develop
+  DOCKER_TAG: latest
 
 jobs:
   test:
@@ -30,21 +31,24 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint check
-        run: npm run lint || true  # Don't fail deployment on lint errors, but report them
-
+        run: npm run lint
+        # Fail deployment on lint errors in production
+        
       - name: Run tests
-        run: npm test || true  # Add proper test command once tests are implemented
+        run: npm test
+        # Fail deployment on test failures in production
 
       - name: Build verification
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
   deploy:
-    name: Deploy to Staging
+    name: Deploy to Production
     needs: test  # Only deploy if tests pass
     runs-on: ubuntu-latest
+    environment: production  # Additional protection for production deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -63,35 +67,37 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
           cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           cache-to: type=inline
 
-      - name: Deploy to staging server
+      - name: Deploy to production server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: root
+          username: root  # Usually root for DigitalOcean droplets
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/auronet
             
             # Create docker-compose file with proper environment variables
-            cat > docker-compose.staging.yml <<EOL
+            cat > docker-compose.yml <<EOL
             version: '3.9'
             services:
-              auronet-staging:
+              auronet:
                 image: ${DOCKER_IMAGE}:${DOCKER_TAG}
-                container_name: auronet-staging
+                container_name: auronet
                 restart: unless-stopped
                 environment:
-                  - DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                 healthcheck:
                   test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
                   interval: 30s
@@ -100,19 +106,19 @@ jobs:
                   start_period: 90s
                 labels:
                   - "traefik.enable=true"
-                  - "traefik.http.routers.staging-secure.rule=Host(\`staging.auroville.social\`)"
-                  - "traefik.http.routers.staging-secure.entrypoints=websecure"
-                  - "traefik.http.routers.staging-secure.tls=true"
-                  - "traefik.http.routers.staging-secure.tls.certresolver=default"
-                  - "traefik.http.routers.staging.rule=Host(\`staging.auroville.social\`)"
-                  - "traefik.http.routers.staging.entrypoints=web"
-                  - "traefik.http.routers.staging.middlewares=redirect-to-https"
+                  - "traefik.http.routers.auronet-secure.rule=Host(\`auroville.social\`)"
+                  - "traefik.http.routers.auronet-secure.entrypoints=websecure"
+                  - "traefik.http.routers.auronet-secure.tls=true"
+                  - "traefik.http.routers.auronet-secure.tls.certresolver=default"
+                  - "traefik.http.routers.auronet.rule=Host(\`auroville.social\`)"
+                  - "traefik.http.routers.auronet.entrypoints=web"
+                  - "traefik.http.routers.auronet.middlewares=redirect-to-https"
                   - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
                   - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-                  - "traefik.http.services.staging.loadbalancer.server.port=3000"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.path=/api/health"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.interval=30s"
-                  - "traefik.http.services.staging.loadbalancer.healthcheck.timeout=10s"
+                  - "traefik.http.services.auronet.loadbalancer.server.port=3000"
+                  - "traefik.http.services.auronet.loadbalancer.healthcheck.path=/api/health"
+                  - "traefik.http.services.auronet.loadbalancer.healthcheck.interval=30s"
+                  - "traefik.http.services.auronet.loadbalancer.healthcheck.timeout=10s"
                 networks:
                   - web
             networks:
@@ -124,9 +130,9 @@ jobs:
             docker network inspect web >/dev/null 2>&1 || docker network create web
             
             # Deploy using the new compose file
-            docker compose -f docker-compose.staging.yml pull
-            docker compose -f docker-compose.staging.yml up -d --force-recreate
+            docker compose pull
+            docker compose up -d --force-recreate
 
             # Print container status and logs
-            docker compose -f docker-compose.staging.yml ps
-            docker logs auronet-staging --tail 50
+            docker compose ps
+            docker logs auronet --tail 50
