@@ -2,7 +2,7 @@
 
 AuroNet is a digital platform designed to foster collaboration and community engagement within Auroville. It provides a centralized space for community events, resource sharing, and collaborative discussions.
 
-## Features
+## Features!
 test
 ### Community Spaces
 - Create and join community spaces
