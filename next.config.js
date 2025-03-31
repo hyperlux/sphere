@@ -14,19 +14,6 @@ const nextConfig = {
   images: {
     domains: ['auroville.social'],
   },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Host',
-            value: 'auroville.social'
-          }
-        ],
-      },
-    ]
-  },
   async redirects() {
     return [
       {
