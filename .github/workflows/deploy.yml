@@ -9,6 +9,8 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    outputs:
+      DEPLOY_DOMAIN: ${{ steps.set-env.outputs.DEPLOY_DOMAIN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,6 +20,19 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Set environment variables
+        id: set-env
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
+            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
+            echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -31,19 +46,22 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
 
       - name: Login to Docker Hub
+        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set up Docker Buildx
+        if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
+        if: github.event_name == 'push'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -52,24 +70,18 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
 
   deploy:
     needs: test-and-build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     env:
       DEPLOY_PATH: /opt/auronet
+      DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
     steps:
-      - name: Set environment variables
-        run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_ENV
-          fi
-
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -77,31 +89,9 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Create deployment directory if it doesn't exist
-            mkdir -p ${{ env.DEPLOY_PATH }}
             cd ${{ env.DEPLOY_PATH }}
 
-            # Ensure proper Docker Compose version
-            docker-compose version
-
-            # Ensure docker network exists
-            docker network inspect web >/dev/null 2>&1 || docker network create web
-
-            # Ensure Traefik service is running (using the main compose file)
-            # Assumes docker-compose.yml and traefik/ config exist in ${{ env.DEPLOY_PATH }}
-            echo "Ensuring Traefik service is running..."
-            docker-compose -f docker-compose.yml up -d traefik
-
-            # Verify Traefik is running after attempting to start it
-            echo "Verifying Traefik container status..."
-            if ! docker ps | grep -q traefik; then
-              echo "Error: Traefik container failed to start or is not running"
-              exit 1
-            else
-              echo "Traefik container is running."
-            fi
-
-            # Update docker-compose.yml for the specific environment
+            # Create branch-specific docker-compose file
             cat > docker-compose.${{ github.ref_name }}.yml <<EOL
             version: '3.9'
             services:
@@ -112,28 +102,19 @@ jobs:
                   - NEXT_PUBLIC_SUPABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
                   - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
                   - SUPABASE_SERVICE_ROLE_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-                restart: unless-stopped
+                  - NODE_ENV=production
                 healthcheck:
-                  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+                  test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
                   interval: 10s
-                  timeout: 5s
-                  retries: 5
-                  start_period: 40s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 30s
                 labels:
                   - "traefik.enable=true"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.entrypoints=websecure"
                   - "traefik.http.routers.${{ github.ref_name }}-secure.tls=true"
-                  - "traefik.http.routers.${{ github.ref_name }}-secure.tls.certresolver=default"
-                  - "traefik.http.middlewares.${{ github.ref_name }}-redirect.redirectscheme.scheme=https"
-                  - "traefik.http.middlewares.${{ github.ref_name }}-redirect.redirectscheme.permanent=true"
-                  - "traefik.http.routers.${{ github.ref_name }}-http.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
-                  - "traefik.http.routers.${{ github.ref_name }}-http.entrypoints=web"
-                  - "traefik.http.routers.${{ github.ref_name }}-http.middlewares=${{ github.ref_name }}-redirect"
                   - "traefik.http.services.${{ github.ref_name }}.loadbalancer.server.port=3000"
-                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.path=/api/health"
-                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.interval=10s"
-                  - "traefik.http.services.${{ github.ref_name }}.loadbalancer.healthcheck.timeout=5s"
                 networks:
                   - web
             networks:
@@ -141,11 +122,6 @@ jobs:
                 external: true
             EOL
 
-            # Pull latest image
+            # Pull latest image and deploy
             docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
-
-            # Deploy using docker compose with explicit compose command
-            docker-compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate --remove-orphans
-
-            # Print container status
-            docker-compose -f docker-compose.${{ github.ref_name }}.yml ps
+            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate
