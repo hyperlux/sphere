@@ -1,7 +1,23 @@
 version: '3.9'
 
 services:
-  staging:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/certs:/certs"
+      - "./traefik/traefik.yml:/traefik.yml:ro"
+    networks:
+      - web
+
+  auronet-staging:
     build:
       context: .
       dockerfile: Dockerfile
@@ -24,23 +40,26 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
       - "traefik.http.routers.staging.rule=Host(`staging.auroville.social`)"
       - "traefik.http.routers.staging.entrypoints=web"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-      - "traefik.http.routers.staging.middlewares=redirect-to-https@docker"
+      - "traefik.http.services.auronet-staging.loadbalancer.server.port=3000"
+      - "traefik.http.routers.staging.service=auronet-staging"
       - "traefik.http.routers.staging-secure.rule=Host(`staging.auroville.social`)"
       - "traefik.http.routers.staging-secure.entrypoints=websecure"
       - "traefik.http.routers.staging-secure.tls=true"
       - "traefik.http.routers.staging-secure.tls.certresolver=default"
-      - "traefik.http.services.staging.loadbalancer.server.port=3000"
+      - "traefik.http.routers.staging-secure.service=auronet-staging"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+      - "traefik.http.routers.staging.middlewares=redirect-https"
     networks:
       - web
 
 networks:
   web:
-    name: web
     external: true
