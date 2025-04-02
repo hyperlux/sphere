@@ -2,11 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches:
-      [ develop ] 
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      [ develop ] 
+    branches: [ main, develop ]
 
 jobs:
   test-and-build:
@@ -26,9 +24,15 @@ jobs:
       - name: Set environment variables
         id: set-env
         run: |
-          echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
-          echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
+            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
+            echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -73,7 +77,7 @@ jobs:
     needs: test-and-build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     env:
       DEPLOY_PATH: /opt/auronet
       DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
@@ -88,7 +92,7 @@ jobs:
             cd ${{ env.DEPLOY_PATH }}
 
             # Create branch-specific docker-compose file
-            cat > docker-compose.${{ github.ref_name }}.yml << 'EOL'
+            cat > docker-compose.${{ github.ref_name }}.yml <<EOL
             version: '3.9'
             services:
               traefik:
@@ -101,13 +105,81 @@ jobs:
                   - "80:80"
                   - "443:443"
                 volumes:
-                  - /var/run/docker.sock:/var/run/docker.sock:ro
-                  - /opt/auronet/traefik/certs:/certs
+                  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+                  - "/opt/auronet/traefik/certs:/certs"
                 command:
-                  - --global.sendAnonymousUsage=false
-                  - --api.dashboard=false
-                  - --providers.docker=true
-                  - --providers.docker.exposedByDefault=false
-                  - --entrypoints.web.address=:80
-                  - --entrypoints.web.http.redirections.entryPoint.to=websecure
-                  - --entrypoints.web.http.redirections.entryPoint.scheme=https
+                  - "--global.sendAnonymousUsage=false"
+                  - "--api.dashboard=false"
+                  - "--providers.docker=true"
+                  - "--providers.docker.exposedByDefault=false"
+                  - "--entrypoints.web.address=:80"
+                  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+                  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+                  - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+                  - "--entrypoints.websecure.address=:443"
+                  - "--certificatesresolvers.default.acme.tlschallenge=true"
+                  - "--certificatesresolvers.default.acme.email=notifications@aurovillenetwork.us"
+                  - "--certificatesresolvers.default.acme.storage=/certs/acme.json"
+                networks:
+                  - web
+
+              auronet-${{ github.ref_name }}:
+                image: ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+                container_name: auronet-${{ github.ref_name }}
+                restart: unless-stopped
+                environment:
+                  - DATABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL || secrets.STAGING_DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  - NODE_ENV=production
+                expose:
+                  - "3000"
+                healthcheck:
+                  test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+                  interval: 10s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 30s
+                depends_on:
+                  - traefik
+                labels:
+                  - "traefik.enable=true"
+                  - "traefik.docker.network=web"
+                  - "traefik.http.services.auronet-${{ github.ref_name }}.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.auronet-${{ github.ref_name }}.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+                  - "traefik.http.routers.auronet-${{ github.ref_name }}.entrypoints=websecure"
+                  - "traefik.http.routers.auronet-${{ github.ref_name }}.tls=true"
+                  - "traefik.http.routers.auronet-${{ github.ref_name }}.tls.certresolver=default"
+                  - "traefik.http.routers.auronet-${{ github.ref_name }}.service=auronet-${{ github.ref_name }}"
+                networks:
+                  - web
+
+            networks:
+              web:
+                name: web
+                external: true
+            EOL
+
+            # Ensure certs directory exists with proper permissions
+            mkdir -p /opt/auronet/traefik/certs
+            touch /opt/auronet/traefik/certs/acme.json
+            chmod 600 /opt/auronet/traefik/certs/acme.json
+
+            # Pull latest image and deploy with new config
+            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate
+
+            # Wait for services to start
+            echo "Waiting for services to start..."
+            sleep 15
+
+            # Verify deployment
+            echo "Checking container status..."
+            docker ps | grep -E "traefik|auronet-${{ github.ref_name }}"
+            
+            echo "Checking Traefik logs..."
+            docker logs traefik --tail 20
+
+            echo "Checking application logs..."
+            docker logs auronet-${{ github.ref_name }} --tail 20
