@@ -72,8 +72,9 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:latest
             ${{ secrets.DOCKER_USERNAME }}/auronet:main
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/auronet:main-cache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/auronet:main-cache,mode=max
+          # Disable cache to force a fresh build for debugging
+          # cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/auronet:main-cache
+          # cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/auronet:main-cache,mode=max
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}

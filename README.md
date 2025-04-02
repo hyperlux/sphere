@@ -272,7 +272,7 @@ The deployment process is fully automated using GitHub Actions (`.github/workflo
    - Traefik health checks
    - GitHub Actions build status
 
-### Deployment Process!
+### Deployment Process
 1. Code is pushed to either `main` or `develop` branch
 2. GitHub Actions workflow is triggered
 3. Application is built and tested
