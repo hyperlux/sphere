@@ -1,0 +1,179 @@
+name: Deploy Application
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    outputs:
+      DEPLOY_DOMAIN: ${{ steps.set-env.outputs.DEPLOY_DOMAIN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Set environment variables
+        id: set-env
+        run: |
+          echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
+          echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint check
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
+
+  deploy:
+    needs: test-and-build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      DEPLOY_PATH: /opt/auronet
+      DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+
+            # Create docker-compose file
+            cat > docker-compose.yml <<EOL
+            version: '3.9'
+            services:
+              traefik:
+                image: traefik:v2.10
+                container_name: traefik
+                restart: unless-stopped
+                security_opt:
+                  - no-new-privileges:true
+                ports:
+                  - "80:80"
+                  - "443:443"
+                volumes:
+                  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+                  - "/opt/auronet/traefik/certs:/certs"
+                command:
+                  - "--global.sendAnonymousUsage=false"
+                  - "--api.dashboard=false"
+                  - "--providers.docker=true"
+                  - "--providers.docker.exposedByDefault=false"
+                  - "--entrypoints.web.address=:80"
+                  - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+                  - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+                  - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+                  - "--entrypoints.websecure.address=:443"
+                  - "--certificatesresolvers.default.acme.tlschallenge=true"
+                  - "--certificatesresolvers.default.acme.email=notifications@aurovillenetwork.us"
+                  - "--certificatesresolvers.default.acme.storage=/certs/acme.json"
+                networks:
+                  - web
+
+              auronet:
+                image: ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+                container_name: auronet
+                restart: unless-stopped
+                environment:
+                  - DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  - NODE_ENV=production
+                expose:
+                  - "3000"
+                healthcheck:
+                  test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+                  interval: 10s
+                  timeout: 10s
+                  retries: 3
+                  start_period: 30s
+                depends_on:
+                  - traefik
+                labels:
+                  - "traefik.enable=true"
+                  - "traefik.docker.network=web"
+                  - "traefik.http.services.auronet.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.auronet.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+                  - "traefik.http.routers.auronet.entrypoints=websecure"
+                  - "traefik.http.routers.auronet.tls=true"
+                  - "traefik.http.routers.auronet.tls.certresolver=default"
+                  - "traefik.http.routers.auronet.service=auronet"
+                networks:
+                  - web
+
+            networks:
+              web:
+                name: web
+                external: true
+            EOL
+
+            # Ensure certs directory exists with proper permissions
+            mkdir -p /opt/auronet/traefik/certs
+            touch /opt/auronet/traefik/certs/acme.json
+            chmod 600 /opt/auronet/traefik/certs/acme.json
+
+            # Pull latest image and deploy with new config
+            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+            docker compose -f docker-compose.yml up -d --force-recreate
+
+            # Wait for services to start
+            echo "Waiting for services to start..."
+            sleep 15
+
+            # Verify deployment
+            echo "Checking container status..."
+            docker ps | grep -E "traefik|auronet"
+            
+            echo "Checking Traefik logs..."
+            docker logs traefik --tail 20
+
+            echo "Checking application logs..."
+            docker logs auronet --tail 20
