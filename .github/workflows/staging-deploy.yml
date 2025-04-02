@@ -38,12 +38,6 @@ jobs:
       - name: Lint check
         run: npm run lint
 
-      - name: Build application
-        run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-
       - name: Run security scan
         uses: snyk/actions/node@master
         env:
