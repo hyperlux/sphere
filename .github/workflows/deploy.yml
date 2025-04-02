@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   test-and-build:
@@ -24,15 +24,9 @@ jobs:
       - name: Set environment variables
         id: set-env
         run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
-            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
-            echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
-            echo "SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}" >> $GITHUB_ENV
-            echo "SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
-          fi
+          echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm ci
@@ -68,7 +62,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
-            ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
+            ${{ secrets.DOCKER_USERNAME }}/auronet:main
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
@@ -77,7 +71,7 @@ jobs:
     needs: test-and-build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    environment: production
     env:
       DEPLOY_PATH: /opt/auronet
       DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
@@ -91,8 +85,8 @@ jobs:
           script: |
             cd ${{ env.DEPLOY_PATH }}
 
-            # Create branch-specific docker-compose file
-            cat > docker-compose.${{ github.ref_name }}.yml <<EOL
+            # Create docker-compose file
+            cat > docker-compose.yml <<EOL
             version: '3.9'
             services:
               traefik:
@@ -123,15 +117,15 @@ jobs:
                 networks:
                   - web
 
-              auronet-${{ github.ref_name }}:
-                image: ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
-                container_name: auronet-${{ github.ref_name }}
+              auronet:
+                image: ${{ secrets.DOCKER_USERNAME }}/auronet:main
+                container_name: auronet
                 restart: unless-stopped
                 environment:
-                  - DATABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL || secrets.STAGING_DATABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_URL=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_URL || secrets.STAGING_SUPABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                   - NODE_ENV=production
                 expose:
                   - "3000"
@@ -146,12 +140,12 @@ jobs:
                 labels:
                   - "traefik.enable=true"
                   - "traefik.docker.network=web"
-                  - "traefik.http.services.auronet-${{ github.ref_name }}.loadbalancer.server.port=3000"
-                  - "traefik.http.routers.auronet-${{ github.ref_name }}.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
-                  - "traefik.http.routers.auronet-${{ github.ref_name }}.entrypoints=websecure"
-                  - "traefik.http.routers.auronet-${{ github.ref_name }}.tls=true"
-                  - "traefik.http.routers.auronet-${{ github.ref_name }}.tls.certresolver=default"
-                  - "traefik.http.routers.auronet-${{ github.ref_name }}.service=auronet-${{ github.ref_name }}"
+                  - "traefik.http.services.auronet.loadbalancer.server.port=3000"
+                  - "traefik.http.routers.auronet.rule=Host(\`${{ env.DEPLOY_DOMAIN }}\`)"
+                  - "traefik.http.routers.auronet.entrypoints=websecure"
+                  - "traefik.http.routers.auronet.tls=true"
+                  - "traefik.http.routers.auronet.tls.certresolver=default"
+                  - "traefik.http.routers.auronet.service=auronet"
                 networks:
                   - web
 
@@ -167,8 +161,8 @@ jobs:
             chmod 600 /opt/auronet/traefik/certs/acme.json
 
             # Pull latest image and deploy with new config
-            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
-            docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate
+            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:main
+            docker compose -f docker-compose.yml up -d --force-recreate
 
             # Wait for services to start
             echo "Waiting for services to start..."
@@ -176,10 +170,10 @@ jobs:
 
             # Verify deployment
             echo "Checking container status..."
-            docker ps | grep -E "traefik|auronet-${{ github.ref_name }}"
+            docker ps | grep -E "traefik|auronet"
             
             echo "Checking Traefik logs..."
             docker logs traefik --tail 20
 
             echo "Checking application logs..."
-            docker logs auronet-${{ github.ref_name }} --tail 20
+            docker logs auronet --tail 20
