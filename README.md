@@ -4,7 +4,7 @@ AuroNet is a digital platform designed to foster collaboration and community eng
 
 ## Features
 test
-### Community Spaces!
+### Community Spaces
 - Create and join community spaces
 - Share posts and updates within spaces
 - Manage space membership and roles
