@@ -1,4 +1,4 @@
-name: Deploy Application
+name: Deploy Production Application
 
 on:
   push:
@@ -12,8 +12,8 @@ jobs:
     outputs:
       DEPLOY_DOMAIN: ${{ steps.set-env.outputs.DEPLOY_DOMAIN }}
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
       - name: Set environment variables
         id: set-env
         run: |
-          echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_OUTPUT
+          echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: npm ci
@@ -40,7 +40,7 @@ jobs:
 
       - name: Login to Docker Hub
         if: github.event_name == 'push'
-        uses: docker/login-action@v3
+        uses: This should be `docker/login-action@v3`
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -57,7 +57,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
-            ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+            ${{ secrets.DOCKER_USERNAME }}/auronet:production
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
@@ -66,7 +66,7 @@ jobs:
     needs: test-and-build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
     env:
       DEPLOY_PATH: /opt/auronet
       DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
@@ -113,14 +113,14 @@ jobs:
                   - web
 
               auronet:
-                image: ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+                image: ${{ secrets.DOCKER_USERNAME }}/auronet:production
                 container_name: auronet
                 restart: unless-stopped
                 environment:
-                  - DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  - DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
                   - NODE_ENV=production
                 expose:
                   - "3000"
@@ -156,7 +156,7 @@ jobs:
             chmod 600 /opt/auronet/traefik/certs/acme.json
 
             # Pull latest image and deploy with new config
-            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:develop
+            docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:production
             docker compose -f docker-compose.yml up -d --force-recreate
 
             # Wait for services to start
