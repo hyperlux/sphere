@@ -53,8 +53,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:production
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }} # Use STAGING URL for test
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }} # Use STAGING ANON KEY for test
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} # Use Production URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} # Use Production Anon Key
 
   deploy:
     needs: test-and-build
