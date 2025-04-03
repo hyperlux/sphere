@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       DEPLOY_DOMAIN: ${{ steps.set-env.outputs.DEPLOY_DOMAIN }}
-    env:
-      SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +46,12 @@ jobs:
         if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
 
+      - name: Debug build args
+        if: github.event_name == 'push'
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}"
+
       - name: Build and push Docker image
         if: github.event_name == 'push'
         uses: docker/build-push-action@v5
@@ -59,8 +62,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:production
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
 
   deploy:
     needs: test-and-build
@@ -162,6 +165,10 @@ jobs:
             # Wait for services to start
             echo "Waiting for services to start..."
             sleep 15
+
+            # Debug environment variables
+            echo "Environment variables in container:"
+            docker exec auronet env | grep -E "SUPABASE|DATABASE"
 
             # Verify deployment
             echo "Checking container status..."
