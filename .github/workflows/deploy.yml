@@ -53,8 +53,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:production
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} # Use Production URL
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} # Use Production Anon Key
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }} # Use STAGING URL for test
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }} # Use STAGING ANON KEY for test
 
   deploy:
     needs: test-and-build
@@ -112,8 +112,8 @@ jobs:
                 restart: unless-stopped
                 environment:
                   # NEXT_PUBLIC vars are baked in at build time via build-args
-                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  - DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
                   - NODE_ENV=production
                 expose:
                   - "3000"

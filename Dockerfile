@@ -14,12 +14,13 @@ ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://invalid.url/fall
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-invalid_key_fallback}
 COPY . .
 # Remove any potentially interfering .env files before build
-# Temporarily hardcode URL for build command to bypass ARG/ENV issues for debugging
+# Build using ENV variables set from ARG
 RUN rm -f .env* && \
-    echo "--- Building with Hardcoded URL (Debug) ---" && \
+    echo "--- Building with ---" && \
+    echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}" && \
     echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" && \
     echo "---------------------" && \
-    NEXT_PUBLIC_SUPABASE_URL='http://localhost:54321' npm run build
+    npm run build
 
 # Stage 3: Production image
 FROM node:18-alpine AS runner
