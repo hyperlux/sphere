@@ -9,8 +9,7 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    outputs:
-      DEPLOY_DOMAIN: ${{ steps.set-env.outputs.DEPLOY_DOMAIN }}
+    # No outputs needed anymore
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,10 +20,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Set environment variables
-        id: set-env
-        run: |
-          echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
+      # This step is no longer needed as secrets are used directly in build-args
+      # and domain is hardcoded in deploy job
 
       - name: Install dependencies
         run: npm ci
@@ -46,12 +43,6 @@ jobs:
         if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
 
-      - name: Debug build args
-        if: github.event_name == 'push'
-        run: |
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}"
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}"
-
       - name: Build and push Docker image
         if: github.event_name == 'push'
         uses: docker/build-push-action@v5
@@ -62,8 +53,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:production
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
   deploy:
     needs: test-and-build
@@ -72,7 +63,7 @@ jobs:
     environment: production
     env:
       DEPLOY_PATH: /opt/auronet
-      DEPLOY_DOMAIN: ${{ needs.test-and-build.outputs.DEPLOY_DOMAIN }}
+      DEPLOY_DOMAIN: auroville.social # Hardcode production domain
     steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@master
@@ -120,10 +111,9 @@ jobs:
                 container_name: auronet
                 restart: unless-stopped
                 environment:
-                  - DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
-                  - NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+                  # NEXT_PUBLIC vars are baked in at build time via build-args
+                  - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                  - SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                   - NODE_ENV=production
                 expose:
                   - "3000"
