@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ love ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ love ]
 
 jobs:
   test-and-build:
@@ -63,12 +63,7 @@ jobs:
       DEPLOY_PATH: /opt/auronet
     steps:
       - name: Set environment variables
-        run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_ENV
-          fi
+        run: echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_ENV
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
