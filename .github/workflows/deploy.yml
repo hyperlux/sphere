@@ -2,9 +2,9 @@ name: Deploy Staging Application
 
 on:
   push:
-    branches: [ solve ]
+    branches: [ solve, develop ]
   pull_request:
-    branches: [ solve ]
+    branches: [ solve, develop ]
 
 jobs:
   test-and-build:
