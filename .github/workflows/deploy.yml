@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ solve ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ solve ]
 
 jobs:
   test-and-build:
@@ -24,7 +24,7 @@ jobs:
       - name: Set environment variables
         id: set-env
         run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+          if [[ ${{ github.ref }} == 'refs/heads/solve' ]]; then
             echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_OUTPUT
             echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
             echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
