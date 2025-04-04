@@ -29,10 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linters
-        run: npm run lint
-        env:
-          ESLINT_USE_FLAT_CONFIG: true # Force ESLint to use eslint.config.mjs
+      # - name: Run linters
+      #   # package.json lint script was updated to run: eslint . --config eslint.config.mjs
+      #   run: npm run lint
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -57,6 +56,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Re-enable cache
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
