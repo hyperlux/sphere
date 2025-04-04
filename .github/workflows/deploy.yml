@@ -1,0 +1,96 @@
+name: Deploy Auronet to Production
+
+on:
+  push:
+    branches:
+      - glorious # Trigger deployment only on pushes to the main branch
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: hyperlux/auronet # Replace 'hyperlux' if your GitHub username/org is different
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Needed to push to GHCR
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Match the Node version in your Dockerfile
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linters
+        run: npm run lint
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Use the automatically generated token
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha # Tag with the Git commit SHA
+            type=raw,value=latest,enable={{is_default_branch}} # Tag with 'latest' only for the default branch (main)
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-push # Run only after the image is built and pushed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: root # As confirmed
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e # Exit on error
+            cd /opt/auronet # Navigate to the app directory on the server
+
+            # Export secrets as environment variables for docker compose
+            export NODE_ENV=production
+            export DATABASE_URL='${{ secrets.DATABASE_URL }}'
+            export NEXT_PUBLIC_SUPABASE_URL='${{ secrets.SUPABASE_URL }}' # Use SUPABASE_URL for public access too
+            export NEXT_PUBLIC_SUPABASE_ANON_KEY='${{ secrets.SUPABASE_ANON_KEY }}'
+            export SUPABASE_SERVICE_ROLE_KEY='${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}'
+
+            # Log in to GHCR on the server to pull the private image
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # Pull the latest image
+            docker compose pull
+
+            # Stop and restart the service with the new image and environment variables
+            # --force-recreate ensures the container uses the new env vars
+            # --remove-orphans cleans up any old containers if the compose file changed
+            docker compose up -d --force-recreate --remove-orphans
+
+            # Optional: Clean up unused Docker images to save space
+            docker image prune -af
