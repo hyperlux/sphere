@@ -166,6 +166,9 @@ jobs:
             touch /opt/auronet/traefik/certs/acme.json
             chmod 600 /opt/auronet/traefik/certs/acme.json
 
+            # Prune unused Docker resources to free up space
+            docker system prune -af
+
             # Pull latest image and deploy with new config
             docker pull ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.ref_name }}
             docker compose -f docker-compose.${{ github.ref_name }}.yml up -d --force-recreate
