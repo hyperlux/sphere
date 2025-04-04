@@ -1,28 +1,28 @@
+import SignUpHeader from '@/components/SignUpHeader'; // Adjusted import path assuming '@' alias for root
+import InnovativeCarousel from '@/components/InnovativeCarousel'; // Adjusted import path
+
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <main className="max-w-4xl mx-auto mt-16 text-center">
-        <h1 className="text-4xl font-bold text-amber-600 mb-4">
-          Welcome to AuroNet
-        </h1>
-        <p className="text-xl text-gray-700 mb-8">
-          Where Auroville's spirit meets digital collaboration
-        </p>
-        <div className="flex gap-4 justify-center">
-          <a
-            href="/login"
-            className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-          >
-            Login
-          </a>
-          <a
-            href="/signup"
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            Sign Up
-          </a>
-        </div>
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+      <SignUpHeader />
+      <main className="flex-grow flex flex-col items-center justify-center p-6">
+        <InnovativeCarousel />
+        <section className="mt-12 text-center max-w-2xl">
+          <h2 className="text-3xl font-semibold text-gray-800 dark:text-white mb-4">
+            Connect, Collaborate, Thrive
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Join the Auroville Social platform to engage with the community,
+            discover events, share resources, and build connections.
+          </p>
+          {/* Optional: Add a unique visual element like a wavy divider here if desired */}
+          {/* Example: <div className="w-full h-1 bg-gradient-to-r from-transparent via-teal-500 to-transparent my-8"></div> */}
+        </section>
       </main>
+      {/* Optional Footer can be added here */}
+      {/* <footer className="w-full py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+        © {new Date().getFullYear()} Auroville Social. All rights reserved.
+      </footer> */}
     </div>
   );
 }
