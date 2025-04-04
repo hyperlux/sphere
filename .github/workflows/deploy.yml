@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ flex, lux ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ flex, lux ]
 
 jobs:
   test-and-build:
@@ -64,7 +64,7 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+          if [[ ${{ github.ref }} == 'refs/heads/flex' ]]; then
             echo "DEPLOY_DOMAIN=auroville.social" >> $GITHUB_ENV
           else
             echo "DEPLOY_DOMAIN=staging.auroville.social" >> $GITHUB_ENV
