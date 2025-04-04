@@ -31,6 +31,8 @@ jobs:
 
       - name: Run linters
         run: npm run lint
+        env:
+          ESLINT_USE_FLAT_CONFIG: true # Force ESLint to use eslint.config.mjs
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
