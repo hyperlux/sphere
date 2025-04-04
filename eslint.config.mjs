@@ -1,12 +1,17 @@
 import eslint from '@eslint/js';
-import next from 'eslint-config-next';
+import tseslint from 'typescript-eslint';
+import next from '@next/eslint-plugin-next';
 
-export default [
+export default tseslint.config(
   eslint.configs.recommended,
-  ...next,
+  ...tseslint.configs.recommended,
   {
+    plugins: {
+      '@next/next': next,
+    },
     rules: {
+      ...next.configs.recommended.rules,
       // Add or override rules here
     },
-  },
-];
+  }
+);
