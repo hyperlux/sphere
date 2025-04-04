@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches: [ main ]
+    branches: [ lux ]
   pull_request:
-    branches: [ main ]
+    branches: [ lux ]
 
 jobs:
   test-and-build:
@@ -59,8 +59,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/auronet:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/auronet:develop
           build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.STAGING_SUPABASE_ANON_KEY }}
 
   deploy:
     needs: test-and-build
