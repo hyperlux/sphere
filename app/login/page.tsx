@@ -51,7 +51,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    // Add w-full here to ensure this container takes full width within the parent layout's flex context
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <img
@@ -59,6 +60,7 @@ export default function LoginPage() {
             src="/logodark.png" // Assuming logo in public folder
             alt="Auroville"
           />
+          {/* Title already centered */}
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Sign in to your account
           </h2>
@@ -103,16 +105,16 @@ export default function LoginPage() {
             <div className="text-red-500 text-sm text-center">{error}</div>
           )}
 
-          <div className="flex items-center justify-end"> {/* Changed justify-between to justify-end */}
-            <div className="text-sm">
-              <Link
-                href="/forgot-password" // Use Next.js Link href
+          {/* Center "Forgot password" link */}
+          <div className="text-sm text-center">
+            <Link
+              href="/forgot-password" // Use Next.js Link href
                 className="font-medium text-orange-500 hover:text-orange-600" // Updated styles
               >
                 Forgot your password?
-              </Link>
-            </div>
+            </Link>
           </div>
+
 
           <div>
             <button

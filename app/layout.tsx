@@ -67,10 +67,12 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#F97316" />
 
-        {/* PWA icons */}
-        <link rel="apple-touch-icon" href="favicon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon.png" />
+        {/* Favicon will be automatically handled by Next.js via app/icon.png */}
+        {/* Removed manual link tags:
+          <link rel="apple-touch-icon" href="favicon.png" />
+          <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon.png" />
+        */}
       </head>
       <body className="antialiased">
         <Suspense fallback={<div className="min-h-screen bg-gray-900"></div>}>
