@@ -11,12 +11,12 @@ const carouselImages = [
     description: 'The soul of Auroville - A place for concentration'
   },
   {
-    url: '/auroimgs/05jogging-in-the-green-belt_29944057187_o.jpg',
+    url: '/auroimgs/greenbelt.jpg',
     title: 'Green Belt',
     description: 'Connecting with nature through outdoor activities'
   },
   {
-    url: '/auroimgs/06residential-zone_44160197054_o.jpg',
+    url: '/auroimgs/residentialzone.jpg',
     title: 'Residential Zone',
     description: 'Living spaces in harmony with nature'
   },
@@ -26,12 +26,12 @@ const carouselImages = [
     description: 'Innovative and sustainable design'
   },
   {
-    url: '/auroimgs/14botanical-garden-nursery_43068782600_o.jpg',
+    url: '/auroimgs/botanicalgarden.jpg',
     title: 'Botanical Gardens',
     description: 'Preserving biodiversity'
   },
   {
-    url: '/auroimgs/18permaculture-garden_44880878331_o.jpg',
+    url: '/auroimgs/townhallperma.jpg',
     title: 'Permaculture Gardens',
     description: 'Sustainable food systems'
   }
