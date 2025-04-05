@@ -7,10 +7,17 @@ RUN npm ci
 
 # Stage 2: Build the app
 FROM deps AS builder
+# Declare build arguments for public keys
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Declare build arguments for server keys (needed for build step)
+ARG SUPABASE_URL
+ARG SUPABASE_SERVICE_ROLE_KEY
+# Set environment variables for the build stage
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV SUPABASE_URL=${SUPABASE_URL}
+ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 COPY . .
 RUN echo "--- Building with ---" && \
     echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}" && \
