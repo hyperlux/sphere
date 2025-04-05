@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/db/client'; // Import the function
+import { createClient } from '@supabase/supabase-js'; // Import base client
 import { Database } from '@/lib/db/database.types';
 
 type RouteParams = {
@@ -11,8 +11,19 @@ type RouteParams = {
 // GET /api/forum/categories/[categoryId]/topics
 export async function GET(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
-  // Create the server client instance inside the handler
-  const supabase = createServerSupabaseClient();
+
+  // Use public keys for this public GET route
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase public URL or Anon Key');
+    return NextResponse.json({ error: 'Internal Server Error: Missing Supabase config' }, { status: 500 });
+  }
+
+  // Create client with public keys
+  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+
 
   if (!categoryId) {
     return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });

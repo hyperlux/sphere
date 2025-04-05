@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/db/client'; // Import the function
-import { Database } from '@/lib/db/database.types'; // Import the generated types
+import { createClient } from '@supabase/supabase-js'; // Import base client
+import { Database } from '@/lib/db/database.types';
 
 export async function GET() {
-  // Create the server client instance inside the handler
-  const supabase = createServerSupabaseClient();
+  // Use public keys for this public GET route
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase public URL or Anon Key');
+    return NextResponse.json({ error: 'Internal Server Error: Missing Supabase config' }, { status: 500 });
+  }
+
+  // Create client with public keys
+  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
   try {
     const { data: categories, error } = await supabase
