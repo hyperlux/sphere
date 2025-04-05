@@ -9,258 +9,95 @@ import ForumSidebar from '@/components/ForumSidebar';
 import ForumCategoryCard from '@/components/ForumCategoryCard';
 import Header from '@/components/Header';
 import { useAuth } from '@/components/AuthProvider';
-import { mockAurovillePosts } from '@/data/mockData';
+// Removed mock data import and related functions/constants
 
-// Generate latest activity from mock posts
-const generateLatestActivity = () => {
-  const latestActivities: { [key: string]: any } = {};
-  
-  mockAurovillePosts.forEach(post => {
-    const category = getCategoryFromTopicId(post.topicId);
-    const timestamp = new Date(post.timestamp);
-    
-    if (!latestActivities[category] || 
-        new Date(latestActivities[category].timestamp) < timestamp) {
-      latestActivities[category] = {
-        topicTitle: post.title,
-        username: post.author,
-        timestamp: formatTimeAgo(post.timestamp)
-      };
-    }
-  });
-  
-  return latestActivities;
-};
+// Define the structure for a category based on API response
+interface ForumCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  // Properties like topicCount, latestActivity, isTrending are removed as they are not in the API response yet
+}
 
-// Helper to format time ago string
-const formatTimeAgo = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  
-  return date.toLocaleDateString();
-};
-
-// Helper to get category from topic ID
-const getCategoryFromTopicId = (topicId: string): string => {
-  if (topicId.startsWith('general')) return '7';
-  if (topicId.startsWith('announcements')) return '1';
-  if (topicId.startsWith('sustainability')) return '3';
-  if (topicId.startsWith('volunteer')) return '4';
-  if (topicId.startsWith('cultural')) return '5';
-  if (topicId.startsWith('spiritual')) return '6';
-  return '2'; // Default to Community Projects
-};
-
-// Get topic counts from mock data
-const getTopicCounts = () => {
-  const counts: { [key: string]: number } = {
-    '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0
-  };
-  
-  mockAurovillePosts.forEach(post => {
-    const category = getCategoryFromTopicId(post.topicId);
-    counts[category] = (counts[category] || 0) + 1;
-  });
-  
-  return counts;
-};
-
-// Calculate trending categories based on post activity
-const determineTrending = () => {
-  const trending: { [key: string]: boolean } = {};
-  const categoryScores: { [key: string]: number } = {
-    '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0
-  };
-  
-  mockAurovillePosts.forEach(post => {
-    const category = getCategoryFromTopicId(post.topicId);
-    // Calculate score based on upvotes, downvotes, and recency
-    const daysSincePost = (new Date().getTime() - new Date(post.timestamp).getTime()) / (1000 * 60 * 60 * 24);
-    const score = (post.upvotes - post.downvotes) * Math.max(0, 7 - daysSincePost) / 7;
-    categoryScores[category] += score;
-  });
-  
-  // Mark top 2 categories as trending
-  const sortedCategories = Object.entries(categoryScores)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(entry => entry[0]);
-  
-  sortedCategories.forEach(categoryId => {
-    trending[categoryId] = true;
-  });
-  
-  return trending;
-};
-
-// Prepare the data
-const latestActivity = generateLatestActivity();
-const topicCounts = getTopicCounts();
-const trendingCategories = determineTrending();
-
-// Enhanced mock data with dynamic information
-const mockCategories = [
-  {
-    id: '1',
-    name: 'Announcements',
-    description: 'Official announcements from Auroville',
-    icon: '📢',
-    topicCount: topicCounts['1'] || 2,
-    latestActivity: latestActivity['1'] || {
-      topicTitle: 'New community guidelines for 2025',
-      username: 'AuroAdmin',
-      timestamp: '2 hours ago'
-    },
-    isTrending: !!trendingCategories['1']
-  },
-  {
-    id: '2',
-    name: 'Community Projects',
-    description: 'Discussions about ongoing and future community projects',
-    icon: '🌱',
-    topicCount: topicCounts['2'] || 2,
-    latestActivity: latestActivity['2'] || {
-      topicTitle: 'API Integration for Resource Sharing Platform',
-      username: 'AmitCode',
-      timestamp: '4 hours ago'
-    },
-    isTrending: !!trendingCategories['2']
-  },
-  {
-    id: '3',
-    name: 'Sustainability',
-    description: 'Discussions about sustainable living and practices',
-    icon: '♻️',
-    topicCount: topicCounts['3'] || 2,
-    latestActivity: latestActivity['3'] || {
-      topicTitle: 'Water conservation techniques',
-      username: 'DeepakWater',
-      timestamp: '1 day ago'
-    },
-    isTrending: !!trendingCategories['3']
-  },
-  {
-    id: '4',
-    name: 'Volunteer Opportunities',
-    description: 'Find and offer volunteer opportunities in Auroville',
-    icon: '🤝',
-    topicCount: topicCounts['4'] || 2,
-    latestActivity: latestActivity['4'] || {
-      topicTitle: 'Volunteers needed for forest restoration',
-      username: 'MayaGreen',
-      timestamp: '3 days ago'
-    },
-    isTrending: !!trendingCategories['4']
-  },
-  {
-    id: '5',
-    name: 'Cultural Exchange',
-    description: 'Share and discuss cultural experiences and events',
-    icon: '🎭',
-    topicCount: topicCounts['5'] || 2,
-    latestActivity: latestActivity['5'] || {
-      topicTitle: 'Traditional dance workshop this weekend',
-      username: 'LeelaHarmony',
-      timestamp: '12 hours ago'
-    },
-    isTrending: !!trendingCategories['5']
-  },
-  {
-    id: '6',
-    name: 'Spiritual Growth',
-    description: 'Discussions about spiritual practices and growth',
-    icon: '🧘',
-    topicCount: topicCounts['6'] || 2,
-    latestActivity: latestActivity['6'] || {
-      topicTitle: 'Meditation techniques for beginners',
-      username: 'PriyaEarth',
-      timestamp: '5 hours ago'
-    },
-    isTrending: !!trendingCategories['6']
-  },
-  {
-    id: '7',
-    name: 'General Discussion',
-    description: 'General topics related to Auroville',
-    icon: '💬',
-    topicCount: topicCounts['7'] || 2,
-    latestActivity: latestActivity['7'] || {
-      topicTitle: 'Ideas for Expanding the Solar Kitchen?',
-      username: 'SolarPrakash',
-      timestamp: '1 hour ago'
-    },
-    isTrending: !!trendingCategories['7']
-  }
-];
-
-const popularTags = [
-  'sustainability', 'community', 'events', 'meditation', 'yoga', 
-  'volunteering', 'education', 'art', 'technology', 'farming'
-];
+// Removed popularTags constant as it's not used with real data yet
 
 export default function ForumPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCategories, setFilteredCategories] = useState(mockCategories);
+  // State for fetched categories, loading, and error
+  const [allCategories, setAllCategories] = useState<ForumCategory[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<ForumCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'activity' | 'topics'>('activity');
-  const [filterTrending, setFilterTrending] = useState(false);
-  // Remove dynamic sidebarWidth state
+  // Simplify sorting - only by name for now
+  const [sortBy, setSortBy] = useState<'name'>('name');
+  // Remove filterTrending state
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/forum/categories');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.statusText}`);
+        }
+        const data: ForumCategory[] = await response.json();
+        setAllCategories(data);
+        setFilteredCategories(data); // Initialize filtered list
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []); // Fetch only once on mount
 
   // Filter and sort categories based on search query and sort option
   useEffect(() => {
-    let filtered = mockCategories;
-    
+    let filtered = [...allCategories]; // Start with all fetched categories
+
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(category => 
-        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.description.toLowerCase().includes(searchQuery.toLowerCase())
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(category =>
+        category.name.toLowerCase().includes(lowerCaseQuery) ||
+        (category.description && category.description.toLowerCase().includes(lowerCaseQuery)) // Check if description exists before searching
       );
     }
     
-    // Apply trending filter
-    if (filterTrending) {
-      filtered = filtered.filter(category => category.isTrending);
+    // Apply sorting (only by name for now)
+    if (sortBy === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
     }
-    
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name);
-      } else if (sortBy === 'topics') {
-        return b.topicCount - a.topicCount;
-      } else {
-        // Sort by activity (most recent first)
-        const aTime = new Date(a.latestActivity?.timestamp || '').getTime();
-        const bTime = new Date(b.latestActivity?.timestamp || '').getTime();
-        return bTime - aTime;
-      }
-    });
-    
+    // Add other sorting options here later if needed
+
     setFilteredCategories(filtered);
-  }, [searchQuery, sortBy, filterTrending]);
-  
+  }, [searchQuery, sortBy, allCategories]); // Re-run filter/sort when search, sort, or base data changes
+
   const handleCreateTopic = () => {
+    // TODO: Update this route if needed, maybe '/forum/topics/new'
     router.push('/forum/new');
   };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)] overflow-hidden">
-      {/* Sidebar */}
-      <ForumSidebar 
-        categories={mockCategories}
-        popularTags={popularTags}
+      {/* Sidebar - Pass fetched categories */}
+      {/* TODO: Update ForumSidebar props if necessary */}
+      <ForumSidebar
+        categories={allCategories} // Pass all fetched categories
+        popularTags={[]} // Pass empty array for now
         onCreateTopic={handleCreateTopic}
       />
-      
+
       {/* Main content area */}
       <div className="flex-1">
         {/* Include scripts and styles */}
@@ -299,11 +136,9 @@ export default function ForumPage() {
                     className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors relative"
                   >
                     <Filter size={20} />
-                    {filterTrending && (
-                      <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full"></span>
-                    )}
+                    {/* Remove trending indicator for now */}
                   </button>
-                  
+
                   <button
                     onClick={handleCreateTopic}
                     className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -329,50 +164,47 @@ export default function ForumPage() {
                       </label>
                       <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as 'name' | 'activity' | 'topics')}
+                        // Only allow sorting by name for now
+                        onChange={(e) => setSortBy(e.target.value as 'name')}
                         className="mt-1 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg p-2 text-[var(--text-primary)]"
                       >
-                        <option value="activity">Recent Activity</option>
+                        {/* <option value="activity">Recent Activity</option> */}
                         <option value="name">Name</option>
-                        <option value="topics">Topic Count</option>
+                        {/* <option value="topics">Topic Count</option> */}
                       </select>
                     </div>
-                    
-                    <div>
-                      <label className="block text-[var(--text-secondary)] text-sm mb-1">
-                        Filters:
-                      </label>
-                      <label className="flex items-center gap-2 text-[var(--text-primary)]">
-                        <input
-                          type="checkbox"
-                          checked={filterTrending}
-                          onChange={(e) => setFilterTrending(e.target.checked)}
-                          className="rounded border-[var(--border-color)]"
-                        />
-                        Trending categories only
-                      </label>
-                    </div>
+
+                    {/* Remove Trending Filter UI */}
                   </div>
                 </motion.div>
               )}
             </div>
-            
-            {filteredCategories.length === 0 ? (
+
+            {/* Handle Loading and Error States */}
+            {isLoading ? (
+              <div className="text-center py-12 text-[var(--text-muted)]">Loading categories...</div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-500">Error loading categories: {error}</div>
+            ) : filteredCategories.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-[var(--text-muted)] text-lg">No categories found matching your search.</p>
+                <p className="text-[var(--text-muted)] text-lg">
+                  {searchQuery ? 'No categories found matching your search.' : 'No categories found.'}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filteredCategories.map((category) => (
+                  // Update ForumCategoryCard props to match fetched data
                   <ForumCategoryCard
                     key={category.id}
                     id={category.id}
                     name={category.name}
-                    description={category.description}
-                    icon={category.icon}
-                    topicCount={category.topicCount}
-                    latestActivity={category.latestActivity}
-                    isTrending={category.isTrending}
+                    description={category.description ?? ''} // Handle null description
+                    icon={category.icon ?? '💬'} // Provide default icon
+                    // Remove props not available from API yet
+                    // topicCount={0}
+                    // latestActivity={null}
+                    // isTrending={false}
                   />
                 ))}
               </div>

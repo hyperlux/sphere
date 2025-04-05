@@ -12,62 +12,41 @@ import {
   Bookmark, 
   MessageSquare,
   Search,
-  Tag,
-  Flame
+  Tag
+  // Flame // Removed as trending section is removed
 } from 'lucide-react';
-import { mockAurovillePosts, getNetScore } from '@/data/mockData';
+// Removed mock data imports
 
 interface Category {
   id: string;
   name: string;
-  icon: string;
-  topicCount: number;
+  icon: string | null; // Allow null icon from API
+  topicCount?: number; // Make optional
 }
 
 interface ForumSidebarProps {
-  categories: Category[];
+  // Accept categories matching the API structure (ForumCategory from page.tsx)
+  categories: Array<{ id: string; name: string; description: string | null; icon: string | null }>;
   popularTags?: string[];
   onCreateTopic?: () => void;
-  trendingPosts?: {
-    id: string;
-    title: string;
-    topicId?: string;
-    author?: string;
-    upvotes?: number;
-    downvotes?: number;
-  }[];
+  // Removed trendingPosts prop
 }
 
-export default function ForumSidebar({ 
-  categories, 
-  popularTags = [], 
-  onCreateTopic,
-  trendingPosts
+export default function ForumSidebar({
+  categories,
+  popularTags = [],
+  onCreateTopic
+  // Removed trendingPosts prop
 }: ForumSidebarProps) {
   const { theme } = useTheme();
-  const [trending, setTrending] = useState<Array<{
-    id: string;
-    title: string;
-    topicId: string;
-    author: string;
-    upvotes: number;
-    downvotes: number;
-  }>>([]);
+  // Removed trending state
   const [searchQuery, setSearchQuery] = useState('');
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (trendingPosts) {
-      setTrending(trendingPosts as any);
-    } else {
-      const sortedPosts = [...mockAurovillePosts]
-        .sort((a, b) => getNetScore(b) - getNetScore(a))
-        .slice(0, 3);
-      setTrending(sortedPosts);
-    }
-  }, [trendingPosts]);
+  // Removed useEffect for trending posts
 
-  const filteredCategories = categories.filter(category => 
+  // Filter categories based on the passed structure
+  const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -172,49 +151,29 @@ export default function ForumSidebar({
             {filteredCategories.map((category) => (
               <li key={category.id}>
                 <Link
-                  href={`/forum/${category.id}`}
+                  href={`/forum/category/${category.id}`} // Link to category page
                   className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                    pathname === `/forum/${category.id}` 
-                      ? 'bg-amber-500 text-white' 
+                    pathname === `/forum/category/${category.id}` // Match category page path
+                      ? 'bg-amber-500 text-white'
                       : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                   }`}
                 >
-                  <span className="mr-3">{category.icon}</span>
-                  <span className="flex-1">{category.name}</span>
-                  <span className="text-xs bg-[var(--bg-tertiary)] px-2 py-1 rounded-full">
-                    {category.topicCount}
-                  </span>
+                  <span className="mr-3">{category.icon ?? '📁'}</span> {/* Default icon */}
+                  <span className="flex-1 truncate">{category.name}</span>
+                  {/* Conditionally render topic count if available */}
+                  {/* {category.topicCount !== undefined && (
+                    <span className="text-xs bg-[var(--bg-tertiary)] px-2 py-1 rounded-full ml-2">
+                      {category.topicCount}
+                    </span>
+                  )} */}
+                  {/* Hiding count for now as API doesn't provide it */}
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="mt-8">
-          <h3 className="text-xs uppercase text-[var(--text-muted)] font-medium tracking-wider mb-3 px-2 flex items-center gap-1">
-            <Flame size={16} /> Community Pulse
-          </h3>
-          <ul className="space-y-2">
-            {trending.map((post) => (
-              <li key={post.id}>
-                <Link
-                  href={`/forum/topics/${post.topicId}`}
-                  className="block p-3 rounded-lg bg-[var(--bg-tertiary)] hover:bg-amber-500/10 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <span className="text-sm text-[var(--text-primary)] line-clamp-1">{post.title}</span>
-                      <span className="text-xs text-[var(--text-muted)]">by {post.author}</span>
-                    </div>
-                    <span className="text-xs bg-amber-500/20 px-2 py-1 rounded-full">
-                      {getNetScore(post)}
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Removed Community Pulse section */}
 
         {popularTags.length > 0 && (
           <div className="mt-8">

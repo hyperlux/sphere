@@ -9,10 +9,10 @@ import { useEffect, useState } from 'react';
 interface ForumCategoryProps {
   id: string;
   name: string;
-  description: string;
-  icon: string;
-  topicCount: number;
-  latestActivity?: {
+  description: string; // Keep as required, handle null upstream if needed
+  icon: string; // Keep as required, handle null upstream if needed
+  topicCount?: number; // Make optional
+  latestActivity?: { // Keep optional
     topicTitle: string;
     username: string;
     timestamp: string;
@@ -25,9 +25,9 @@ export default function ForumCategoryCard({
   name,
   description,
   icon,
-  topicCount,
-  latestActivity,
-  isTrending = false
+  topicCount, // Now optional
+  latestActivity, // Already optional
+  isTrending = false // Already optional
 }: ForumCategoryProps) {
   const [iconSize, setIconSize] = useState("text-3xl");
   const [headingSize, setHeadingSize] = useState("text-xl");
@@ -85,11 +85,15 @@ export default function ForumCategoryCard({
                   </div>
                 )}
               </div>
-              <p className="text-xs md:text-sm text-[var(--text-muted)] mt-1 truncate">
-                <MessageSquare size={12} className="inline mr-1" />
-                {topicCount} {topicCount === 1 ? 'topic' : 'topics'}
-              </p>
+              {/* Conditionally render topic count */}
+              {topicCount !== undefined && (
+                <p className="text-xs md:text-sm text-[var(--text-muted)] mt-1 truncate">
+                  <MessageSquare size={12} className="inline mr-1" />
+                  {topicCount} {topicCount === 1 ? 'topic' : 'topics'}
+                </p>
+              )}
             </div>
+            {/* Always show chevron for link indication */}
             <ChevronRight className="text-[var(--text-muted)] ml-1 md:ml-2 mt-2 flex-shrink-0" size={18} />
           </div>
           

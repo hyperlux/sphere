@@ -27,7 +27,7 @@
         "./*"
       ]
     },
-    "target": "ES2017"
+    "target": "ESNext" // Update target to ESNext
   },
   "include": [
     "next-env.d.ts",
