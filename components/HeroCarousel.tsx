@@ -21,7 +21,7 @@ const carouselImages = [
     description: 'Living spaces in harmony with nature'
   },
   {
-    url: '/auroimgs/08architecture_44830142842_o.jpg',
+    url: '/auroimgs/unique architecture.jpg',
     title: 'Unique Architecture',
     description: 'Innovative and sustainable design'
   },
@@ -111,7 +111,7 @@ export default function HeroCarousel() {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <Link
                   href="/login" // Use Next.js Link href
-                  className="px-6 py-3 bg-auroville-primary text-white rounded-lg text-lg font-semibold hover:bg-opacity-90 transition-colors"
+                  className="px-6 py-3 bg-orange-500 text-white rounded-lg text-lg font-semibold hover:bg-orange-600 transition-colors" // Use orange-500 and hover:orange-600
                 >
                   Community Portal
                 </Link>
