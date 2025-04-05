@@ -27,7 +27,9 @@ function validateSupabaseEnv() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
+  // We might still want validation, but perhaps called explicitly elsewhere
+  // or rely on Supabase client errors.
 }
 
-// Validate environment variables when the module is imported
-validateSupabaseEnv()
+// Remove the top-level validation call to avoid issues during build
+// validateSupabaseEnv()
