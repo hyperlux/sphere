@@ -1,125 +1,143 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { AuthError } from '@supabase/supabase-js';
-import Link from 'next/link';
-import ResendConfirmation from '@/components/ResendConfirmation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation'; // Use Next.js hooks
+import Link from 'next/link'; // Use Next.js Link
+import { useAuth } from '@/components/AuthProvider'; // Corrected import path
 
-export default function Login() {
-  const router = useRouter();
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams(); // Hook to get query parameters
+  const { login, session, loading } = useAuth(); // Get login function and session/loading state
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && session) {
+      const redirectPath = searchParams.get('redirect') || '/dashboard';
+      router.replace(redirectPath);
+    }
+  }, [session, loading, router, searchParams]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
-    setNeedsEmailConfirmation(false);
+    setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        router.push('/dashboard');
-        router.refresh();
-      }
-    } catch (error: unknown) {
-      if (error instanceof AuthError && error.message.includes('Email not confirmed')) {
-        setNeedsEmailConfirmation(true);
-      } else {
-        setError(error instanceof Error ? error.message : 'An error occurred');
-      }
+      await login({ email, password });
+      // Login success will trigger the useEffect above to redirect
+      // Get the redirect path from query param or default to dashboard
+      const redirectPath = searchParams.get('redirect') || '/dashboard';
+      router.replace(redirectPath); // Explicit redirect after login attempt
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-amber-600">
-          Sign in to AuroNet
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link href="/signup" className="text-green-600 hover:text-green-500">
-            create a new account
-          </Link>
-        </p>
+  // Don't render the form if loading auth state or already logged in
+  if (loading || session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        {/* Optional: Add a loading spinner */}
+        <p className="text-white">Loading...</p>
       </div>
+    );
+  }
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleLogin}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-md p-4 text-sm">
-                {error}
-              </div>
-            )}
-            {needsEmailConfirmation && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md p-4 text-sm">
-                <p className="mb-2">Please check your email to confirm your account before logging in.</p>
-                <ResendConfirmation email={email} />
-              </div>
-            )}
-            
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <img
+            className="mx-auto h-12 w-auto"
+            src="/logodark.png" // Assuming logo in public folder
+            alt="Auroville"
+          />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+            Sign in to your account
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="sr-only">
                 Email address
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" // Updated styles
+                placeholder="Email address"
+              />
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500"
-                />
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" // Updated styles
+                placeholder="Password"
+              />
             </div>
+          </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
+          <div className="flex items-center justify-end"> {/* Changed justify-between to justify-end */}
+            <div className="text-sm">
+              <Link
+                href="/forgot-password" // Use Next.js Link href
+                className="font-medium text-orange-500 hover:text-orange-600" // Updated styles
               >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
+                Forgot your password?
+              </Link>
             </div>
-          </form>
-        </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${ // Updated styles
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+
+          <div className="text-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Don't have an account?{' '}
+              <Link
+                href="/signup" // Use Next.js Link href (assuming signup page exists)
+                className="font-medium text-orange-500 hover:text-orange-600" // Updated styles
+              >
+                Sign up
+              </Link>
+            </span>
+          </div>
+        </form>
       </div>
     </div>
   );

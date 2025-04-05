@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, Provider, SignInWithPasswordCredentials } from '@supabase/supabase-js'; // Added Provider and SignInWithPasswordCredentials
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -10,13 +10,16 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  login: (credentials: SignInWithPasswordCredentials) => Promise<void>; // Added login function type
+  // Add other auth methods like signUp, signInWithOAuth if needed
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
-  signOut: async () => {}
+  signOut: async () => {},
+  login: async () => {}, // Added default empty login function
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -54,8 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Add the login function
+  const login = async (credentials: SignInWithPasswordCredentials) => {
+    const { error } = await supabase.auth.signInWithPassword(credentials);
+    if (error) {
+      console.error('Error logging in:', error);
+      // Re-throw the error so the calling component (LoginPage) can catch it
+      throw error;
+    }
+    // No need to manually set user/session here, onAuthStateChange listener will handle it
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, login }}> {/* Added login to provider value */}
       {children}
     </AuthContext.Provider>
   );
