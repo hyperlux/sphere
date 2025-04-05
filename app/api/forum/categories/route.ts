@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabaseServerClient } from '@/lib/db/client'; // Use the server-side client
+import { createServerSupabaseClient } from '@/lib/db/client'; // Import the function
 import { Database } from '@/lib/db/database.types'; // Import the generated types
 
 export async function GET() {
-  // Use the pre-configured server client directly
-  const supabase = supabaseServerClient;
+  // Create the server client instance inside the handler
+  const supabase = createServerSupabaseClient();
 
   try {
     const { data: categories, error } = await supabase

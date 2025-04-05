@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseServerClient } from '@/lib/db/client';
+import { createServerSupabaseClient } from '@/lib/db/client'; // Import the function
 import { Database } from '@/lib/db/database.types';
 
 type RouteParams = {
@@ -11,7 +11,8 @@ type RouteParams = {
 // GET /api/forum/categories/[categoryId]/topics
 export async function GET(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
-  const supabase = supabaseServerClient;
+  // Create the server client instance inside the handler
+  const supabase = createServerSupabaseClient();
 
   if (!categoryId) {
     return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
