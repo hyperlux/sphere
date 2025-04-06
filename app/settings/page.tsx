@@ -24,14 +24,18 @@ export default function SettingsPage() {
   } : null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--bg-primary)]"> {/* Added bg-primary like dashboard */}
       <Sidebar user={userDisplayInfo} />
-      <Header user={userDisplayInfo} />
-      
-      <main className="ml-80 pt-24 p-6">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
-          {t('settings')}
-        </h1>
+      {/* Added wrapper div with margin-left like dashboard */}
+      <div className="flex flex-col min-h-screen ml-64 transition-all duration-300"> 
+        <Header user={userDisplayInfo} />
+        
+        {/* Adjusted main classes to match dashboard: removed pl-80, pt-24, max-w-5xl, added w-full */}
+        <main className="p-6 w-full transition-all duration-300"> 
+          {/* Removed mt-8 from h1 as p-6 provides top padding */}
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]"> 
+            {t('settings')}
+          </h1>
         <p className="text-[var(--text-secondary)]">
           {t('manage your account settings here')}
         </p>
@@ -70,5 +74,6 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  </div>
   );
 }

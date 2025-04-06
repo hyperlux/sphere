@@ -33,12 +33,13 @@ interface Resource {
 }
 
 interface Category {
-  id: number;
+  id: number; // Assuming number based on other category tables
   name: string;
   description: string | null;
   created_at: string | null;
 }
 
+// Helper function to get display info
 function getUserDisplayInfo(user: User | null) {
   if (!user) return null;
   return {
@@ -95,8 +96,8 @@ export default function ResourcesPage() {
         .filter(r => r && typeof r === 'object')
         .map(resource => ({
           ...resource,
-          author: null,
-          category: undefined,
+          author: null, // Placeholder until author join is fixed/verified
+          category: undefined, // Placeholder until category join is fixed/verified
         }));
 
       setResources(resourcesData as Resource[] || []);
@@ -113,7 +114,7 @@ export default function ResourcesPage() {
     try {
       console.log('Loading categories...');
       const { data, error } = await supabase
-        .from('resource_categories')
+        .from('resource_categories') // Assuming this is the correct table name
         .select('*')
         .order('name');
 
@@ -138,9 +139,12 @@ export default function ResourcesPage() {
         return;
       }
 
+      // Assuming resource.url is the path within the bucket
+      const filePath = resource.url; 
+
       const { data, error } = await supabase.storage
         .from('public') // Assuming 'public' bucket, adjust if needed
-        .createSignedUrl(resource.url, 60); // Now we know resource.url is a string
+        .createSignedUrl(filePath, 60); // Generate signed URL for the file path
 
       if (error) throw error;
 
@@ -169,87 +173,85 @@ export default function ResourcesPage() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <Sidebar user={userDisplayInfo} />
-      <Header user={userDisplayInfo} />
-
-      <main className="ml-80 pt-24 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
-            {t('resources')}
-          </h1>
-          <button
-            onClick={() => setShowUploadForm(true)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 mt-10"
-          >
-            {t('upload resource')}
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
-            {error}
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
+        <Header user={userDisplayInfo} />
+        <main className="p-6 w-full transition-all duration-300">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+              {t('resources')}
+            </h1>
+            <button
+              onClick={() => setShowUploadForm(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            >
+              {t('upload resource')}
+            </button>
           </div>
-        )}
 
-        {/* Filters */}
-        <div className="mb-6 flex gap-4">
-          <input
-            type="search"
-            placeholder={t('search resources')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-          />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-          >
-            <option value="">{t('all_categories')}</option>
-            {categories.map(category => (
-              <option key={category.id} value={String(category.id)}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Resources List */}
-        {loading ? (
-          <p className="text-[var(--text-muted)]">{t('loading')}...</p>
-        ) : (
-          <div className="space-y-4">
-            {filteredResources.length === 0 ? (
-              <p className="text-[var(--text-muted)] pl-5">{t('no resources found')}</p>
-            ) : (
-              filteredResources.map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  resource={resource}
-                  onDownload={handleDownload}
-                />
-              ))
-            )}
-          </div>
-        )}
-
-        {/* Upload Resource Modal */}
-        {showUploadForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="max-w-lg w-full">
-              <UploadResourceForm
-                categories={categories}
-                onClose={() => setShowUploadForm(false)}
-                onSuccess={() => {
-                  setShowUploadForm(false);
-                  loadResources();
-                }}
-              />
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
+              {error}
             </div>
+          )}
+
+          <div className="mb-6 flex gap-4">
+            <input
+              type="search"
+              placeholder={t('search resources')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+            >
+              <option value="">{t('all_categories')}</option>
+              {categories.map(category => (
+                <option key={category.id} value={String(category.id)}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-      </main>
+
+          {loading ? (
+            <p className="text-[var(--text-muted)]">{t('loading')}...</p>
+          ) : (
+            <div className="space-y-4">
+              {filteredResources.length === 0 ? (
+                <p className="text-[var(--text-muted)] pl-5">{t('no resources found')}</p>
+              ) : (
+                filteredResources.map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    onDownload={handleDownload}
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {showUploadForm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+              <div className="max-w-lg w-full">
+                <UploadResourceForm
+                  categories={categories}
+                  onClose={() => setShowUploadForm(false)}
+                  onSuccess={() => {
+                    setShowUploadForm(false);
+                    loadResources();
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
-}
+} // End of component function

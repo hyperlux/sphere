@@ -83,7 +83,7 @@ export default function EventsPage() {
           created_by
         `)
         // attendees_count will be handled by default/placeholder in EventCard for now
-        .order('date', { ascending: true }); // Ordering by 'date' might fail if column doesn't exist
+        .order('created_at', { ascending: true }); // Fixed: order by existing created_at column
 
       if (error) throw error;
       // Data should now mostly match the Event interface (except category join and creator object)
@@ -203,79 +203,76 @@ export default function EventsPage() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[var(--bg-primary)]">
       <Sidebar user={userDisplayInfo} />
-      <Header user={userDisplayInfo} />
-      
-      <main className="ml-80 pt-32 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-            {t('events')}
-          </h1>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-          >
-            {t('create_event')}
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-6 flex gap-4">
-          <input
-            type="search"
-            placeholder={t('search_events')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-          />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-          >
-            <option value="">{t('all_categories')}</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Events List */}
-        {/* Restore event list rendering */}
-        {loading ? (
-          <p className="text-[var(--text-muted)]">{t('loading')}...</p>
-        ) : (
-           <div className="space-y-4">
-             {filteredEvents.map((event) => (
-               <EventCard
-                 key={event.id}
-                 event={event}
-                 onRsvp={handleRsvp}
-                 userStatus={userRsvps[event.id] as 'attending' | 'maybe' | 'not_attending' | undefined}
-               />
-             ))}
-           </div>
-        )}
-
-        {/* Create Event Modal */}
-        {showCreateForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="max-w-lg w-full">
-              <CreateEventForm
-                categories={categories}
-                onClose={() => setShowCreateForm(false)}
-                onSuccess={() => {
-                  setShowCreateForm(false);
-                  loadEvents(); // Re-enable call
-                }}
-              />
-            </div>
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
+        <Header user={userDisplayInfo} />
+        <main className="p-6 w-full transition-all duration-300">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+              {t('events')}
+            </h1>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            >
+              {t('create_event')}
+            </button>
           </div>
-        )}
-      </main>
+
+          <div className="mb-6 flex gap-4">
+            <input
+              type="search"
+              placeholder={t('search_events')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+            >
+              <option value="">{t('all_categories')}</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {loading ? (
+            <p className="text-[var(--text-muted)]">{t('loading')}...</p>
+          ) : (
+            <div className="space-y-4">
+              {filteredEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onRsvp={handleRsvp}
+                  userStatus={userRsvps[event.id] as 'attending' | 'maybe' | 'not_attending' | undefined}
+                />
+              ))}
+            </div>
+          )}
+
+          {showCreateForm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+              <div className="max-w-lg w-full">
+                <CreateEventForm
+                  categories={categories}
+                  onClose={() => setShowCreateForm(false)}
+                  onSuccess={() => {
+                    setShowCreateForm(false);
+                    loadEvents();
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
-}
+} // End of component function

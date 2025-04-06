@@ -44,7 +44,7 @@ export default function Dashboard() {
           supabase
             .from('events')
             .select('*')
-            .order('date', { ascending: true })
+            .order('created_at', { ascending: true })
             .limit(3),
           supabase
             .from('resources')
