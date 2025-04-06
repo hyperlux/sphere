@@ -91,9 +91,9 @@ export default function ForumSidebar({
         <ul className="space-y-1 mt-4">
           <li>
             <Link
-              href="/forum"
+              href="/forum/categories"
               className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                pathname === '/forum' 
+                pathname === '/forum/categories' // Update path check
                   ? 'bg-amber-500 text-white' 
                   : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               }`}
