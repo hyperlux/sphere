@@ -33,8 +33,10 @@ interface Resource {
 }
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
+  description: string | null;
+  created_at: string | null;
 }
 
 function getUserDisplayInfo(user: User | null) {
@@ -89,16 +91,13 @@ export default function ResourcesPage() {
 
       console.log('Resources loaded:', data);
       // Map data safely, setting potentially missing relational objects to null
-      const resourcesData = (data || []).map(resource => {
-         if (typeof resource === 'object' && resource !== null) {
-           return {
-             ...resource,
-             author: null, // Set author to null initially
-             category: undefined, // Set category to undefined initially
-           };
-         }
-         return null;
-       }).filter(Boolean); // Remove any null entries
+      const resourcesData = ((data || []) as any[])
+        .filter(r => r && typeof r === 'object')
+        .map(resource => ({
+          ...resource,
+          author: null,
+          category: undefined,
+        }));
 
       setResources(resourcesData as Resource[] || []);
       setError(null);
@@ -209,7 +208,7 @@ export default function ResourcesPage() {
           >
             <option value="">{t('all_categories')}</option>
             {categories.map(category => (
-              <option key={category.id} value={category.id}>
+              <option key={category.id} value={String(category.id)}>
                 {category.name}
               </option>
             ))}

@@ -13,17 +13,13 @@ import ListItemForm from '@/components/ListItemForm';
 import { User } from '@supabase/supabase-js';
 
 interface BazaarItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image_url: string | null; // Align with Card: Use string | null
-  condition: string;
-  location: string | null; // Align with Card: Use string | null
-  seller: { // Updated to expect username
-    username: string;
-  } | null; // Allow seller to be null if join fails or user deleted
-  created_at: string;
+  id: number;
+  title: string;
+  description: string | null;
+  price: number | null;
+  user_id: string | null;
+  votes: number | null;
+  created_at: string | null;
 }
 
 function getUserDisplayInfo(user: User | null) {
@@ -86,7 +82,7 @@ export default function BazaarPage() {
     }
   };
 
-  const handleContact = async (itemId: string) => {
+  const handleContact = async (itemId: number) => {
     try {
       const item = items.find(i => i.id === itemId);
       if (!item) return;
@@ -97,7 +93,7 @@ export default function BazaarPage() {
       // Use seller username if available
       setContactInfo({
         visible: true,
-        sellerId: item.seller?.username ?? 'Unknown Seller'
+        sellerId: 'Unknown Seller'
       });
     } catch (error) {
       console.error('Error contacting seller:', error);
@@ -114,9 +110,9 @@ export default function BazaarPage() {
   }
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCondition = !selectedCondition || item.condition === selectedCondition;
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.description ? item.description.toLowerCase().includes(searchQuery.toLowerCase()) : false);
+    const matchesCondition = true; // condition removed from schema
     return matchesSearch && matchesCondition;
   });
 

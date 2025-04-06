@@ -62,13 +62,10 @@ export default function ListItemForm({ onClose, onSuccess }: ListItemFormProps) 
       const { error: insertError } = await supabase
         .from('bazaar_items')
         .insert({
-          name,
+          title: name,
           description,
           price: parseFloat(price),
-          condition,
-          location: location || null,
-          image_url: imageUrl,
-          seller_id: user.id
+          user_id: user.id
         });
 
       if (insertError) throw insertError;

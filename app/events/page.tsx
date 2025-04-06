@@ -13,7 +13,7 @@ import CreateEventForm from '@/components/CreateEventForm';
 import { User } from '@supabase/supabase-js';
 
 interface Event {
-  id: string;
+  id: number;
   title: string;
   description: string | null;
   date?: string; // Make optional to match DB type
@@ -31,8 +31,10 @@ interface Event {
 }
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
+  description: string | null;
+  created_at: string | null;
 }
 
 function getUserDisplayInfo(user: User | null) {
@@ -86,10 +88,12 @@ export default function EventsPage() {
       if (error) throw error;
       // Data should now mostly match the Event interface (except category join and creator object)
       // Manually add a default attendees_count since we removed the join
-      const eventsData = (data || []).map(event => ({
-        ...event,
-        attendees_count: 0, // Default to 0
-      }));
+      const eventsData = ((data || []) as any[])
+        .filter(e => e && typeof e === 'object' && typeof e.id === 'number' && typeof e.title === 'string')
+        .map(event => ({
+          ...event,
+          attendees_count: 0,
+        }));
       setEvents(eventsData as Event[]); // Cast might still be needed
     } catch (error) {
       console.error('Error loading events:', error);
@@ -122,11 +126,18 @@ export default function EventsPage() {
         .eq('user_id', user.id); // Now we know user.id exists
 
       if (error) throw error;
-      const rsvpMap = (data || []).reduce((acc, curr) => ({
-        ...acc,
-        [curr.event_id]: curr.status
-      }), {});
-      setUserRsvps(rsvpMap);
+      const rsvpMap = (data || []).reduce((acc, curr) => {
+        const key = curr.event_id !== null ? String(curr.event_id) : '';
+        return {
+          ...acc,
+          [key]: curr.status
+        };
+      }, {} as Record<string, string | null>);
+      const filteredMap: Record<string, string> = {};
+      for (const key in rsvpMap) {
+        if (rsvpMap[key]) filteredMap[key] = rsvpMap[key]!;
+      }
+      setUserRsvps(filteredMap);
     } catch (error) {
       console.error('Error loading RSVPs:', error);
     }
@@ -134,43 +145,39 @@ export default function EventsPage() {
   
 
   
-  const handleRsvp = async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
+  const handleRsvp = async (eventId: number, status: 'attending' | 'maybe' | 'not_attending') => {
     if (!user?.id) {
       console.error("Cannot RSVP without user ID");
       return; // Or show an error message
     }
 
     try {
-      const existingStatus = userRsvps[eventId];
+      const existingStatus = userRsvps[String(eventId)];
 
       if (existingStatus) {
-        // Update existing RSVP
         const { error } = await supabase
           .from('event_attendees')
           .update({ status })
-          .match({ event_id: eventId, user_id: user.id }); // Use user.id
+          .match({ event_id: eventId, user_id: user.id });
 
         if (error) throw error;
       } else {
-        // Create new RSVP
         const { error } = await supabase
           .from('event_attendees')
           .insert({
             event_id: eventId,
-            user_id: user.id, // Add required user_id
+            user_id: user.id,
             status
           });
 
         if (error) throw error;
       }
 
-      // Update local state
       setUserRsvps(prev => ({
         ...prev,
-        [eventId]: status
+        [String(eventId)]: status
       }));
 
-      // Refresh events to update counts
       loadEvents();
     } catch (error) {
       console.error('Error updating RSVP:', error);

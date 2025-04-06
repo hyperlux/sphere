@@ -5,19 +5,15 @@ import Image from 'next/image';
 
 interface BazaarItemProps {
   item: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    image_url: string | null; // Accept null
-    seller: { // Expect username now
-      username: string;
-    } | null; // Allow seller to be null
-    created_at: string;
-    condition: string;
-    location: string | null; // Accept null
+    id: number;
+    title: string;
+    description: string | null;
+    price: number | null;
+    user_id: string | null;
+    votes: number | null;
+    created_at: string | null;
   };
-  onContact?: (itemId: string) => void;
+  onContact?: (itemId: number) => void;
 }
 
 export default function BazaarItemCard({ 
@@ -33,7 +29,8 @@ export default function BazaarItemCard({
     }
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null) => {
+    if (price === null) return t('N/A');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'EUR',
@@ -45,43 +42,15 @@ export default function BazaarItemCard({
   return (
     <div className="dashboard-card hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer">
       <div className="flex items-start space-x-4">
-        {/* Item Image */}
-        <div className="flex-shrink-0 w-20 h-20 relative rounded-lg overflow-hidden">
-          {item.image_url ? (
-            <Image
-              src={item.image_url}
-              alt={item.name}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-orange-500 flex items-center justify-center text-white text-xl font-bold">
-              {item.name[0].toUpperCase()}
-            </div>
-          )}
-        </div>
-
         {/* Item Details */}
         <div className="flex-1">
           <div className="flex justify-between items-start">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{item.name}</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{item.title}</h3>
             <span className="text-lg font-bold text-orange-500">{formatPrice(item.price)}</span>
           </div>
           <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-2">
-            {item.description}
+            {item.description ?? ''}
           </p>
-          <div className="flex items-center text-sm text-[var(--text-muted)] space-x-4">
-            <span>{t('condition')}: {item.condition}</span>
-            {item.location && (
-              <>
-                <span>•</span>
-                <span>{item.location}</span>
-              </>
-            )}
-            <span>•</span>
-            {/* Display username, handle null seller */}
-            <span>{t('seller')}: {item.seller?.username ?? 'N/A'}</span>
-          </div>
         </div>
 
         {/* Contact Button */}

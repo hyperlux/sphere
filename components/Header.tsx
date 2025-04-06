@@ -31,9 +31,8 @@ interface Notification {
   id: string;
   title: string;
   description: string | null;
-  created_at: string;
-  type: 'info' | 'warning' | 'success' | 'error' | string | undefined;
-  isRead: boolean | undefined; // Allow undefined
+  created_at: string | null;
+  type: string | null;
 }
 
 export default function Header({
@@ -59,7 +58,7 @@ export default function Header({
       const supabase = createClientComponentClient(); // Need to create client instance here
       const { data, error } = await supabase
         .from('events') // Assuming 'events' table now exists in types
-        .select('id, title, description, created_at, type, isRead') // Select columns defined in manual type
+        .select('id, title, description, created_at, type') // Removed isRead, which does not exist
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -164,7 +163,9 @@ export default function Header({
                       {/* Optionally display description if needed */}
                       {/* <p className="text-xs text-[var(--text-secondary)] line-clamp-1">{notification.description}</p> */}
                       <p className="text-xs text-[var(--text-muted)] mt-1">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        {notification.created_at
+                          ? formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })
+                          : ''}
                       </p>
                     </div>
                   </a>

@@ -78,7 +78,6 @@ export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormP
         const { error: updateError } = await supabase
           .from('communities')
           .update({
-            image_url: filePath
           })
           .eq('id', spaceData.id);
 

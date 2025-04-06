@@ -8,7 +8,7 @@ import { Clock, MapPin, Tag, Users } from 'lucide-react';
 
 interface EventProps {
   event: {
-    id: string;
+    id: number;
     title: string;
     description: string | null; // Accept null
     date?: string; // Accept undefined
@@ -22,7 +22,7 @@ interface EventProps {
     created_by: string | null; // Accept creator ID instead
     attendees_count: number | null; // Accept null count
   };
-  onRsvp?: (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => Promise<void>;
+  onRsvp?: (eventId: number, status: 'attending' | 'maybe' | 'not_attending') => Promise<void>;
   userStatus?: 'attending' | 'maybe' | 'not_attending' | null;
 }
 

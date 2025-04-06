@@ -10,7 +10,7 @@ interface CreateEventFormProps {
   onClose: () => void;
   onSuccess: () => void;
   categories: Array<{
-    id: string;
+    id: number;
     name: string;
   }>;
 }

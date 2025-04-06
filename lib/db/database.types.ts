@@ -9,6 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bazaar_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          price: number | null
+          title: string
+          user_id: string | null
+          votes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          price?: number | null
+          title: string
+          user_id?: string | null
+          votes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          price?: number | null
+          title?: string
+          user_id?: string | null
+          votes?: number | null
+        }
+        Relationships: []
+      }
+      communities: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+          votes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name: string
+          votes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name?: string
+          votes?: number | null
+        }
+        Relationships: []
+      }
+      event_attendees: {
+        Row: {
+          event_id: number | null
+          id: number
+          joined_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_id?: number | null
+          id?: never
+          joined_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: number | null
+          id?: never
+          joined_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_extended"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string | null
@@ -35,6 +142,41 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      events_extended: {
+        Row: {
+          category_id: number | null
+          created_at: string | null
+          description: string | null
+          id: number
+          title: string
+          votes: number | null
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          title: string
+          votes?: number | null
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          title?: string
+          votes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_extended_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       forum_categories: {
         Row: {
@@ -218,6 +360,27 @@ export type Database = {
           },
         ]
       }
+      resource_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           author: string | null
@@ -259,6 +422,59 @@ export type Database = {
           },
         ]
       }
+      space_members: {
+        Row: {
+          id: number
+          joined_at: string | null
+          space_id: number | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: never
+          joined_at?: string | null
+          space_id?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: never
+          joined_at?: string | null
+          space_id?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_members_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spaces: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+          votes: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name: string
+          votes?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: never
+          name?: string
+          votes?: number | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           auth_user_id: string
@@ -295,9 +511,43 @@ export type Database = {
         }
         Relationships: []
       }
+      votes: {
+        Row: {
+          created_at: string | null
+          entity_id: number
+          entity_type: string
+          id: number
+          user_id: string | null
+          vote: number
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: number
+          entity_type: string
+          id?: never
+          user_id?: string | null
+          vote: number
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: number
+          entity_type?: string
+          id?: never
+          user_id?: string | null
+          vote?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      vote_totals: {
+        Row: {
+          entity_id: number | null
+          entity_type: string | null
+          total_votes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_vote_score: {
