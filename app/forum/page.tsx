@@ -98,13 +98,14 @@ export default function ForumPage() {
         <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
         <link rel="stylesheet" href="/forum/forum-layout.css" />
 
-<main className="p-6 w-full pt-24 transition-all duration-300">
+{/* Add flex-1 to make the main content area grow */}
+<main className="flex-1 p-6 w-full pt-24 transition-all duration-300">
   <div className="flex justify-between items-center mb-6">
     <h1 className="text-3xl font-bold text-[var(--text-primary)]">Forum</h1>
     <button
       onClick={() => setShowCreateModal(true)}
       disabled={allCategories.length === 0}
-      className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-5 py-2.5 rounded-full bg-[var(--auroville-teal)] text-white font-semibold shadow hover:shadow-lg hover:bg-opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
     >
       Create Topic
     </button>
@@ -157,7 +158,7 @@ export default function ForumPage() {
       placeholder="Search categories and topics..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full max-w-md px-4 py-2 rounded border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--auroville-teal)] transition"
+      className="w-full max-w-md px-4 py-2 rounded-full border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--auroville-teal)] shadow transition"
     />
   </div>
 
@@ -173,14 +174,14 @@ export default function ForumPage() {
         (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
       ).length > 0 && (
         <section className="mb-10">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Announcements</h2>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Announcements</h2>
           <div className="flex flex-col gap-4">
             {pinnedTopics.filter(t =>
               !searchQuery ||
               t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
               (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
             ).map((topic) => (
-              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-orange-400 transition p-4">
+              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-xl border border-[var(--border-color)] shadow hover:shadow-xl hover:-translate-y-1 hover:border-orange-400 transition-transform p-4">
                 <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
                 <p className="text-[var(--text-secondary)] line-clamp-2">{topic.snippet}</p>
               </a>
@@ -195,7 +196,7 @@ export default function ForumPage() {
         (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
       ).length > 0 && (
         <section className="mb-10">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Recent Discussions</h2>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Recent Discussions</h2>
           <div className="flex flex-col gap-4">
             {recentTopics.filter((t) =>
               !searchQuery ||
@@ -204,7 +205,7 @@ export default function ForumPage() {
             ).map((topic, idx) => (
               <div
                 key={topic.id}
-                className="flex items-start gap-4 rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-[var(--auroville-teal)] transition p-4 bg-[#1A2526] text-white"
+                className="flex items-start gap-4 rounded-xl border border-[var(--border-color)] shadow hover:shadow-xl hover:-translate-y-1 hover:border-[var(--auroville-teal)] transition-transform p-4 bg-[#1A2526] text-white"
               >
                 <div className="flex flex-col items-center mr-2">
                   <button
@@ -273,12 +274,12 @@ export default function ForumPage() {
 
       {popularTopics.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Popular Topics</h2>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Popular Topics</h2>
           <div className="flex flex-col gap-4">
             {popularTopics.map((topic, idx) => (
               <div
                 key={topic.id}
-                className="flex items-start gap-4 rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-amber-400 transition p-4 bg-[#1A2526] text-white"
+                className="flex items-start gap-4 rounded-xl border border-[var(--border-color)] shadow hover:shadow-xl hover:-translate-y-1 hover:border-amber-400 transition-transform p-4 bg-[#1A2526] text-white"
               >
                 <div className="flex flex-col items-center mr-2">
                   <button
@@ -346,7 +347,7 @@ export default function ForumPage() {
       )}
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Categories</h2>
+        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Categories</h2>
         {filteredCategories.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[var(--text-muted)] text-lg">

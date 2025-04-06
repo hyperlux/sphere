@@ -49,7 +49,7 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
+    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40 rounded-r-2xl shadow-lg">
       <div className="flex items-center py-2 pl-5 pb-5 border-b border-[var(--border-color)]">
         <Link href="/dashboard">
           <Image 
@@ -68,11 +68,11 @@ export default function Sidebar({ user }: SidebarProps) {
             <li key={item.name}>
               <Link
                 href={item.href}
-                className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                  pathname === item.href 
-                    ? 'bg-amber-500 text-white' 
-                    : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
-                }`}
+className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
+  pathname === item.href 
+    ? 'bg-amber-500 text-white' 
+    : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] hover:shadow-md hover:ring-1 hover:ring-amber-400'
+}`}
               >
                 <span className="mr-3">
                   {React.createElement(item.icon, { size: 20 })}
@@ -92,11 +92,11 @@ export default function Sidebar({ user }: SidebarProps) {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                    pathname === link.href 
-                      ? 'bg-amber-500 text-white' 
-                      : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
-                  }`}
+className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
+  pathname === link.href 
+    ? 'bg-amber-500 text-white' 
+    : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] hover:shadow-md hover:ring-1 hover:ring-amber-400'
+}`}
                 >
                   <span className="mr-3">
                     {React.createElement(link.icon, { size: 20 })}
@@ -110,7 +110,7 @@ export default function Sidebar({ user }: SidebarProps) {
       </nav>
 
       {user && (
-        <div className="p-4 mt-auto border-t border-[var(--border-color)] bg-[var(--bg-tertiary)]">
+        <div className="p-4 mt-auto border-t border-[var(--border-color)] bg-[var(--bg-tertiary)] rounded-t-xl shadow-inner">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
               <span className="text-sm text-white">

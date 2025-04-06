@@ -34,8 +34,8 @@ export default function ServicesPage() {
           {/* Pass simplified user object */}
           <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
         </div>
-        {/* Add padding-top to main */}
-        <main className="p-6 w-full pt-24 transition-all duration-300"> 
+        {/* Add padding-top and flex-1 to main */}
+        <main className="flex-1 p-6 w-full pt-24 transition-all duration-300"> 
           <h1 className="text-3xl font-bold text-[var(--text-primary)]">
             {t('Services')}
           </h1>
