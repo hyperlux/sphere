@@ -32,11 +32,12 @@ export async function GET(request: Request, { params }: RouteParams) {
   try {
     // Fetch topics for the given category, joining with users table to get creator's name
     // Also fetch the category name itself for context
-    const { data, error } = await supabase
+    const { data: topics, error: topicsError } = await supabase
       .from('forum_topics')
       .select(`
         id,
         title,
+        content,
         created_at,
         last_activity_at,
         author_id,
@@ -46,29 +47,45 @@ export async function GET(request: Request, { params }: RouteParams) {
       .eq('category_id', categoryId)
       .order('last_activity_at', { ascending: false }); // Show most recently active topics first
 
-    if (error) {
-      console.error(`Error fetching topics for category ${categoryId}:`, error);
-      return NextResponse.json({ error: 'Failed to fetch topics', details: error.message }, { status: 500 });
+    if (topicsError) {
+      console.error(`Error fetching topics for category ${categoryId}:`, topicsError);
+      return NextResponse.json({ error: 'Failed to fetch topics', details: topicsError.message }, { status: 500 });
     }
 
-    // Optional: Check if the category exists (data might be empty if category is valid but has no topics)
-    // If you need to return 404 specifically for non-existent categories, a separate query might be needed.
+    const topicIds = topics?.map(t => Number(t.id)) ?? [];
 
-    // Format the response slightly for easier frontend use
-    const formattedData = data?.map(topic => ({
+    let voteTotals: Record<string, number> = {};
+
+    if (topicIds.length > 0) {
+      const { data: votesData, error: votesError } = await supabase
+        .from('vote_totals')
+        .select('entity_id, total_votes')
+        .in('entity_id', topicIds)
+        .eq('entity_type', 'topic');
+
+      if (votesError) {
+        console.error('Error fetching vote totals:', votesError);
+      } else {
+        voteTotals = Object.fromEntries(
+          (votesData ?? []).map(v => [String(v.entity_id), v.total_votes ?? 0])
+        );
+      }
+    }
+
+    const formattedData = topics?.map(topic => ({
       id: topic.id,
       title: topic.title,
+      snippet: topic.content?.substring(0, 100) ?? '',
       createdAt: topic.created_at,
       lastActivityAt: topic.last_activity_at,
+      voteCount: voteTotals[String(topic.id)] ?? 0,
       category: {
-        // Ensure null safety for category relation
         id: topic.forum_categories?.id ?? null,
         name: topic.forum_categories?.name ?? null,
       },
       author: {
-         // Ensure null safety for user relation and use username
         id: topic.users?.id ?? null,
-        name: topic.users?.username ?? 'Unknown User', // Use username as the primary display name
+        name: topic.users?.username ?? 'Unknown User',
       }
     }));
 

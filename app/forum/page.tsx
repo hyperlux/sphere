@@ -167,29 +167,105 @@ export default function ForumPage() {
     <div className="text-center py-12 text-red-500">Error loading forum data: {error}</div>
   ) : (
     <>
-      {pinnedTopics.length > 0 && (
+      {pinnedTopics.filter(t =>
+        !searchQuery ||
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
+      ).length > 0 && (
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Announcements</h2>
           <div className="flex flex-col gap-4">
-            {pinnedTopics.map((topic) => (
+            {pinnedTopics.filter(t =>
+              !searchQuery ||
+              t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
+            ).map((topic) => (
               <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-orange-400 transition p-4">
                 <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
-                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
+                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.snippet}</p>
               </a>
             ))}
           </div>
         </section>
       )}
 
-      {recentTopics.length > 0 && (
+      {recentTopics.filter(t =>
+        !searchQuery ||
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
+      ).length > 0 && (
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Recent Discussions</h2>
           <div className="flex flex-col gap-4">
-            {recentTopics.map((topic) => (
-              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-[var(--auroville-teal)] transition p-4">
-                <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
-                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
-              </a>
+            {recentTopics.filter((t) =>
+              !searchQuery ||
+              t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (t.snippet && t.snippet.toLowerCase().includes(searchQuery.toLowerCase()))
+            ).map((topic, idx) => (
+              <div
+                key={topic.id}
+                className="flex items-start gap-4 rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-[var(--auroville-teal)] transition p-4 bg-[#1A2526] text-white"
+              >
+                <div className="flex flex-col items-center mr-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/forum/topics/${topic.id}/vote`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ vote: 1 }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setRecentTopics(prev => {
+                            const copy = [...prev];
+                            copy[idx] = { ...copy[idx], voteCount: data.voteCount };
+                            return copy;
+                          });
+                        } else {
+                          console.error('Vote error:', data);
+                        }
+                      } catch (err) {
+                        console.error('Vote error:', err);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    ▲
+                  </button>
+                  <span className="font-semibold">{topic.voteCount ?? 0}</span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/forum/topics/${topic.id}/vote`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ vote: -1 }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setRecentTopics(prev => {
+                            const copy = [...prev];
+                            copy[idx] = { ...copy[idx], voteCount: data.voteCount };
+                            return copy;
+                          });
+                        } else {
+                          console.error('Vote error:', data);
+                        }
+                      } catch (err) {
+                        console.error('Vote error:', err);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-blue-400 transition"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <a href={`/forum/topics/${topic.id}`} className="flex-1">
+                  <h3 className="font-semibold">{topic.title}</h3>
+                  <p className="text-[var(--text-secondary)] line-clamp-2">{topic.snippet}</p>
+                </a>
+              </div>
             ))}
           </div>
         </section>
@@ -199,11 +275,71 @@ export default function ForumPage() {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Popular Topics</h2>
           <div className="flex flex-col gap-4">
-            {popularTopics.map((topic) => (
-              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-amber-400 transition p-4">
-                <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
-                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
-              </a>
+            {popularTopics.map((topic, idx) => (
+              <div
+                key={topic.id}
+                className="flex items-start gap-4 rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-amber-400 transition p-4 bg-[#1A2526] text-white"
+              >
+                <div className="flex flex-col items-center mr-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/forum/topics/${topic.id}/vote`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ vote: 1 }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setPopularTopics(prev => {
+                            const copy = [...prev];
+                            copy[idx] = { ...copy[idx], voteCount: data.voteCount };
+                            return copy;
+                          });
+                        } else {
+                          console.error('Vote error:', data);
+                        }
+                      } catch (err) {
+                        console.error('Vote error:', err);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    ▲
+                  </button>
+                  <span className="font-semibold">{topic.voteCount ?? 0}</span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/forum/topics/${topic.id}/vote`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ vote: -1 }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setPopularTopics(prev => {
+                            const copy = [...prev];
+                            copy[idx] = { ...copy[idx], voteCount: data.voteCount };
+                            return copy;
+                          });
+                        } else {
+                          console.error('Vote error:', data);
+                        }
+                      } catch (err) {
+                        console.error('Vote error:', err);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-blue-400 transition"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <a href={`/forum/topics/${topic.id}`} className="flex-1">
+                  <h3 className="font-semibold">{topic.title}</h3>
+                  <p className="text-[var(--text-secondary)] line-clamp-2">{topic.snippet}</p>
+                </a>
+              </div>
             ))}
           </div>
         </section>
