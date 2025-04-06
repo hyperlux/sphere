@@ -48,6 +48,7 @@ export default function ForumPage() {
           throw new Error(`Failed to fetch categories: ${response.statusText}`);
         }
         const data: ForumCategory[] = await response.json();
+        console.log('Fetched categories data:', data); // Log fetched data
         setAllCategories(data);
         setFilteredCategories(data); // Initialize filtered list
       } catch (err) {
@@ -63,6 +64,7 @@ export default function ForumPage() {
 
   // Filter and sort categories based on search query and sort option
   useEffect(() => {
+    // Removed log from here
     let filtered = [...allCategories]; // Start with all fetched categories
 
     // Apply search filter
@@ -82,6 +84,10 @@ export default function ForumPage() {
 
     setFilteredCategories(filtered);
   }, [searchQuery, sortBy, allCategories]); // Re-run filter/sort when search, sort, or base data changes
+
+  // Log state values just before rendering
+  console.log('Rendering with allCategories:', allCategories);
+  console.log('Rendering with filteredCategories:', filteredCategories);
 
   const handleCreateTopic = () => {
     // Standardize route to create new topics
