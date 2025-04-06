@@ -39,14 +39,7 @@ interface Category {
   created_at: string | null;
 }
 
-// Helper function to get display info
-function getUserDisplayInfo(user: User | null) {
-  if (!user) return null;
-  return {
-    email: user.email || 'No email',
-    name: user.user_metadata?.name
-  };
-}
+// Remove getUserDisplayInfo function
 
 export default function ResourcesPage() {
   const { t } = useTranslation();
@@ -61,7 +54,7 @@ export default function ResourcesPage() {
   // Create client instance within the component
   const [supabase] = useState(() => createClientComponentClient());
 
-  const userDisplayInfo = getUserDisplayInfo(user);
+  // Remove userDisplayInfo variable
 
   useEffect(() => {
     if (user) {
@@ -159,7 +152,8 @@ export default function ResourcesPage() {
     return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center">{t('loading')}...</div>;
   }
 
-  if (!user || !userDisplayInfo) {
+  // Update check to only use user
+  if (!user) { 
     return <RedirectToLogin />;
   }
 
@@ -174,10 +168,16 @@ export default function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={userDisplayInfo} />
+      {/* Pass simplified user object */}
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
       <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <Header user={userDisplayInfo} />
-        <main className="p-6 w-full transition-all duration-300">
+        {/* Wrap Header in fixed div */}
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          {/* Pass simplified user object */}
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+        </div>
+        {/* Add padding-top to main */}
+        <main className="p-6 w-full pt-24 transition-all duration-300"> 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-[var(--text-primary)]">
               {t('resources')}

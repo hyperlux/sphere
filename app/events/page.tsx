@@ -37,13 +37,7 @@ interface Category {
   created_at: string | null;
 }
 
-function getUserDisplayInfo(user: User | null) {
-  if (!user) return null;
-  return {
-    email: user.email || 'No email',
-    name: user.user_metadata?.name
-  };
-}
+// Remove the getUserDisplayInfo function as it's no longer needed
 
 export default function EventsPage() {
   const { t } = useTranslation();
@@ -58,7 +52,7 @@ export default function EventsPage() {
   // Create client instance within the component
   const [supabase] = useState(() => createClientComponentClient());
 
-  const userDisplayInfo = getUserDisplayInfo(user);
+  // Remove the call to getUserDisplayInfo
 
   useEffect(() => {
     if (user) {
@@ -189,7 +183,8 @@ export default function EventsPage() {
     return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
   }
 
-  if (!user || !userDisplayInfo) {
+  // Update the condition to only check for user
+  if (!user) {
     return <RedirectToLogin />;
   }
 
@@ -204,44 +199,54 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={userDisplayInfo} />
+      {/* Pass user prop in the simplified format */}
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
       <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <Header user={userDisplayInfo} />
-        <main className="p-6 w-full transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+        {/* Wrap Header in fixed position div like forum page */}
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          {/* Pass user prop in the simplified format */}
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
+        </div>
+        {/* Add padding-top to main to account for fixed header */}
+        <main className="p-6 w-full pt-24 transition-all duration-300"> 
+          {/* Combined Header Row for Title and Controls */}
+          <div className="flex justify-between items-center mb-6 gap-4">
+            {/* Title on the left */}
+            <h1 className="text-3xl font-bold text-[var(--text-primary)] whitespace-nowrap">
               {t('events')}
             </h1>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-            >
-              {t('create_event')}
-            </button>
+
+            {/* Controls grouped on the right */}
+            <div className="flex items-center gap-4">
+              <input
+                type="search"
+                placeholder={t('search_events')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+              />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
+              >
+                <option value="">{t('all_categories')}</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 whitespace-nowrap"
+              >
+                {t('create_event')}
+              </button>
+            </div>
           </div>
 
-          <div className="mb-6 flex gap-4">
-            <input
-              type="search"
-              placeholder={t('search_events')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 max-w-lg px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-            />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
-            >
-              <option value="">{t('all_categories')}</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* Event List Section */}
           {loading ? (
             <p className="text-[var(--text-muted)]">{t('loading')}...</p>
           ) : (

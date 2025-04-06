@@ -19,8 +19,10 @@ import {
 
 interface SidebarProps {
   user: {
-    email: string;
+    // Revert to original: email is required string, no user_metadata
+    email: string; 
     name?: string;
+    // Remove user_metadata
   } | null;
 }
 
@@ -112,12 +114,14 @@ export default function Sidebar({ user }: SidebarProps) {
           <div className="flex items-center">
             <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
               <span className="text-sm text-white">
-                {user.name ? user.name.charAt(0) : user.email.charAt(0)}
+                {/* Safely get initial: check name, then email, fallback */}
+                {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
               </span>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-[var(--text-primary)]">
-                {user.name || 'Test Admin'}
+                {/* Revert to original logic */}
+                {user.name || 'Test Admin'} 
               </p>
               <p className="text-xs text-[var(--text-muted)]">
                 {t('community_member')}

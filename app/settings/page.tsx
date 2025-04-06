@@ -18,21 +18,22 @@ export default function SettingsPage() {
     return <RedirectToLogin />;
   }
 
-  const userDisplayInfo = user ? {
-    email: user.email || 'No email',
-    name: user.user_metadata?.name || undefined
-  } : null;
+  // Remove userDisplayInfo variable
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]"> {/* Added bg-primary like dashboard */}
-      <Sidebar user={userDisplayInfo} />
-      {/* Added wrapper div with margin-left like dashboard */}
-      <div className="flex flex-col min-h-screen ml-64 transition-all duration-300"> 
-        <Header user={userDisplayInfo} />
+      {/* Pass simplified user object */}
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+      {/* Use standard wrapper div with margin-left */}
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300"> 
+        {/* Wrap Header in fixed div */}
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          {/* Pass simplified user object */}
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+        </div>
         
-        {/* Adjusted main classes to match dashboard: removed pl-80, pt-24, max-w-5xl, added w-full */}
-        <main className="p-6 w-full transition-all duration-300"> 
-          {/* Removed mt-8 from h1 as p-6 provides top padding */}
+        {/* Add padding-top to main */}
+        <main className="p-6 w-full pt-24 transition-all duration-300"> 
           <h1 className="text-3xl font-bold text-[var(--text-primary)]"> 
             {t('settings')}
           </h1>

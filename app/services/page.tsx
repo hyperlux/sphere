@@ -7,36 +7,35 @@ import Sidebar from '@/components/Sidebar';
 import RedirectToLogin from '@/components/RedirectToLogin';
 import { User } from '@supabase/supabase-js'; // Import User type
 
-// Helper function to get display info
-function getUserDisplayInfo(user: User | null) {
-  if (!user) return null;
-  return {
-    email: user.email || 'No email',
-    name: user.user_metadata?.name || undefined
-  };
-}
-
+// Remove getUserDisplayInfo function
 
 export default function ServicesPage() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
 
-  const userDisplayInfo = getUserDisplayInfo(user); // Use helper function
+  // Remove userDisplayInfo variable
 
   if (authLoading) {
     return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center">{t('loading')}...</div>; // Added flex centering
   }
 
-  if (!user || !userDisplayInfo) { // Check userDisplayInfo as well
+  // Update check to only use user
+  if (!user) { 
     return <RedirectToLogin />;
   }
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={userDisplayInfo} />
+      {/* Pass simplified user object */}
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
       <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <Header user={userDisplayInfo} />
-        <main className="p-6 w-full transition-all duration-300">
+        {/* Wrap Header in fixed div */}
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          {/* Pass simplified user object */}
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+        </div>
+        {/* Add padding-top to main */}
+        <main className="p-6 w-full pt-24 transition-all duration-300"> 
           <h1 className="text-3xl font-bold text-[var(--text-primary)]">
             {t('Services')}
           </h1>

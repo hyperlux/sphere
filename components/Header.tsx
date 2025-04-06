@@ -14,10 +14,12 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface HeaderProps {
   user: {
-    email: string;
-    name?: string;
+    // Revert to original: email is required string, no user_metadata
+    email: string; 
+    name?: string; 
     role?: string;
     avatar_url?: string;
+    // Remove user_metadata from here
   } | null;
   visitorCount?: number;
   siteStats?: {
@@ -78,24 +80,25 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md flex flex-col sm:flex-row items-center justify-between py-6 px-6">
-      <div className="w-full sm:w-auto flex-1 max-w-2xl mb-4 sm:mb-0">
-        <form onSubmit={handleSearch} className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="w-5 h-5 text-[var(--text-muted)]" />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('Search...')}
-            className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 text-sm"
-          />
-        </form>
-      </div>
+    <header className="sticky top-0 z-50 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between">
+        <div className="w-full sm:w-auto flex-1 max-w-2xl mb-4 sm:mb-0">
+          <form onSubmit={handleSearch} className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-[var(--text-muted)]" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('Search...')}
+              className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 text-sm"
+            />
+          </form>
+        </div>
 
-      <div className="flex items-center space-x-6 mb-4 sm:mb-0">
-        <div className="flex flex-col items-center text-amber-500">
+        <div className="flex items-center space-x-6 mb-4 sm:mb-0">
+          <div className="flex flex-col items-center text-amber-500">
           <div className="flex items-center">
             <Users className="w-5 h-5 mr-2" />
             <span className="text-sm font-medium">
@@ -184,13 +187,16 @@ export default function Header({
           <div className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
               <span className="text-sm text-white">
-                {user.name ? user.name.charAt(0) : user.email.charAt(0)}
+                {/* Safely get initial: check name, then email, fallback */}
+                {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
               </span>
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-[var(--text-primary)]">
+                {/* Revert to original logic, expecting name directly on prop */}
                 {user.name || user.email}
               </p>
+              {/* Revert role check */}
               <p className="text-xs text-[var(--text-muted)]">{user.role || t('community_member')}</p>
             </div>
             <button
@@ -201,6 +207,7 @@ export default function Header({
             </button>
           </div>
         )}
+        </div>
       </div>
     </header>
   );
