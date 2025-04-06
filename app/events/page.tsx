@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import RedirectToLogin from '@/components/RedirectToLogin';
@@ -14,17 +15,19 @@ import { User } from '@supabase/supabase-js';
 interface Event {
   id: string;
   title: string;
-  description: string;
-  date: string;
-  location: string;
+  description: string | null;
+  date?: string; // Make optional to match DB type
+  location: string | null;
   category?: {
     id: string;
     name: string;
   };
-  creator: {
-    name: string;
-  };
-  attendees_count: number;
+  // creator: { // Remove creator object for now
+  //   username: string;
+  // } | null;
+  created_by: string | null; // Store the ID instead
+  attendees_count: number | null; // Allow null based on query result type
+  category_id: string | null; // Add category_id based on query
 }
 
 interface Category {
@@ -50,37 +53,49 @@ export default function EventsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
+
   const userDisplayInfo = getUserDisplayInfo(user);
 
   useEffect(() => {
     if (user) {
-      loadEvents();
+      loadEvents(); // Re-enable
       loadCategories();
-      loadUserRsvps();
+      loadUserRsvps(); // Re-enable
+      // setLoading(false); // Loading is handled within loadEvents now
+    } else {
+       setLoading(false); // Set loading false if no user
     }
-  }, [user]);
+  }, [user]); // Add loadEvents, loadUserRsvps to dependencies if needed after defining them
 
+  // Uncomment functions
+  
   const loadEvents = async () => {
     try {
       const { data, error } = await supabase
         .from('events')
         .select(`
           *,
-          category:category_id(id, name),
-          creator:created_by(name),
-          attendees_count:event_attendees(count)
+          category_id,
+          created_by
         `)
-        .order('date', { ascending: true });
+        // attendees_count will be handled by default/placeholder in EventCard for now
+        .order('date', { ascending: true }); // Ordering by 'date' might fail if column doesn't exist
 
       if (error) throw error;
-      setEvents(data || []);
+      // Data should now mostly match the Event interface (except category join and creator object)
+      // Manually add a default attendees_count since we removed the join
+      const eventsData = (data || []).map(event => ({
+        ...event,
+        attendees_count: 0, // Default to 0
+      }));
+      setEvents(eventsData as Event[]); // Cast might still be needed
     } catch (error) {
       console.error('Error loading events:', error);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); } // Restore finally block
   };
+  
 
   const loadCategories = async () => {
     try {
@@ -96,12 +111,15 @@ export default function EventsPage() {
     }
   };
 
+  
   const loadUserRsvps = async () => {
+    if (!user?.id) return; // Don't run if user ID is not available
+
     try {
       const { data, error } = await supabase
         .from('event_attendees')
         .select('event_id, status')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id); // Now we know user.id exists
 
       if (error) throw error;
       const rsvpMap = (data || []).reduce((acc, curr) => ({
@@ -113,18 +131,25 @@ export default function EventsPage() {
       console.error('Error loading RSVPs:', error);
     }
   };
+  
 
+  
   const handleRsvp = async (eventId: string, status: 'attending' | 'maybe' | 'not_attending') => {
+    if (!user?.id) {
+      console.error("Cannot RSVP without user ID");
+      return; // Or show an error message
+    }
+
     try {
       const existingStatus = userRsvps[eventId];
-      
+
       if (existingStatus) {
         // Update existing RSVP
         const { error } = await supabase
           .from('event_attendees')
           .update({ status })
-          .match({ event_id: eventId, user_id: user?.id });
-          
+          .match({ event_id: eventId, user_id: user.id }); // Use user.id
+
         if (error) throw error;
       } else {
         // Create new RSVP
@@ -132,9 +157,10 @@ export default function EventsPage() {
           .from('event_attendees')
           .insert({
             event_id: eventId,
+            user_id: user.id, // Add required user_id
             status
           });
-          
+
         if (error) throw error;
       }
 
@@ -150,6 +176,7 @@ export default function EventsPage() {
       console.error('Error updating RSVP:', error);
     }
   };
+  
 
   if (authLoading) {
     return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
@@ -160,9 +187,11 @@ export default function EventsPage() {
   }
 
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || event.category?.id === selectedCategory;
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const matchesSearch = event.title.toLowerCase().includes(lowerCaseQuery) ||
+      (event.description && event.description.toLowerCase().includes(lowerCaseQuery));
+    // Adjust category filtering to use category_id directly
+    const matchesCategory = !selectedCategory || event.category_id === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -208,19 +237,20 @@ export default function EventsPage() {
         </div>
 
         {/* Events List */}
+        {/* Restore event list rendering */}
         {loading ? (
           <p className="text-[var(--text-muted)]">{t('loading')}...</p>
         ) : (
-          <div className="space-y-4">
-            {filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onRsvp={handleRsvp}
-                userStatus={userRsvps[event.id] as 'attending' | 'maybe' | 'not_attending' | undefined}
-              />
-            ))}
-          </div>
+           <div className="space-y-4">
+             {filteredEvents.map((event) => (
+               <EventCard
+                 key={event.id}
+                 event={event}
+                 onRsvp={handleRsvp}
+                 userStatus={userRsvps[event.id] as 'attending' | 'maybe' | 'not_attending' | undefined}
+               />
+             ))}
+           </div>
         )}
 
         {/* Create Event Modal */}
@@ -232,7 +262,7 @@ export default function EventsPage() {
                 onClose={() => setShowCreateForm(false)}
                 onSuccess={() => {
                   setShowCreateForm(false);
-                  loadEvents();
+                  loadEvents(); // Re-enable call
                 }}
               />
             </div>

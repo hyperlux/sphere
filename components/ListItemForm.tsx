@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 
 interface ListItemFormProps {
   onClose: () => void;
@@ -21,6 +22,8 @@ export default function ListItemForm({ onClose, onSuccess }: ListItemFormProps) 
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

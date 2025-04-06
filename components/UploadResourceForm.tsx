@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 
 interface UploadResourceFormProps {
   onClose: () => void;
@@ -22,6 +23,8 @@ export default function UploadResourceForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: '',

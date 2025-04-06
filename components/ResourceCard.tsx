@@ -7,16 +7,16 @@ interface ResourceProps {
   resource: {
     id: string;
     title: string;
-    description?: string;
-    url: string;
-    file_type: string;
-    size_in_bytes: number;
-    category?: {
+    description: string | null; // Accept null
+    url: string | null; // Accept null
+    file_type: string | null; // Accept null
+    size_in_bytes: number | null; // Accept null
+    category?: { // Keep optional
       name: string;
     };
-    author: {
-      name: string;
-    };
+    author: { // Expect username
+      username: string;
+    } | null; // Allow null
     created_at: string;
   };
   onDownload?: (resourceId: string) => Promise<void>;
@@ -32,7 +32,8 @@ export default function ResourceCard({ resource, onDownload }: ResourceProps) {
     }
   };
 
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string | null) => {
+    if (!fileType) return '📎'; // Default icon if null
     switch (fileType.toLowerCase()) {
       case 'pdf':
         return '📄';
@@ -58,7 +59,8 @@ export default function ResourceCard({ resource, onDownload }: ResourceProps) {
     }
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number | null) => {
+    if (bytes === null || bytes === undefined) return 'N/A'; // Handle null size
     const units = ['B', 'KB', 'MB', 'GB'];
     let size = bytes;
     let unitIndex = 0;
@@ -104,7 +106,7 @@ export default function ResourceCard({ resource, onDownload }: ResourceProps) {
             </div>
             <div className="flex items-center">
               <span className="mr-1">👤</span>
-              {resource.author.name}
+              {resource.author?.username ?? 'N/A'} {/* Display username, handle null author */}
             </div>
             <div className="flex items-center">
               <span className="mr-1">⏰</span>

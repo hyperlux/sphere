@@ -217,6 +217,266 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      },
+      // Manually add basic type definition for communities
+      communities: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          created_by: string; // Assuming FK to users
+          created_at: string; // Assuming timestampz
+          image_url: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          created_by: string;
+          created_at?: string;
+          image_url?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          created_by?: string;
+          created_at?: string;
+          image_url?: string | null;
+        };
+        Relationships: [
+           // { foreignKeyName: "communities_created_by_fkey", columns: ["created_by"], referencedRelation: "users", referencedColumns: ["id"] }
+        ];
+      },
+       // Manually add basic type definition for space_members
+      space_members: {
+        Row: {
+          id: string;
+          space_id: string; // Assuming FK to communities
+          user_id: string; // Assuming FK to users
+          role: string; // e.g., 'admin', 'member'
+          created_at: string; // Assuming timestampz
+        };
+        Insert: {
+          id?: string;
+          space_id: string;
+          user_id: string;
+          role: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          space_id?: string;
+          user_id?: string;
+          role?: string;
+          created_at?: string;
+        };
+        Relationships: [
+           // { foreignKeyName: "space_members_space_id_fkey", columns: ["space_id"], referencedRelation: "communities", referencedColumns: ["id"] },
+           // { foreignKeyName: "space_members_user_id_fkey", columns: ["user_id"], referencedRelation: "users", referencedColumns: ["id"] }
+        ];
+      },
+      // Manually add basic type definition for event_categories
+      event_categories: {
+        Row: {
+          id: string;
+          name: string;
+          // Add other columns if they exist
+        };
+        Insert: {
+          id?: string;
+          name: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      },
+      // Manually add basic type definition for event_attendees
+      event_attendees: {
+        Row: {
+          event_id: string; // FK to events
+          user_id: string; // FK to users
+          status: string; // e.g., 'attending', 'maybe', 'not_attending'
+          created_at: string; // Assuming timestampz
+        };
+        Insert: {
+          event_id: string;
+          user_id: string;
+          status: string;
+          created_at?: string;
+        };
+        Update: {
+          event_id?: string;
+          user_id?: string;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          // { foreignKeyName: "event_attendees_event_id_fkey", columns: ["event_id"], referencedRelation: "events", referencedColumns: ["id"] },
+          // { foreignKeyName: "event_attendees_user_id_fkey", columns: ["user_id"], referencedRelation: "users", referencedColumns: ["id"] }
+        ];
+      },
+      // Manually add basic type definition for events
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          start_time: string; // Assuming timestampz
+          end_time: string | null; // Assuming timestampz
+          location: string | null;
+          community_id: string; // Assuming FK to a communities table
+          category_id: string | null; // Add missing category FK
+          created_by: string; // Assuming FK to users table
+          created_at: string; // Assuming timestampz
+          // Add other columns like 'date', 'type', 'isRead' if they exist
+          date?: string; // Example if 'date' exists
+          type?: string; // Example if 'type' exists
+          isRead?: boolean; // Example if 'isRead' exists
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          start_time: string;
+          end_time?: string | null;
+          location?: string | null;
+          community_id: string;
+          category_id?: string | null; // Add missing category FK
+          created_by: string;
+          created_at?: string;
+          date?: string;
+          type?: string;
+          isRead?: boolean;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          start_time?: string;
+          end_time?: string | null;
+          location?: string | null;
+          community_id?: string;
+          category_id?: string | null; // Add missing category FK
+          created_by?: string;
+          created_at?: string;
+          date?: string;
+          type?: string;
+          isRead?: boolean;
+        };
+        Relationships: [
+          // Define relationships if needed
+          // { foreignKeyName: "events_community_id_fkey", columns: ["community_id"], referencedRelation: "communities", referencedColumns: ["id"] },
+          // { foreignKeyName: "events_created_by_fkey", columns: ["created_by"], referencedRelation: "users", referencedColumns: ["id"] }
+        ];
+      },
+      // Manually add basic type definition for resource_categories
+      resource_categories: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string; // Assuming timestampz
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      },
+      // Manually add basic type definition for resources
+      resources: {
+         Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          url: string | null;
+          file_type: string | null;
+          size_in_bytes: number | null;
+          category_id: string | null; // Assuming FK to resource_categories
+          author_id: string | null; // Assuming FK to users
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          url?: string | null;
+          file_type?: string | null;
+          size_in_bytes?: number | null;
+          category_id?: string | null;
+          author_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          url?: string | null;
+          file_type?: string | null;
+          size_in_bytes?: number | null;
+          category_id?: string | null;
+          author_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+           // Define relationships if needed
+           // { foreignKeyName: "resources_category_id_fkey", columns: ["category_id"], referencedRelation: "resource_categories", referencedColumns: ["id"] },
+           // { foreignKeyName: "resources_author_id_fkey", columns: ["author_id"], referencedRelation: "users", referencedColumns: ["id"] }
+        ];
+      },
+      // Manually add basic type definition for bazaar_items
+      bazaar_items: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          price: number;
+          condition: string;
+          location: string | null;
+          image_url: string | null;
+          seller_id: string; // Foreign key to users table
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description: string;
+          price: number;
+          condition: string;
+          location?: string | null;
+          image_url?: string | null;
+          seller_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          price?: number;
+          condition?: string;
+          location?: string | null;
+          image_url?: string | null;
+          seller_id?: string;
+          created_at?: string;
+        };
+        // Define relationship if needed for type safety, though the query uses explicit join syntax
+        Relationships: [
+           {
+            foreignKeyName: "bazaar_items_seller_id_fkey", // Assuming this is the FK constraint name
+            columns: ["seller_id"],
+            isOneToOne: false,
+            referencedRelation: "users",
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

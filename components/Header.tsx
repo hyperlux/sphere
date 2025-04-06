@@ -6,7 +6,10 @@ import { useAuth } from '@/components/AuthProvider';
 import { useTheme } from '@/components/ThemeProvider';
 import { Search, Bell, Sun, Moon, Users, Filter, CirclePlus } from 'lucide-react';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import { supabase } from '@/lib/supabase';
+// Remove old import
+// import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 
 interface HeaderProps {
@@ -27,13 +30,13 @@ interface HeaderProps {
 interface Notification {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   created_at: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  isRead: boolean;
+  type: 'info' | 'warning' | 'success' | 'error' | string | undefined;
+  isRead: boolean | undefined; // Allow undefined
 }
 
-export default function Header({ 
+export default function Header({
   user, 
   visitorCount = 1247,
   siteStats = { totalUsers: 5432, activeSessions: 89 },
@@ -49,13 +52,14 @@ export default function Header({
 
   useClickOutside(notificationButtonRef, () => setIsNotificationMenuOpen(false));
 
-  // Temporarily comment out notification fetching due to missing 'events' table
-  /*
+  // Re-enable notification fetching
   useEffect(() => {
     const fetchNotifications = async () => {
+      // Use the client component client instance
+      const supabase = createClientComponentClient(); // Need to create client instance here
       const { data, error } = await supabase
-        .from('events') // This table seems to be missing
-        .select('id, title, description, created_at, type, isRead')
+        .from('events') // Assuming 'events' table now exists in types
+        .select('id, title, description, created_at, type, isRead') // Select columns defined in manual type
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -67,8 +71,7 @@ export default function Header({
     };
 
     fetchNotifications();
-  }, []);
-  */
+  }, []); // Removed supabase dependency as it's created inside
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,12 +156,14 @@ export default function Header({
                 {notifications.map((notification) => (
                   <a
                     key={notification.id}
-                    href="#"
+                    href="#" // TODO: Link to actual event/resource?
                     className="flex items-center px-4 py-3 hover:bg-[var(--bg-tertiary)] transition-colors"
                   >
                     <div className="flex-1">
                       <p className="text-sm font-medium text-[var(--text-primary)]">{notification.title}</p>
-                      <p className="text-xs text-[var(--text-muted)]">
+                      {/* Optionally display description if needed */}
+                      {/* <p className="text-xs text-[var(--text-secondary)] line-clamp-1">{notification.description}</p> */}
+                      <p className="text-xs text-[var(--text-muted)] mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                       </p>
                     </div>

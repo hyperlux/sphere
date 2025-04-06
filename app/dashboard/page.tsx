@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ContentCard from '@/components/ContentCard';
@@ -25,6 +26,8 @@ export default function Dashboard() {
     events: [],
     resources: []
   });
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   useEffect(() => {
     async function loadDashboard() {
@@ -45,7 +48,7 @@ export default function Dashboard() {
             .limit(3),
           supabase
             .from('resources')
-            .select('*, author:users(name)')
+            .select('*, author:users(username)') // Select username instead of name
             .order('created_at', { ascending: false })
             .limit(5)
         ]);

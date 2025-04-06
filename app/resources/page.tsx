@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import RedirectToLogin from '@/components/RedirectToLogin';
@@ -14,17 +15,17 @@ import { User } from '@supabase/supabase-js';
 interface Resource {
   id: string;
   title: string;
-  description?: string;
-  url: string;
-  file_type: string;
-  size_in_bytes: number;
-  category?: {
+  description: string | null; // Use database type
+  url: string | null; // Use database type
+  file_type: string; // Assuming required
+  size_in_bytes: number | null;
+  category?: { // Keep optional as category_id is nullable
     id: string;
     name: string;
   };
-  author: {
-    name: string;
-  };
+  author: { // Expect username
+    username: string;
+  } | null;
   created_at: string;
 }
 
@@ -51,6 +52,8 @@ export default function ResourcesPage() {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const userDisplayInfo = getUserDisplayInfo(user);
 
@@ -69,7 +72,7 @@ export default function ResourcesPage() {
         .select(`
           *,
           category:resource_categories(id, name),
-          author:users!author_id(name)
+          author:users!author_id(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -113,11 +116,14 @@ export default function ResourcesPage() {
   const handleDownload = async (resourceId: string) => {
     try {
       const resource = resources.find(r => r.id === resourceId);
-      if (!resource) return;
+      if (!resource || !resource.url) {
+        setError(t('error_resource_url_missing'));
+        return;
+      }
 
       const { data, error } = await supabase.storage
         .from('public')
-        .createSignedUrl(resource.url, 60);
+        .createSignedUrl(resource.url, 60); // Now we know resource.url is a string
 
       if (error) throw error;
 

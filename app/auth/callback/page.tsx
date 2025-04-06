@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react'; // Added useState
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 
 export default function AuthCallback() {
   const router = useRouter();
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   useEffect(() => {
     const handleAuthCallback = async () => {

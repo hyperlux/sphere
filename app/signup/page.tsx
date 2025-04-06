@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import ResendConfirmation from '@/components/ResendConfirmation'; // Keep this if used in success message
 
@@ -17,6 +18,8 @@ export default function SignUpPage() { // Renamed component for clarity
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({

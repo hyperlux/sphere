@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 
 export default function ResendConfirmation({ email }: { email: string }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const handleResend = async () => {
     setStatus('sending');

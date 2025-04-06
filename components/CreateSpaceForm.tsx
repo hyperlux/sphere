@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 
 interface CreateSpaceFormProps {
@@ -16,6 +17,8 @@ export default function CreateSpaceForm({ onClose, onSuccess }: CreateSpaceFormP
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({

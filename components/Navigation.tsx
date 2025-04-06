@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react'; // Import useState
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthProvider';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 
 export default function Navigation() {
   const { user } = useAuth();
   const router = useRouter();
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

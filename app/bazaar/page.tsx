@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+// Import the new client creation function
+import { createClientComponentClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import RedirectToLogin from '@/components/RedirectToLogin';
@@ -16,12 +17,12 @@ interface BazaarItem {
   name: string;
   description: string;
   price: number;
-  image_url?: string;
+  image_url: string | null; // Align with Card: Use string | null
   condition: string;
-  location?: string;
-  seller: {
-    name: string;
-  };
+  location: string | null; // Align with Card: Use string | null
+  seller: { // Updated to expect username
+    username: string;
+  } | null; // Allow seller to be null if join fails or user deleted
   created_at: string;
 }
 
@@ -45,6 +46,8 @@ export default function BazaarPage() {
   const [contactInfo, setContactInfo] = useState<{ visible: boolean; sellerId?: string }>({
     visible: false
   });
+  // Create client instance within the component
+  const [supabase] = useState(() => createClientComponentClient());
 
   const userDisplayInfo = getUserDisplayInfo(user);
 
@@ -57,11 +60,13 @@ export default function BazaarPage() {
   const loadItems = async () => {
     try {
       console.log('Loading bazaar items...');
+      // NOTE: This query will still fail if 'bazaar_items' table doesn't exist or isn't in types.
+      // Fixing the user join part first.
       const { data, error } = await supabase
         .from('bazaar_items')
         .select(`
           *,
-          seller:users!seller_id(name)
+          seller:users!seller_id(username)
         `)
         .order('created_at', { ascending: false });
 
@@ -89,9 +94,10 @@ export default function BazaarPage() {
       // In a real app, you might want to fetch the seller's contact info
       // or open a chat interface. For now, we'll just show a modal with
       // placeholder text.
+      // Use seller username if available
       setContactInfo({
         visible: true,
-        sellerId: item.seller.name
+        sellerId: item.seller?.username ?? 'Unknown Seller'
       });
     } catch (error) {
       console.error('Error contacting seller:', error);

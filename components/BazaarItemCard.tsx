@@ -9,13 +9,13 @@ interface BazaarItemProps {
     name: string;
     description: string;
     price: number;
-    image_url?: string;
-    seller: {
-      name: string;
-    };
+    image_url: string | null; // Accept null
+    seller: { // Expect username now
+      username: string;
+    } | null; // Allow seller to be null
     created_at: string;
     condition: string;
-    location?: string;
+    location: string | null; // Accept null
   };
   onContact?: (itemId: string) => void;
 }
@@ -79,7 +79,8 @@ export default function BazaarItemCard({
               </>
             )}
             <span>•</span>
-            <span>{t('seller')}: {item.seller.name}</span>
+            {/* Display username, handle null seller */}
+            <span>{t('seller')}: {item.seller?.username ?? 'N/A'}</span>
           </div>
         </div>
 
