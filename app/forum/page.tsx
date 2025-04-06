@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ForumCategoryCard from '@/components/ForumCategoryCard';
+import CreateTopicForm from '@/components/CreateTopicForm';
 import { useAuth } from '@/components/AuthProvider';
 
 interface ForumCategory {
@@ -26,6 +27,8 @@ export default function ForumPage() {
   const [pinnedTopics, setPinnedTopics] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +99,57 @@ export default function ForumPage() {
         <link rel="stylesheet" href="/forum/forum-layout.css" />
 
 <main className="p-6 w-full pt-24 transition-all duration-300">
-  <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Forum</h1>
+  <div className="flex justify-between items-center mb-6">
+    <h1 className="text-3xl font-bold text-[var(--text-primary)]">Forum</h1>
+    <button
+      onClick={() => setShowCreateModal(true)}
+      disabled={allCategories.length === 0}
+      className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Create Topic
+    </button>
+  </div>
+
+  {showCreateModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-[var(--bg-primary)] rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
+        <button
+          onClick={() => setShowCreateModal(false)}
+          className="absolute top-3 right-3 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+        >
+          ✕
+        </button>
+        <h2 className="text-xl font-semibold mb-4 text-[var(--text-primary)]">Create New Topic</h2>
+        <CreateTopicForm
+          categories={allCategories}
+          isLoading={isSubmitting}
+          onCancel={() => setShowCreateModal(false)}
+          onSubmit={async (data: { title: string; content: string; categoryId: string; tags: string[] }) => {
+            setIsSubmitting(true);
+            try {
+              const response = await fetch(`/api/forum/categories/${data.categoryId}/topics`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: data.title, content: data.content, tags: data.tags })
+              });
+              if (!response.ok) throw new Error('Failed to create topic');
+              const newTopic = await response.json();
+              setRecentTopics(prev => [newTopic, ...prev]);
+              setPopularTopics(prev => [newTopic, ...prev]);
+              if (newTopic.isPinned) setPinnedTopics(prev => [newTopic, ...prev]);
+              setShowCreateModal(false);
+            } catch (err) {
+              console.error(err);
+              alert('Failed to create topic');
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+          categoryId={''} // prevent internal redirect
+        />
+      </div>
+    </div>
+  )}
 
   <div className="mb-6">
     <input

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js'; // Import base client
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/lib/db/database.types';
 
 type RouteParams = {
@@ -8,7 +10,6 @@ type RouteParams = {
   };
 };
 
-// GET /api/forum/categories/[categoryId]/topics
 export async function GET(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
 
@@ -23,7 +24,6 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   // Create client with public keys
   const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-
 
   if (!categoryId) {
     return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
@@ -76,6 +76,73 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   } catch (err) {
     console.error(`Unexpected error fetching topics for category ${categoryId}:`, err);
+    const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+    return NextResponse.json({ error: 'Internal Server Error', details: errorMessage }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request, { params }: RouteParams) {
+  const { categoryId } = params;
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: cookies() }
+  );
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const userId = session?.user?.id;
+    if (!userId) {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Your session has expired or you are not logged in. Please log in and try again.'
+        },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { title, content, tags } = body;
+
+    if (!title || !content) {
+      return NextResponse.json({ error: 'Missing title or content' }, { status: 400 });
+    }
+
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+    const { data, error } = await supabase
+      .from('forum_topics')
+      .insert([
+        {
+          title,
+          slug,
+          content,
+          category_id: categoryId,
+          author_id: userId,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating topic:', error);
+      return NextResponse.json(
+        { error: 'Failed to create topic', details: error.message, supabaseError: error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    console.error('Unexpected error creating topic:', err);
     const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
     return NextResponse.json({ error: 'Internal Server Error', details: errorMessage }, { status: 500 });
   }

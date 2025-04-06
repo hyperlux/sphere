@@ -663,3 +663,8 @@ body {
     background: var(--auroville-terracotta);
   }
 }
+
+img {
+  max-width: 100%;
+  height: auto;
+}
