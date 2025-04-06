@@ -84,8 +84,8 @@ export default function ForumPage() {
   }, [searchQuery, sortBy, allCategories]); // Re-run filter/sort when search, sort, or base data changes
 
   const handleCreateTopic = () => {
-    // TODO: Update this route if needed, maybe '/forum/topics/new'
-    router.push('/forum/new');
+    // Standardize route to create new topics
+    router.push('/forum/topics/new');
   };
 
   return (
