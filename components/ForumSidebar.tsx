@@ -102,45 +102,46 @@ export default function ForumSidebar({
               All Categories
             </Link>
           </li>
-          <li>
+          {/* Comment out links to non-existent pages for now */}
+          {/* <li>
             <Link
               href="/forum/trending"
               className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                pathname === '/forum/trending' 
-                  ? 'bg-amber-500 text-white' 
+                pathname === '/forum/trending'
+                  ? 'bg-amber-500 text-white'
                   : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
               <TrendingUp size={20} className="mr-3" />
               Trending
             </Link>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <Link
               href="/forum/recent"
               className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                pathname === '/forum/recent' 
-                  ? 'bg-amber-500 text-white' 
+                pathname === '/forum/recent'
+                  ? 'bg-amber-500 text-white'
                   : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
               <Clock size={20} className="mr-3" />
               Recent
             </Link>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <Link
               href="/forum/bookmarks"
               className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
-                pathname === '/forum/bookmarks' 
-                  ? 'bg-amber-500 text-white' 
+                pathname === '/forum/bookmarks'
+                  ? 'bg-amber-500 text-white'
                   : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
               <Bookmark size={20} className="mr-3" />
               Bookmarks
             </Link>
-          </li>
+          </li> */}
         </ul>
 
         <div className="mt-8">

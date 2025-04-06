@@ -49,10 +49,12 @@ export default function Header({
 
   useClickOutside(notificationButtonRef, () => setIsNotificationMenuOpen(false));
 
+  // Temporarily comment out notification fetching due to missing 'events' table
+  /*
   useEffect(() => {
     const fetchNotifications = async () => {
       const { data, error } = await supabase
-        .from('events')
+        .from('events') // This table seems to be missing
         .select('id, title, description, created_at, type, isRead')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -66,6 +68,7 @@ export default function Header({
 
     fetchNotifications();
   }, []);
+  */
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
