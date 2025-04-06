@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session, Provider, SignInWithPasswordCredentials } from '@supabase/supabase-js'; // Added Provider and SignInWithPasswordCredentials
-import { supabase } from '@/lib/supabase';
+import { User, Session, Provider, SignInWithPasswordCredentials, SupabaseClient } from '@supabase/supabase-js'; // Added SupabaseClient
+// Import the new client creation function instead of the pre-configured one
+import { createClientComponentClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -27,16 +28,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  // Create the client instance using the ssr helper and store it in state
+  const [supabase] = useState(() => createClientComponentClient());
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session using the new client instance
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for auth changes using the new client instance
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -50,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Use the new client instance
       await supabase.auth.signOut();
       router.push('/login');
     } catch (error) {
@@ -59,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Add the login function
   const login = async (credentials: SignInWithPasswordCredentials) => {
+    // Use the new client instance
     const { error } = await supabase.auth.signInWithPassword(credentials);
     if (error) {
       console.error('Error logging in:', error);
