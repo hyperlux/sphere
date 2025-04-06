@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
   // Define cookie handling methods separately
   const cookieMethods = {
     get(name: string) {
-      return cookieStore.get(name)?.value;
+      const cookie = cookieStore.get(name)?.value;
+      // Log cookie access attempts
+      console.log(`[API Cookie GET] Trying to get cookie: ${name}. Found: ${cookie ? 'Yes' : 'No'}`);
+      return cookie;
     },
     set(name: string, value: string, options: CookieOptions) {
       try {
