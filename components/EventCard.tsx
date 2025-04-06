@@ -52,8 +52,8 @@ export default function EventCard({ event, onRsvp, userStatus }: EventProps) {
               <div className="text-center py-2 text-2xl font-bold">
                 {event.date ? format(new Date(event.date), 'd') : '?'}
               </div>
-            </div>
-          </div>
+            </div> {/* This closes the bg-orange-500 div */}
+          </div> {/* This closes the flex-shrink-0 div */}
 
           {/* Event Details */}
           <div className="flex-1">

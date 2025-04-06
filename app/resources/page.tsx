@@ -15,18 +15,21 @@ import { User } from '@supabase/supabase-js';
 interface Resource {
   id: string;
   title: string;
-  description: string | null; // Use database type
-  url: string | null; // Use database type
-  file_type: string; // Assuming required
+  description: string | null;
+  url: string | null;
+  file_type: string | null;
   size_in_bytes: number | null;
-  category?: { // Keep optional as category_id is nullable
-    id: string;
-    name: string;
-  };
+  category_id: string | null; // Store category ID from query
+  author_id: string | null; // Store author ID from query
   author: { // Expect username
     username: string;
-  } | null;
+  } | null; // Allow null
   created_at: string;
+  // Add category object back if needed later after fixing join/fetching category name
+  // category?: {
+  //   id: string;
+  //   name: string;
+  // };
 }
 
 interface Category {
@@ -61,18 +64,21 @@ export default function ResourcesPage() {
     if (user) {
       loadResources();
       loadCategories();
+    } else {
+      setLoading(false); // Set loading false if no user
     }
   }, [user]);
 
   const loadResources = async () => {
+    setLoading(true); // Ensure loading state is set at the start
     try {
       console.log('Loading resources...');
       const { data, error } = await supabase
         .from('resources')
         .select(`
           *,
-          category:resource_categories(id, name),
-          author:users!author_id(username)
+          category_id,
+          author_id
         `)
         .order('created_at', { ascending: false });
 
@@ -82,7 +88,19 @@ export default function ResourcesPage() {
       }
 
       console.log('Resources loaded:', data);
-      setResources(data || []);
+      // Map data safely, setting potentially missing relational objects to null
+      const resourcesData = (data || []).map(resource => {
+         if (typeof resource === 'object' && resource !== null) {
+           return {
+             ...resource,
+             author: null, // Set author to null initially
+             category: undefined, // Set category to undefined initially
+           };
+         }
+         return null;
+       }).filter(Boolean); // Remove any null entries
+
+      setResources(resourcesData as Resource[] || []);
       setError(null);
     } catch (error) {
       console.error('Error loading resources:', error);
@@ -122,7 +140,7 @@ export default function ResourcesPage() {
       }
 
       const { data, error } = await supabase.storage
-        .from('public')
+        .from('public') // Assuming 'public' bucket, adjust if needed
         .createSignedUrl(resource.url, 60); // Now we know resource.url is a string
 
       if (error) throw error;
@@ -135,7 +153,7 @@ export default function ResourcesPage() {
   };
 
   if (authLoading) {
-    return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">{t('loading')}...</div>;
+    return <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center">{t('loading')}...</div>;
   }
 
   if (!user || !userDisplayInfo) {
@@ -143,9 +161,11 @@ export default function ResourcesPage() {
   }
 
   const filteredResources = resources.filter(resource => {
-    const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resource.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || resource.category?.id === selectedCategory;
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const matchesSearch = resource.title.toLowerCase().includes(lowerCaseQuery) ||
+      (resource.description && resource.description.toLowerCase().includes(lowerCaseQuery));
+    // Filter using category_id directly
+    const matchesCategory = !selectedCategory || resource.category_id === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -153,7 +173,7 @@ export default function ResourcesPage() {
     <div className="min-h-screen">
       <Sidebar user={userDisplayInfo} />
       <Header user={userDisplayInfo} />
-      
+
       <main className="ml-80 pt-24 p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-[var(--text-primary)] mt-8">
