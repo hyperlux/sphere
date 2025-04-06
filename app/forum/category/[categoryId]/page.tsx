@@ -1,65 +1,70 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { PlusCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import ForumTopicCard from '@/components/ForumTopicCard';
+import CreateTopicForm from '@/components/CreateTopicForm';
 import { useAuth } from '@/components/AuthProvider';
-import ForumTopicCard from '@/components/ForumTopicCard'; // Assuming this component exists or will be created
-import { formatDistanceToNow } from 'date-fns'; // For relative timestamps
 
-// Define the structure for a topic based on API response
-interface ForumTopic {
+interface Category {
   id: string;
-  title: string;
-  createdAt: string;
-  lastActivityAt: string;
-  category: {
-    id: string | null;
-    name: string | null;
-  };
-  author: {
-    id: string | null;
-    name: string; // Username is mapped to name in API
-  };
-  // Add postCount later if API provides it
+  name: string;
 }
 
-export default function CategoryTopicsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { user } = useAuth();
-  const categoryId = params.categoryId as string;
+interface Topic {
+  id: string;
+  title: string;
+  content: string;
+  author: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  replyCount: number;
+  viewCount: number;
+  isPinned?: boolean;
+  isLocked?: boolean;
+  lastReply?: {
+    author: {
+      id: string;
+      name: string;
+    };
+    timestamp: string;
+  };
+  mood?: 'default' | 'question' | 'announcement' | 'discussion' | 'solved';
+}
 
-  const [topics, setTopics] = useState<ForumTopic[]>([]);
-  const [categoryName, setCategoryName] = useState<string | null>(null);
+export default function CategoryPage() {
+  const { categoryId } = useParams();
+  const { user } = useAuth();
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!categoryId) return;
-
-    const fetchTopics = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/forum/categories/${categoryId}/topics`);
-        if (!response.ok) {
-          if (response.status === 404) {
-             throw new Error(`Category not found.`);
-          }
-          throw new Error(`Failed to fetch topics: ${response.statusText}`);
-        }
-        const data: ForumTopic[] = await response.json();
-        setTopics(data);
-        // Set category name from the first topic's data (assuming all topics belong to the same category)
-        if (data.length > 0 && data[0].category?.name) {
-          setCategoryName(data[0].category.name);
-        } else {
-          // If no topics, maybe fetch category name separately? Or handle upstream.
-          setCategoryName('Category'); // Fallback name
-        }
+        const [topicsRes, categoriesRes] = await Promise.all([
+          fetch(`/api/forum/categories/${categoryId}/topics`),
+          fetch('/api/forum/categories')
+        ]);
+
+        if (!topicsRes.ok) throw new Error(`Failed to fetch topics: ${topicsRes.statusText}`);
+        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.statusText}`);
+
+        const topicsData = await topicsRes.json();
+        const categoriesData = await categoriesRes.json();
+
+        setTopics(topicsData);
+        setCategories(categoriesData);
       } catch (err) {
         console.error(err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -68,89 +73,84 @@ export default function CategoryTopicsPage() {
       }
     };
 
-    fetchTopics();
+    if (categoryId) {
+      fetchData();
+    }
   }, [categoryId]);
 
-  const handleCreateTopic = () => {
-    // Navigate to a dedicated page or open a modal
-    // Pass categoryId if the creation form needs it
-    router.push(`/forum/topics/new?categoryId=${categoryId}`);
-  };
-
-  const formatRelativeTime = (dateString: string) => {
+  const handleCreateTopic = async (data: { title: string; content: string; categoryId: string; tags: string[] }) => {
+    setIsSubmitting(true);
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch (e) {
-      return dateString; // Fallback
+      const response = await fetch(`/api/forum/categories/${data.categoryId}/topics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          content: data.content,
+          tags: data.tags
+        })
+      });
+      if (!response.ok) throw new Error(`Failed to create topic: ${response.statusText}`);
+      const newTopic = await response.json();
+      setTopics(prev => [newTopic, ...prev]);
+      setShowCreateForm(false);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create topic');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--bg-primary)]">
-      <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
 
-      <main className="flex-1 p-6 container mx-auto max-w-5xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <button onClick={() => router.back()} className="p-2 hover:bg-[var(--bg-tertiary)] rounded-full transition-colors">
-                <ArrowLeft size={20} className="text-[var(--text-secondary)]" />
-             </button>
-             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-               {isLoading ? 'Loading...' : categoryName ? `${categoryName} Topics` : 'Topics'}
-             </h1>
-          </div>
-          <button
-            onClick={handleCreateTopic}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            <PlusCircle size={18} />
-            <span>New Topic</span>
-          </button>
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-12 flex justify-center items-center gap-2 text-[var(--text-muted)]">
-            <Loader2 className="animate-spin" size={20} /> Loading topics...
+        <main className="p-6 w-full pt-24 transition-all duration-300">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-[var(--text-primary)]">Topics</h1>
+            {user && (
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition"
+              >
+                {showCreateForm ? 'Cancel' : 'Create Topic'}
+              </button>
+            )}
           </div>
-        ) : error ? (
-          <div className="text-center py-12 text-red-500">Error loading topics: {error}</div>
-        ) : topics.length === 0 ? (
-          <div className="text-center py-12 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
-            <p className="text-[var(--text-muted)] text-lg mb-4">No topics found in this category yet.</p>
-            <button
-                onClick={handleCreateTopic}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors mx-auto"
-            >
-                <PlusCircle size={18} />
-                <span>Be the first to create one!</span>
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {topics.map((topic) => (
-              // Map API data to ForumTopicCard props
-              <ForumTopicCard
-                key={topic.id}
-                id={topic.id}
-                title={topic.title}
-                // Provide default/placeholder values for missing data
-                content={""} // API doesn't provide topic content snippet yet
-                author={{
-                  id: topic.author.id ?? 'unknown', // Use author ID from API if available
-                  name: topic.author.name, // Use author name from API
-                  // avatar: topic.author.avatarUrl ?? undefined // Add avatar later if API provides it
-                }}
-                createdAt={topic.createdAt} // Pass raw timestamp, card formats it
-                replyCount={0} // API doesn't provide reply count yet
-                viewCount={0} // API doesn't provide view count yet
-                // lastReply={undefined} // API doesn't provide last reply info yet
-                // isPinned={topic.is_pinned ?? false} // Add later if API provides it
-                // isLocked={topic.is_locked ?? false} // Add later if API provides it
+
+          {showCreateForm && (
+            <div className="mb-6">
+              <CreateTopicForm
+                categoryId={categoryId as string}
+                categories={categories}
+                isLoading={isSubmitting}
+                onCancel={() => setShowCreateForm(false)}
+                onSubmit={handleCreateTopic}
               />
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">Loading topics...</div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">Error loading topics: {error}</div>
+          ) : topics.length === 0 ? (
+            <div className="text-center py-12 text-[var(--text-muted)]">No topics found.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {topics.map((topic) => (
+                <ForumTopicCard key={topic.id} {...topic} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function ForumSidebar({
   );
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
+    <aside className="w-80 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40">
       <div className="flex items-center py-2 pl-5 pb-6 border-b border-[var(--border-color)]">
         <Link href="/dashboard">
           <Image 

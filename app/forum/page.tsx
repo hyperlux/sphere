@@ -1,56 +1,64 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Filter, Search, SlidersHorizontal } from 'lucide-react';
-import { motion } from 'framer-motion';
-import ForumSidebar from '@/components/ForumSidebar';
-import ForumCategoryCard from '@/components/ForumCategoryCard';
+import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import ForumCategoryCard from '@/components/ForumCategoryCard';
 import { useAuth } from '@/components/AuthProvider';
-// Removed mock data import and related functions/constants
 
-// Define the structure for a category based on API response
 interface ForumCategory {
   id: string;
   name: string;
   description: string | null;
   icon: string | null;
-  // Properties like topicCount, latestActivity, isTrending are removed as they are not in the API response yet
 }
-
-// Removed popularTags constant as it's not used with real data yet
 
 export default function ForumPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  // State for fetched categories, loading, and error
   const [allCategories, setAllCategories] = useState<ForumCategory[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<ForumCategory[]>([]);
+  const [recentTopics, setRecentTopics] = useState<any[]>([]);
+  const [popularTopics, setPopularTopics] = useState<any[]>([]);
+  const [pinnedTopics, setPinnedTopics] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [showFilters, setShowFilters] = useState(false);
-  // Simplify sorting - only by name for now
-  const [sortBy, setSortBy] = useState<'name'>('name');
-  // Remove filterTrending state
-
-  // Fetch categories from API
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/forum/categories');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch categories: ${response.statusText}`);
+        const categoriesRes = await fetch('/api/forum/categories');
+        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.statusText}`);
+        const categoriesData = await categoriesRes.json();
+
+        setAllCategories(categoriesData);
+        setFilteredCategories(categoriesData);
+
+        const allTopics: any[] = [];
+
+        for (const category of categoriesData) {
+          try {
+            const topicsRes = await fetch(`/api/forum/categories/${category.id}/topics`);
+            if (!topicsRes.ok) continue;
+            const topicsData = await topicsRes.json();
+            allTopics.push(...topicsData);
+          } catch {
+            continue;
+          }
         }
-        const data: ForumCategory[] = await response.json();
-        console.log('Fetched categories data:', data); // Log fetched data
-        setAllCategories(data);
-        setFilteredCategories(data); // Initialize filtered list
+
+        const pinned = allTopics.filter((t: any) => t.isPinned);
+        const recent = [...allTopics].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+        const popular = [...allTopics].sort((a: any, b: any) => (b.replyCount || 0) - (a.replyCount || 0)).slice(0, 5);
+
+        setPinnedTopics(pinned);
+        setRecentTopics(recent);
+        setPopularTopics(popular);
       } catch (err) {
         console.error(err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -59,164 +67,120 @@ export default function ForumPage() {
       }
     };
 
-    fetchCategories();
-  }, []); // Fetch only once on mount
+    fetchData();
+  }, []);
 
-  // Filter and sort categories based on search query and sort option
   useEffect(() => {
-    // Removed log from here
-    let filtered = [...allCategories]; // Start with all fetched categories
-
-    // Apply search filter
+    let filtered = [...allCategories];
     if (searchQuery) {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      filtered = filtered.filter(category =>
-        category.name.toLowerCase().includes(lowerCaseQuery) ||
-        (category.description && category.description.toLowerCase().includes(lowerCaseQuery)) // Check if description exists before searching
+      const lower = searchQuery.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name.toLowerCase().includes(lower) ||
+        (c.description && c.description.toLowerCase().includes(lower))
       );
     }
-    
-    // Apply sorting (only by name for now)
-    if (sortBy === 'name') {
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    // Add other sorting options here later if needed
-
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
     setFilteredCategories(filtered);
-  }, [searchQuery, sortBy, allCategories]); // Re-run filter/sort when search, sort, or base data changes
-
-  // Log state values just before rendering
-  console.log('Rendering with allCategories:', allCategories);
-  console.log('Rendering with filteredCategories:', filteredCategories);
-
-  const handleCreateTopic = () => {
-    // Standardize route to create new topics
-    router.push('/forum/topics/new');
-  };
+  }, [searchQuery, allCategories]);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-primary)] overflow-hidden">
-      {/* Sidebar - Pass fetched categories */}
-      {/* TODO: Update ForumSidebar props if necessary */}
-      <ForumSidebar
-        categories={allCategories} // Pass all fetched categories
-        popularTags={[]} // Pass empty array for now
-        onCreateTopic={handleCreateTopic}
-      />
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
 
-      {/* Main content area */}
-      <div className="flex-1">
-        {/* Include scripts and styles */}
+      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
+        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
+        </div>
+
         <Script src="/forum/forum-layout.js" strategy="afterInteractive" />
         <link rel="stylesheet" href="/forum/forum-layout.css" />
-        
-        {/* Content area with proper sidebar offset */}
-        <div className="md:ml-64 sm:ml-20 transition-all duration-300">
-          {/* Header in the properly offset area */}
-          <Header 
-            user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null}
-          />
-          
-          {/* Main content */}
-          <main className="p-6">
-            <div className="mb-8 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                  Forum Categories
-                </h1>
-                
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
-                    />
-                  </div>
-                  
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors relative"
-                  >
-                    <Filter size={20} />
-                    {/* Remove trending indicator for now */}
-                  </button>
 
-                  <button
-                    onClick={handleCreateTopic}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <PlusCircle size={18} />
-                    <span>New Topic</span>
-                  </button>
-                </div>
-              </div>
-              
-              {showFilters && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="bg-[var(--bg-secondary)] p-4 rounded-lg border border-[var(--border-color)]"
-                >
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <label className="flex items-center gap-2 text-[var(--text-secondary)] text-sm">
-                        <SlidersHorizontal size={16} />
-                        Sort by:
-                      </label>
-                      <select
-                        value={sortBy}
-                        // Only allow sorting by name for now
-                        onChange={(e) => setSortBy(e.target.value as 'name')}
-                        className="mt-1 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg p-2 text-[var(--text-primary)]"
-                      >
-                        {/* <option value="activity">Recent Activity</option> */}
-                        <option value="name">Name</option>
-                        {/* <option value="topics">Topic Count</option> */}
-                      </select>
-                    </div>
+<main className="p-6 w-full pt-24 transition-all duration-300">
+  <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-6">Forum</h1>
 
-                    {/* Remove Trending Filter UI */}
-                  </div>
-                </motion.div>
-              )}
-            </div>
+  <div className="mb-6">
+    <input
+      type="text"
+      placeholder="Search categories and topics..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="w-full max-w-md px-4 py-2 rounded border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--auroville-teal)] transition"
+    />
+  </div>
 
-            {/* Handle Loading and Error States */}
-            {isLoading ? (
-              <div className="text-center py-12 text-[var(--text-muted)]">Loading categories...</div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-500">Error loading categories: {error}</div>
-            ) : filteredCategories.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-[var(--text-muted)] text-lg">
-                  {searchQuery ? 'No categories found matching your search.' : 'No categories found.'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredCategories.map((category) => (
-                  // Update ForumCategoryCard props to match fetched data
-                  <ForumCategoryCard
-                    key={category.id}
-                    id={category.id}
-                    name={category.name}
-                    description={category.description ?? ''} // Handle null description
-                    icon={category.icon ?? '💬'} // Provide default icon
-                    // Remove props not available from API yet
-                    // topicCount={0}
-                    // latestActivity={null}
-                    // isTrending={false}
-                  />
-                ))}
-              </div>
-            )}
-          </main>
-        </div>
+  {isLoading ? (
+    <div className="text-center py-12 text-[var(--text-muted)]">Loading forum data...</div>
+  ) : error ? (
+    <div className="text-center py-12 text-red-500">Error loading forum data: {error}</div>
+  ) : (
+    <>
+      {pinnedTopics.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Announcements</h2>
+          <div className="flex flex-col gap-4">
+            {pinnedTopics.map((topic) => (
+              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-orange-400 transition p-4">
+                <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
+                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recentTopics.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Recent Discussions</h2>
+          <div className="flex flex-col gap-4">
+            {recentTopics.map((topic) => (
+              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-[var(--auroville-teal)] transition p-4">
+                <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
+                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {popularTopics.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Popular Topics</h2>
+          <div className="flex flex-col gap-4">
+            {popularTopics.map((topic) => (
+              <a key={topic.id} href={`/forum/topics/${topic.id}`} className="block rounded-lg border border-[var(--border-color)] hover:shadow-lg hover:border-amber-400 transition p-4">
+                <h3 className="font-semibold text-[var(--text-primary)]">{topic.title}</h3>
+                <p className="text-[var(--text-secondary)] line-clamp-2">{topic.content}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">Categories</h2>
+        {filteredCategories.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-[var(--text-muted)] text-lg">
+              {searchQuery ? 'No categories found matching your search.' : 'No categories found.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+{filteredCategories.map((category) => (
+  <ForumCategoryCard
+    key={category.id}
+    id={category.id}
+    name={category.name}
+    description={category.description ?? ''}
+    icon={category.icon ?? '💬'}
+  />
+))}
+          </div>
+        )}
+      </section>
+    </>
+  )}
+</main>
       </div>
     </div>
   );
