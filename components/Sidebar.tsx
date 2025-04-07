@@ -43,9 +43,6 @@ export default function Sidebar({ user }: SidebarProps) {
 
   const externalLinks = [
     { name: 'auroville_foundation', href: 'https://auroville.org', icon: ExternalLink },
-    { name: 'directory', href: '/directory', icon: ExternalLink },
-    { name: 'media_portal', href: '/media', icon: ExternalLink },
-    { name: 'wiki', href: '/wiki', icon: ExternalLink },
   ];
 
   return (

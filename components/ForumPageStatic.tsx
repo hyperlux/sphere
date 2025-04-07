@@ -59,6 +59,17 @@ const ForumPageStatic: React.FC = () => {
 
       const accessToken = session?.access_token;
 
+      console.log('Access token:', accessToken);
+
+      if (accessToken) {
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          console.log('Decoded JWT payload:', payload);
+        } catch (e) {
+          console.warn('Failed to decode JWT payload:', e);
+        }
+      }
+
       if (!accessToken) {
         alert('You must be logged in to create a topic.');
         setIsLoading(false);
