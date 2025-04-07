@@ -18,7 +18,7 @@ interface ForumCategory {
 
 export default function ForumPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [allCategories, setAllCategories] = useState<ForumCategory[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<ForumCategory[]>([]);
@@ -100,18 +100,29 @@ export default function ForumPage() {
 
 {/* Add flex-1 to make the main content area grow */}
 <main className="flex-1 p-6 w-full pt-24 transition-all duration-300">
-  <div className="flex justify-between items-center mb-6">
-    <h1 className="text-3xl font-bold text-[var(--text-primary)]">Forum</h1>
-    <button
-      onClick={() => setShowCreateModal(true)}
-      disabled={allCategories.length === 0}
-      className="px-5 py-2.5 rounded-full bg-[var(--auroville-teal)] text-white font-semibold shadow hover:shadow-lg hover:bg-opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Create Topic
-    </button>
-  </div>
+  <div className="max-w-5xl mx-auto px-4 space-y-12">
+    <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-6">
+      <h1 className="text-3xl font-bold text-[var(--text-primary)]">Forum</h1>
+      <button
+        onClick={() => setShowCreateModal(true)}
+        disabled={allCategories.length === 0}
+        className="px-5 py-2.5 rounded-full bg-[var(--auroville-teal)] text-white font-semibold shadow hover:shadow-lg hover:bg-opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2 md:mt-4"
+      >
+        Create Topic
+      </button>
+    </div>
 
-  {showCreateModal && (
+    <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+      <input
+        type="text"
+        placeholder="Search categories and topics..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full max-w-md px-4 py-2 rounded-full border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--auroville-teal)] shadow transition"
+      />
+    </div>
+
+    {showCreateModal && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-[var(--bg-primary)] rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
         <button
@@ -130,8 +141,12 @@ export default function ForumPage() {
             try {
               const response = await fetch(`/api/forum/categories/${data.categoryId}/topics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: data.title, content: data.content, tags: data.tags })
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+                },
+                body: JSON.stringify({ title: data.title, content: data.content, tags: data.tags }),
+                credentials: 'include'
               });
               if (!response.ok) throw new Error('Failed to create topic');
               const newTopic = await response.json();
@@ -152,15 +167,6 @@ export default function ForumPage() {
     </div>
   )}
 
-  <div className="mb-6">
-    <input
-      type="text"
-      placeholder="Search categories and topics..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full max-w-md px-4 py-2 rounded-full border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--auroville-teal)] shadow transition"
-    />
-  </div>
 
   {isLoading ? (
     <div className="text-center py-12 text-[var(--text-muted)]">Loading forum data...</div>
@@ -370,6 +376,7 @@ export default function ForumPage() {
       </section>
     </>
   )}
+  </div>
 </main>
       </div>
     </div>

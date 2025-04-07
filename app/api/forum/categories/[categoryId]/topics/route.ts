@@ -101,11 +101,22 @@ export async function GET(request: Request, { params }: RouteParams) {
 export async function POST(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookies() }
-  );
+  const authHeader = request.headers.get('authorization');
+  const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  const supabase = accessToken
+    ? createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: { headers: { Authorization: `Bearer ${accessToken}` } }
+        }
+      )
+    : createServerClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: cookies() }
+      );
 
   try {
     const {
