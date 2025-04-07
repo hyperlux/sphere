@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import jwtDecode from 'jwt-decode';
 import { Database } from '@/lib/db/database.types';
 
 type RouteParams = {
@@ -104,36 +104,39 @@ export async function POST(request: Request, { params }: RouteParams) {
   const authHeader = request.headers.get('authorization');
   const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-  const supabase = accessToken
-    ? createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: { headers: { Authorization: `Bearer ${accessToken}` } }
-        }
-      )
-    : createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: cookies() }
-      );
+  if (!accessToken) {
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Missing access token' },
+      { status: 401 }
+    );
+  }
+
+  let userId: string | null = null;
 
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const decoded: any = jwtDecode(accessToken);
+    userId = decoded.sub;
+  } catch (err) {
+    console.error('JWT decode error:', err);
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Invalid access token' },
+      { status: 401 }
+    );
+  }
 
-    const userId = session?.user?.id;
-    if (!userId) {
-      return NextResponse.json(
-        {
-          error: 'Unauthorized',
-          message: 'Your session has expired or you are not logged in. Please log in and try again.'
-        },
-        { status: 401 }
-      );
-    }
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Invalid user ID in token' },
+      { status: 401 }
+    );
+  }
 
+  const supabaseAdmin = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  try {
     const body = await request.json();
     const { title, content, tags } = body;
 
@@ -146,7 +149,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('forum_topics')
       .insert([
         {

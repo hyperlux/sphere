@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Hero from './Hero';
+import { createClientComponentClient } from '@/lib/supabase/client';
 import CategoryCard from './CategoryCard';
 import TopicItem from './TopicItem';
 import TrendingSidebar from './TrendingSidebar';
@@ -50,10 +51,25 @@ const ForumPageStatic: React.FC = () => {
   }) => {
     setIsLoading(true);
     try {
+      const supabase = createClientComponentClient();
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        alert('You must be logged in to create a topic.');
+        setIsLoading(false);
+        return;
+      }
+
       const res = await fetch(`/api/forum/categories/${categoryId}/topics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ title, content, tags }),
       });

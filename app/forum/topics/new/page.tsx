@@ -6,6 +6,9 @@ import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/components/AuthProvider';
 import CreateTopicForm from '@/components/CreateTopicForm';
+import { jwtDecode } from 'jwt-decode';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/lib/db/database.types';
 
 // Define structure for category list
 interface CategoryInfo {
@@ -59,10 +62,49 @@ export default function NewTopicPage() {
     setError(null);
 
     try {
+      const supabase = createClientComponentClient<Database>();
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        console.warn('No Supabase session found');
+      } else {
+        const accessToken = sessionData.session.access_token;
+        console.log('Supabase Access Token:', accessToken);
+
+        try {
+          const decoded: any = jwtDecode(accessToken);
+          console.log('Decoded JWT:', decoded);
+        } catch (err) {
+          console.error('JWT decode error:', err);
+        }
+
+        const response = await fetch('/api/forum/topics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            content: formData.content,
+            categoryId: formData.categoryId,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Failed to create topic: ${response.statusText}`);
+        }
+
+        const newTopic = await response.json();
+        router.push(`/forum/topics/${newTopic.id}`);
+        return;
+      }
+
+      // If no session, fallback to unauthenticated request (will likely fail)
       const response = await fetch('/api/forum/topics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Only send data expected by the API route
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
@@ -76,17 +118,14 @@ export default function NewTopicPage() {
       }
 
       const newTopic = await response.json();
-      // Redirect to the newly created topic page
       router.push(`/forum/topics/${newTopic.id}`);
-      // Optionally show a success toast message here
 
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'Failed to create topic. Please try again.');
-      setIsSubmitting(false); // Re-enable form on error
-      throw err; // Re-throw to let the form know submission failed
+      setIsSubmitting(false);
+      throw err;
     }
-    // No finally block needed for setIsSubmitting(false) because successful submission navigates away
   }, [router]);
 
   // Redirect if not logged in

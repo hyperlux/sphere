@@ -7,6 +7,9 @@ import Header from '@/components/Header';
 import ForumTopicCard from '@/components/ForumTopicCard';
 import CreateTopicForm from '@/components/CreateTopicForm';
 import { useAuth } from '@/components/AuthProvider';
+import { jwtDecode } from 'jwt-decode';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/lib/db/database.types';
 
 interface Category {
   id: string;
@@ -79,19 +82,49 @@ export default function CategoryPage() {
   }, [categoryId]);
 
   const handleCreateTopic = async (data: { title: string; content: string; categoryId: string; tags: string[] }) => {
+    console.log('DEBUG: handleCreateTopic called with data:', data);
     setIsSubmitting(true);
     try {
+      const supabase = createClientComponentClient<Database>();
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      let headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (!sessionData.session) {
+        console.warn('No Supabase session found');
+      } else {
+        const accessToken = sessionData.session.access_token;
+        console.log('Supabase Access Token:', accessToken);
+
+        try {
+          const decoded: any = jwtDecode(accessToken);
+          console.log('Decoded JWT:', decoded);
+        } catch (err) {
+          console.error('JWT decode error:', err);
+        }
+
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      console.log('Final headers for topic POST:', headers);
+
       const response = await fetch(`/api/forum/categories/${data.categoryId}/topics`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           title: data.title,
           content: data.content,
           tags: data.tags
         })
       });
+
       if (!response.ok) throw new Error(`Failed to create topic: ${response.statusText}`);
       const newTopic = await response.json();
+      console.log('Created topic response:', newTopic);
+      // Comment out redirect to inspect logs
+      // router.push(`/forum/topics/${newTopic.id}`);
       setTopics(prev => [newTopic, ...prev]);
       setShowCreateForm(false);
     } catch (err) {
