@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 // Import the new client creation function
 import { createClientComponentClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
 import ContentCard from '@/components/ContentCard';
 import RedirectToLogin from '@/components/RedirectToLogin';
 import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare, Megaphone, ChevronUp, Heart } from 'lucide-react';
@@ -84,7 +83,6 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <Sidebar user={user} />
       <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <Header user={user} visitorCount={1247} />
         
         <main className="p-6 w-full transition-all duration-300">
           {/* Important Announcements */}

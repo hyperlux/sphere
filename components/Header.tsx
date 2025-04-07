@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useTheme } from '@/components/ThemeProvider';
 import { Search, Bell, Sun, Moon, Users, Filter, CirclePlus } from 'lucide-react';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import Image from 'next/image';
 // Remove old import
 // import { supabase } from '@/lib/supabase';
 // Import the new client creation function
@@ -80,22 +81,29 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md py-6">
-      <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between">
-        <div className="w-full sm:w-auto flex-1 max-w-2xl mb-4 sm:mb-0">
-          <form onSubmit={handleSearch} className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-[var(--text-muted)]" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('Search...')}
-              className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 text-sm"
-            />
-          </form>
+    <header className="sticky top-0 z-50 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-color)] shadow-md py-4">
+      <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="flex items-center flex-shrink-0">
+          <Image
+            src="/logodark.png"
+            alt="Auroville Community"
+            width={200}
+            height={100}
+            className="h-14 w-auto"
+          />
         </div>
+        <form onSubmit={handleSearch} className="relative flex-grow max-w-xl mx-8">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-[var(--text-muted)]" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('Search...')}
+            className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 text-sm"
+          />
+        </form>
 
         <div className="flex items-center space-x-6 mb-4 sm:mb-0">
           <div className="flex flex-col items-center text-amber-500">

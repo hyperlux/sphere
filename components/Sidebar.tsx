@@ -49,17 +49,8 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] fixed h-full flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40 rounded-r-2xl shadow-lg">
-      <div className="flex items-center py-2 pl-5 pb-5 border-b border-[var(--border-color)]">
-        <Link href="/dashboard">
-          <Image 
-            src={theme === 'dark' ? '/logodark.png' : '/logolight.png'} 
-            alt="Auroville.COMMUNITY" 
-            width={200} 
-            height={120} 
-            className="mr-auto" 
-          />
-        </Link>
+    <aside className="w-64 bg-[var(--bg-secondary)] fixed top-28 left-0 flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40 rounded-r-2xl rounded-b-2xl shadow-lg">
+      <div className="flex items-center py-2 pl-5 pb-5">
       </div>
 
       <nav className="flex-1 px-4 py-2 pb-4">

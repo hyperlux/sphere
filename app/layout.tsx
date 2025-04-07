@@ -11,6 +11,8 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Suspense, useEffect } from 'react';
 import '../lib/i18n';
 import { useTranslation } from 'react-i18next';
+import Header from '@/components/Header';
+import { useAuth } from '@/components/AuthProvider';
 
 // Validate Supabase environment variables at module load time
 if (typeof window === 'undefined') {
@@ -80,9 +82,9 @@ export default function RootLayout({
             <ThemeProvider>
               <AuthProvider>
                 <NetworkStatus />
-                <div className="flex flex-col md:flex-row min-h-screen w-full">
+                <LayoutWithHeader>
                   {children}
-                </div>
+                </LayoutWithHeader>
                 <InstallPrompt />
                 <NotificationPrompt />
               </AuthProvider>
@@ -91,5 +93,27 @@ export default function RootLayout({
         </Suspense>
       </body>
     </html>
+  );
+}
+
+function LayoutWithHeader({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
+  const safeUser = user
+    ? {
+        email: user.email ?? '',
+        name: undefined,
+        role: user.role,
+        avatar_url: undefined,
+      }
+    : null;
+
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen w-full">
+      <div className="flex flex-col w-full">
+        <Header user={safeUser} />
+        {children}
+      </div>
+    </div>
   );
 }
