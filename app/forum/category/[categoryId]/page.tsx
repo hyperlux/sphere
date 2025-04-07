@@ -82,7 +82,7 @@ export default function CategoryPage() {
   }, [categoryId]);
 
   const handleCreateTopic = async (data: { title: string; content: string; categoryId: string; tags: string[] }) => {
-    console.log('DEBUG: handleCreateTopic called with data:', data);
+    console.log('DEBUG_TEST_123: handleCreateTopic running', data);
     setIsSubmitting(true);
     try {
       const supabase = createClientComponentClient<Database>();
