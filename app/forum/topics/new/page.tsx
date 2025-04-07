@@ -78,7 +78,7 @@ export default function NewTopicPage() {
           console.error('JWT decode error:', err);
         }
 
-        const response = await fetch('/api/forum/topics', {
+        const response = await fetch(`/api/forum/categories/${formData.categoryId}/topics`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export default function NewTopicPage() {
       }
 
       // If no session, fallback to unauthenticated request (will likely fail)
-      const response = await fetch('/api/forum/topics', {
+      const response = await fetch(`/api/forum/categories/${formData.categoryId}/topics`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -106,8 +106,7 @@ export default function CreateTopicForm({
       setTags([]);
       setCurrentTag('');
       
-      // Redirect to the category page
-      router.push(`/forum/${categoryId}`);
+      // Do not redirect here; let the caller handle navigation
     } catch (err) {
       setError('Failed to create topic. Please try again.');
       console.error(err);

@@ -136,6 +136,21 @@ export async function POST(request: Request, { params }: RouteParams) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // Fetch the public.users profile to get the internal user ID
+  const { data: userProfile, error: userProfileError } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', userId)
+    .single();
+
+  if (userProfileError || !userProfile) {
+    console.error('Error fetching user profile:', userProfileError);
+    return NextResponse.json(
+      { error: 'User profile not found', details: userProfileError?.message },
+      { status: 404 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { title, content, tags } = body;
@@ -157,7 +172,7 @@ export async function POST(request: Request, { params }: RouteParams) {
           slug,
           content,
           category_id: categoryId,
-          author_id: userId,
+          author_id: userProfile.id,
         },
       ])
       .select()

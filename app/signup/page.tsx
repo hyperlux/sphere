@@ -47,7 +47,12 @@ export default function SignUpPage() { // Renamed component for clarity
           data: {
             name: formData.name
           }
-        }
+        },
+        // Explicitly add apikey header to fix "No API key found" error
+        // @ts-ignore
+        headers: {
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        },
       });
 
       if (authError) throw authError;

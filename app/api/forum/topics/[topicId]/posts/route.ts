@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         updated_at,
         parent_post_id,
         author_id,
-        users ( id, username, avatar_url )
+        author:users ( id, username, avatar_url )
       `, { count: 'exact' }) // Request total count
       .eq('topic_id', topicId)
       .order('created_at', { ascending: true }) // Show oldest posts first
@@ -69,9 +69,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       updatedAt: post.updated_at,
       parentPostId: post.parent_post_id,
       author: {
-        id: post.users?.id ?? null,
-        username: post.users?.username ?? 'Unknown User',
-        avatarUrl: post.users?.avatar_url ?? null,
+        id: post.author?.id ?? null,
+        username: post.author?.username ?? 'Unknown User',
+        avatarUrl: post.author?.avatar_url ?? null,
       }
       // TODO: Add vote counts later if needed by joining/querying forum_votes
     }));
@@ -128,6 +128,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         }
         const userId = session.user.id;
 
+        // Fetch the public.users profile to get the internal user ID
+        const { data: userProfile, error: userProfileError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('auth_user_id', userId)
+            .single();
+
+        if (userProfileError || !userProfile) {
+            console.error('Error fetching user profile:', userProfileError);
+            return NextResponse.json(
+                { error: 'User profile not found', details: userProfileError?.message },
+                { status: 404 }
+            );
+        }
+
         // 2. Validate Topic ID
         if (!topicId) {
             return NextResponse.json({ error: 'Topic ID is required' }, { status: 400 });
@@ -161,7 +176,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             .insert({
                 content: content.trim(),
                 topic_id: topicId,
-                author_id: userId,
+                author_id: userProfile.id,
                 parent_post_id: parentPostId || null, // Handle optional parent post ID
             })
             .select(`
@@ -171,7 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 updated_at,
                 parent_post_id,
                 author_id,
-                users ( id, username, avatar_url )
+                author:users ( id, username, avatar_url )
             `) // Select data to return, including author info
             .single();
 
@@ -196,9 +211,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             updatedAt: newPost.updated_at,
             parentPostId: newPost.parent_post_id,
             author: {
-                id: newPost.users?.id ?? null,
-                username: newPost.users?.username ?? 'Unknown User',
-                avatarUrl: newPost.users?.avatar_url ?? null,
+                id: newPost.author?.id ?? null,
+                username: newPost.author?.username ?? 'Unknown User',
+                avatarUrl: newPost.author?.avatar_url ?? null,
             }
         };
 
