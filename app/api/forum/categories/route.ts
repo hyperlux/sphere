@@ -15,10 +15,13 @@ const generateSlug = (name: string): string => {
 
 // Helper function to get Supabase client with service role key
 const getSupabaseAdminClient = () => {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+console.log('Supabase URL:', supabaseUrl);
+console.log('Service Role Key present:', !!supabaseServiceKey);
+
+if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase Admin URL or Service Role Key');
     throw new Error('Internal Server Error: Missing Supabase admin config');
   }
@@ -27,19 +30,9 @@ const getSupabaseAdminClient = () => {
 
 
 export async function GET(request: NextRequest) {
-  // Use public keys for this public GET route
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase public URL or Anon Key');
-    return NextResponse.json({ error: 'Internal Server Error: Missing Supabase config' }, { status: 500 });
-  }
-
-  // Create client with public keys
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-
   try {
+    const supabase = getSupabaseAdminClient();
+
     const { data: categories, error } = await supabase
       .from('forum_categories')
       .select('id, name, description, icon') // Select the columns needed for display

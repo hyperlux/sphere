@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/lib/db/database.types';
+import { getSupabaseServerClient } from '@/lib/supabase/serverClient';
+import { getUserProfile } from '@/lib/auth/getUserProfile';
 
 type RouteParams = {
   params: {
@@ -12,21 +12,14 @@ type RouteParams = {
 export async function POST(request: Request, { params }: RouteParams) {
   const { topicId } = params;
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: cookies() }
-  );
+  const supabase = getSupabaseServerClient(request);
 
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const userProfile = await getUserProfile(supabase);
 
-    const userId = session?.user?.id;
-    if (!userId) {
+    if (!userProfile) {
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Please log in to vote.' },
+        { error: 'Unauthorized or user profile not found' },
         { status: 401 }
       );
     }
@@ -43,14 +36,17 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const { error: upsertError } = await supabase
       .from('votes')
-      .upsert([
-        {
-          entity_type: 'topic',
-          entity_id: Number(topicId),
-          user_id: userId,
-          vote,
-        },
-      ], { onConflict: 'entity_type,entity_id,user_id' });
+      .upsert(
+        [
+          {
+            entity_type: 'topic',
+            entity_id: Number(topicId),
+            user_id: userProfile.id,
+            vote,
+          },
+        ],
+        { onConflict: 'entity_type,entity_id,user_id' }
+      );
 
     if (upsertError) {
       console.error('Error upserting vote:', upsertError);
@@ -60,7 +56,6 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    // Optionally, fetch updated vote total
     const { data: voteTotalData, error: totalError } = await supabase
       .from('vote_totals')
       .select('total_votes')
@@ -76,7 +71,6 @@ export async function POST(request: Request, { params }: RouteParams) {
       success: true,
       voteCount: voteTotalData?.total_votes ?? 0,
     });
-
   } catch (err) {
     console.error('Unexpected error in vote API:', err);
     const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';

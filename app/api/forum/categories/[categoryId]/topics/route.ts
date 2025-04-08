@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
-import { jwtDecode } from 'jwt-decode';
 import { Database } from '@/lib/db/database.types';
+import { getSupabaseServerClient } from '@/lib/supabase/serverClient';
+import { getUserProfile } from '@/lib/auth/getUserProfile';
 
 type RouteParams = {
   params: {
@@ -13,17 +12,7 @@ type RouteParams = {
 export async function GET(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
 
-  // Use public keys for this public GET route
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase public URL or Anon Key');
-    return NextResponse.json({ error: 'Internal Server Error: Missing Supabase config' }, { status: 500 });
-  }
-
-  // Create client with public keys
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+  const supabase = getSupabaseServerClient(request);
 
   if (!categoryId) {
     return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
@@ -101,53 +90,14 @@ export async function GET(request: Request, { params }: RouteParams) {
 export async function POST(request: Request, { params }: RouteParams) {
   const { categoryId } = params;
 
-  const authHeader = request.headers.get('authorization');
-  const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const supabase = getSupabaseServerClient(request);
 
-  if (!accessToken) {
+  const userProfile = await getUserProfile(supabase);
+
+  if (!userProfile) {
     return NextResponse.json(
-      { error: 'Unauthorized', message: 'Missing access token' },
+      { error: 'Unauthorized or user profile not found' },
       { status: 401 }
-    );
-  }
-
-  let userId: string | null = null;
-
-  try {
-    const decoded: any = jwtDecode(accessToken);
-    userId = decoded.sub;
-  } catch (err) {
-    console.error('JWT decode error:', err);
-    return NextResponse.json(
-      { error: 'Unauthorized', message: 'Invalid access token' },
-      { status: 401 }
-    );
-  }
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'Unauthorized', message: 'Invalid user ID in token' },
-      { status: 401 }
-    );
-  }
-
-  const supabaseAdmin = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  // Fetch the public.users profile to get the internal user ID
-  const { data: userProfile, error: userProfileError } = await supabaseAdmin
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', userId)
-    .single();
-
-  if (userProfileError || !userProfile) {
-    console.error('Error fetching user profile:', userProfileError);
-    return NextResponse.json(
-      { error: 'User profile not found', details: userProfileError?.message },
-      { status: 404 }
     );
   }
 
@@ -164,7 +114,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('forum_topics')
       .insert([
         {
