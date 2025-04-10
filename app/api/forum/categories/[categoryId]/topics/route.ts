@@ -30,7 +30,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         created_at,
         last_activity_at,
         author_id,
-        users ( id, username ),
+        author:users ( id, username ),
         forum_categories ( id, name )
       `)
       .eq('category_id', categoryId)
@@ -73,8 +73,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         name: topic.forum_categories?.name ?? null,
       },
       author: {
-        id: topic.users?.id ?? null,
-        name: topic.users?.username ?? 'Unknown User',
+        id: topic.author?.id ?? null,
+        name: topic.author?.username ?? 'Unknown User',
       }
     }));
 
@@ -88,11 +88,46 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 export async function POST(request: Request, { params }: RouteParams) {
+  console.log('--- /api/forum/categories/[categoryId]/topics POST called ---');
+
   const { categoryId } = params;
 
   const supabase = getSupabaseServerClient(request);
 
-  const userProfile = await getUserProfile(supabase);
+  let userProfile = await getUserProfile(supabase);
+  console.log('Fetched user profile:', userProfile);
+
+  if (!userProfile) {
+    // Attempt to create user profile on the fly
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    console.log('Supabase auth.getUser result:', user, userError);
+
+    if (!userError && user) {
+      const usernameFallback = user.email ?? user.id;
+      const { data: newProfile, error: createProfileError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          username: usernameFallback,
+        } as any)
+        .select('id')
+        .single();
+
+      console.log('Profile insert result:', newProfile, createProfileError);
+
+      if (!createProfileError && newProfile) {
+        userProfile = newProfile;
+      } else {
+        console.error('Error creating user profile:', createProfileError);
+      }
+    }
+  }
+
+  console.log('Final userProfile before authorization check:', userProfile);
 
   if (!userProfile) {
     return NextResponse.json(
@@ -114,17 +149,18 @@ export async function POST(request: Request, { params }: RouteParams) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
+    const insertPayload = {
+      title,
+      slug,
+      content,
+      category_id: categoryId,
+      author_id: userProfile.id,
+    };
+    console.log('Insert payload:', insertPayload);
+
     const { data, error } = await supabase
       .from('forum_topics')
-      .insert([
-        {
-          title,
-          slug,
-          content,
-          category_id: categoryId,
-          author_id: userProfile.id,
-        },
-      ])
+      .insert([insertPayload])
       .select()
       .single();
 

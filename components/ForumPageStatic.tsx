@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Hero from './Hero';
-import { createClientComponentClient } from '@/lib/supabase/client';
+import { createClientComponentClient, createClientComponentClientWithToken } from '@/lib/supabase/client';
 import CategoryCard from './CategoryCard';
 import TopicItem from './TopicItem';
 import TrendingSidebar from './TrendingSidebar';
@@ -51,11 +51,11 @@ const ForumPageStatic: React.FC = () => {
   }) => {
     setIsLoading(true);
     try {
-      const supabase = createClientComponentClient();
+      const supabaseNoAuth = createClientComponentClient();
 
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseNoAuth.auth.getSession();
 
       const accessToken = session?.access_token;
 
@@ -76,11 +76,13 @@ const ForumPageStatic: React.FC = () => {
         return;
       }
 
+      const supabase = createClientComponentClientWithToken(accessToken);
+
       const res = await fetch(`/api/forum/categories/${categoryId}/topics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ title, content, tags }),
       });

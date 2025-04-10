@@ -55,7 +55,6 @@ export default function NewTopicPage() {
   const handleCreateTopicSubmit = useCallback(async (formData: {
     title: string;
     content: string;
-    categoryId: string;
     tags: string[]; // Tags are collected but not yet used by the API
   }) => {
     setIsSubmitting(true);
@@ -64,51 +63,21 @@ export default function NewTopicPage() {
     try {
       const supabase = createClientComponentClient<Database>();
       const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
 
-      if (!sessionData.session) {
-        console.warn('No Supabase session found');
-      } else {
-        const accessToken = sessionData.session.access_token;
-        console.log('Supabase Access Token:', accessToken);
-
-        try {
-          const decoded: any = jwtDecode(accessToken);
-          console.log('Decoded JWT:', decoded);
-        } catch (err) {
-          console.error('JWT decode error:', err);
-        }
-
-        const response = await fetch(`/api/forum/categories/${formData.categoryId}/topics`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            title: formData.title,
-            content: formData.content,
-            categoryId: formData.categoryId,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Failed to create topic: ${response.statusText}`);
-        }
-
-        const newTopic = await response.json();
-        router.push(`/forum/topics/${newTopic.id}`);
-        return;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
-      // If no session, fallback to unauthenticated request (will likely fail)
-      const response = await fetch(`/api/forum/categories/${formData.categoryId}/topics`, {
+      const response = await fetch('/api/forum/topics', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           title: formData.title,
           content: formData.content,
-          categoryId: formData.categoryId,
         }),
       });
 
@@ -119,7 +88,6 @@ export default function NewTopicPage() {
 
       const newTopic = await response.json();
       router.push(`/forum/topics/${newTopic.id}`);
-
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'Failed to create topic. Please try again.');
@@ -168,7 +136,6 @@ export default function NewTopicPage() {
             categories={categories}
             onSubmit={handleCreateTopicSubmit}
             onCancel={() => router.back()}
-            categoryId={initialCategoryId}
             isLoading={isSubmitting}
           />
         )}

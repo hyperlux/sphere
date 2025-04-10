@@ -7,7 +7,7 @@ import { Database } from '@/lib/db/database.types';
  */
 export function getSupabaseServerClient(req: Request): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
   let accessToken: string | null = null;
 
@@ -28,7 +28,7 @@ export function getSupabaseServerClient(req: Request): SupabaseClient<Database> 
     }
   }
 
-  const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const client = createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
     global: {
       headers: {
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

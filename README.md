@@ -2,6 +2,21 @@
 
 AuroNet is a digital platform designed to foster collaboration and community engagement within Auroville. It provides a centralized space for community events, resource sharing, and collaborative discussions.
 
+## Requirements
+
+- **Node.js**: >= 18.x recommended
+- **npm**: >= 9.x
+- **Docker** and **Docker Compose** (for containerized local development and production)
+- **Supabase Account** with two projects (staging and production)
+- **Supabase CLI** (`npm install -g supabase`) for local backend emulation
+- **Git** for version control
+- **Traefik** (configured via provided files) for reverse proxy and SSL
+- **GitHub Account** with repository secrets configured:
+  - `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - `STAGING_DATABASE_URL`, `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`
+  - `DOCKER_USERNAME`, `DOCKER_PASSWORD`
+  - `SSH_HOST`, `SSH_PRIVATE_KEY`
+
 ## Features
 test
 ### Community Spaces!

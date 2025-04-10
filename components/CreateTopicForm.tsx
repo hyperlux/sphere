@@ -76,40 +76,59 @@ export default function CreateTopicForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    if (!title.trim()) {
+
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTitle) {
       setError('Please enter a title');
       return;
     }
-    
-    if (!content.trim()) {
+    if (trimmedTitle.length < 5) {
+      setError('Title must be at least 5 characters');
+      return;
+    }
+    if (trimmedTitle.length > 150) {
+      setError('Title cannot exceed 150 characters');
+      return;
+    }
+
+    if (!trimmedContent) {
       setError('Please enter content');
       return;
     }
-    
+    if (trimmedContent.length < 10) {
+      setError('Content must be at least 10 characters');
+      return;
+    }
+    if (trimmedContent.length > 5000) {
+      setError('Content cannot exceed 5000 characters');
+      return;
+    }
+
     if (!selectedCategoryId) {
       setError('Please select a category');
       return;
     }
-    
+
     try {
       await onSubmit({
-        title: title.trim(),
-        content: content.trim(),
+        title: trimmedTitle,
+        content: trimmedContent,
         categoryId: selectedCategoryId,
-        tags
+        tags,
       });
-      
+
       // Reset form after successful submission
       setTitle('');
       setContent('');
       setTags([]);
       setCurrentTag('');
-      
-      // Do not redirect here; let the caller handle navigation
+      setSelectedCategoryId('');
+      setError(null);
     } catch (err) {
-      setError('Failed to create topic. Please try again.');
       console.error(err);
+      setError('Failed to create topic. Please try again.');
     }
   };
 
@@ -140,6 +159,26 @@ export default function CreateTopicForm({
         )}
         
         <div className="mb-4">
+          <label htmlFor="category" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+            Category
+          </label>
+          <select
+            id="category"
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-primary)]"
+            required
+          >
+            <option value="">Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
           <label htmlFor="title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
             Title
           </label>
@@ -154,25 +193,6 @@ export default function CreateTopicForm({
           />
         </div>
         
-        <div className="mb-4">
-          <label htmlFor="category" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-            Category
-          </label>
-          <select
-            id="category"
-            value={selectedCategoryId}
-            onChange={(e) => setSelectedCategoryId(e.target.value)}
-            className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-primary)]"
-            required
-          >
-            <option value="">Select a category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
         
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
@@ -287,10 +307,42 @@ export default function CreateTopicForm({
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              isLoading
+                ? 'bg-orange-400'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
+            }`}
           >
-            {isLoading ? 'Creating...' : 'Create Topic'}
-            <Send size={16} />
+            {isLoading ? (
+              <>
+                <svg
+                  className="animate-spin h-4 w-4 mr-2 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+                Creating...
+              </>
+            ) : (
+              <>
+                Create Topic
+                <Send size={16} />
+              </>
+            )}
           </button>
         </div>
       </form>

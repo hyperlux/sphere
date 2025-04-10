@@ -44,15 +44,11 @@ export default function SignUpPage() { // Renamed component for clarity
         email: formData.email,
         password: formData.password,
         options: {
+          emailRedirectTo: 'http://localhost:3000/auth/callback', // <-- update this to your production URL in prod
           data: {
             name: formData.name
           }
-        },
-        // Explicitly add apikey header to fix "No API key found" error
-        // @ts-ignore
-        headers: {
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        },
+        }
       });
 
       if (authError) throw authError;
