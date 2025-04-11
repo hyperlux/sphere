@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import CreatePostForm from './CreatePostForm';
 import { MessageSquare, Share2, MoreHorizontal, Check, Award, ChevronUp, ChevronDown, Heart, BookmarkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPostEngagementColor, isTrendingPost } from '@/data/mockData';
@@ -334,7 +335,7 @@ export default function ForumPostCard({
               )}
             </div>
             
-            {/* Reply Preview */}
+            {/* Reply Form for Threaded Comments */}
             <AnimatePresence>
               {showReplyPreview && (
                 <motion.div
@@ -343,16 +344,30 @@ export default function ForumPostCard({
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 pt-4 border-t border-[var(--border-color)] border-opacity-20"
                 >
-                  <div className="flex gap-3 items-start">
-                    <div className="avatar-wrapper w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
-                      Y
-                    </div>
-                    <div className="flex-1 p-3 rounded-xl bg-[var(--bg-tertiary)] bg-opacity-50 reply-preview">
-                      <p className="text-sm text-[var(--text-secondary)] opacity-70">
-                        Start typing your reply...
-                      </p>
-                    </div>
-                  </div>
+                  {/* Render CreatePostForm for reply */}
+                  {/* You may need to import CreatePostForm at the top of this file */}
+                  {/* Example: import CreatePostForm from './CreatePostForm'; */}
+                  <CreatePostForm
+                    topicId={id /* or pass the correct topicId from parent context */}
+                    parentId={id}
+                    isReply={true}
+                    replyingTo={authorName}
+                    onCancel={() => setShowReplyPreview(false)}
+                    onSubmit={async (data: { content: string; topicId: string; parentId?: string }) => {
+                      // Map parentId to parentPostId for API
+                      const { content, topicId, parentId } = data;
+                      await fetch(`/api/forum/topics/${topicId}/posts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          content,
+                          parentPostId: parentId,
+                        }),
+                      });
+                      setShowReplyPreview(false);
+                      // Optionally trigger a refresh or callback to reload posts
+                    }}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>

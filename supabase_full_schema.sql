@@ -150,6 +150,16 @@ CREATE TABLE IF NOT EXISTS public.forum_posts (
 
 CREATE INDEX IF NOT EXISTS idx_forum_posts_parent_post_id ON public.forum_posts(parent_post_id);
 
+-- ====== Forum Posts View with User Info ======
+CREATE OR REPLACE VIEW public.forum_posts_with_user AS
+SELECT
+  fp.*,
+  u.id AS user_id,
+  u.username,
+  u.avatar_url
+FROM public.forum_posts fp
+LEFT JOIN public.users u ON fp.author_id = u.id;
+
 -- ====== Enable RLS ======
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;

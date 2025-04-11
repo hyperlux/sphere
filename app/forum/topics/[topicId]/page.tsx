@@ -127,7 +127,7 @@ export default function TopicPage() {
       const response = await fetch(`/api/forum/topics/${topicId}/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, parentId })
+        body: JSON.stringify({ content, parentPostId: parentId })
       });
       if (!response.ok) throw new Error(`Failed to create post: ${response.statusText}`);
       const newPost = await response.json();

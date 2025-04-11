@@ -9,18 +9,18 @@ Always read and update this file before and after making changes.
 
 ## 1. Threaded Comments (parent_post_id)
 
-- [ ] **Database Migration**
-  - [ ] Add `parent_post_id` (nullable, FK to forum_posts.id) to `forum_posts` table.
-  - [ ] Create index on `parent_post_id`.
-  - [ ] Update Supabase schema and run migration.
-- [ ] **API Update**
-  - [ ] Update post creation endpoint to accept `parent_post_id`.
-  - [ ] Update post fetching endpoint to return `parent_post_id`.
-  - [ ] Update API docs/comments.
-- [ ] **Frontend Update**
-  - [ ] Update post creation UI to allow replying to specific posts.
-  - [ ] Refactor post rendering to use backend-provided thread structure.
-  - [ ] Test nested replies and UI edge cases.
+- [x] **Database Migration**
+  - [x] Add `parent_post_id` (nullable, FK to forum_posts.id) to `forum_posts` table.
+  - [x] Create index on `parent_post_id`.
+  - [x] Update Supabase schema and run migration.
+- [x] **API Update**
+  - [x] Update post creation endpoint to accept `parent_post_id`.
+  - [x] Update post fetching endpoint to return `parent_post_id`.
+  - [x] Update API docs/comments.
+- [x] **Frontend Update**
+  - [x] Update post creation UI to allow replying to specific posts.
+  - [x] Refactor post rendering to use backend-provided thread structure.
+  - [x] Test nested replies and UI edge cases.
 
 ---
 

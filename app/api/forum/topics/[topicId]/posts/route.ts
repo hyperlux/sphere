@@ -11,7 +11,20 @@ type RouteParams = {
 
 const DEFAULT_PAGE_LIMIT = 20; // Number of posts per page
 
-// GET /api/forum/topics/[topicId]/posts?page=1&limit=20
+/**
+ * GET /api/forum/topics/[topicId]/posts?page=1&limit=20
+ * Returns a paginated list of posts for a topic.
+ * Each post includes:
+ *   - id
+ *   - content
+ *   - createdAt
+ *   - updatedAt
+ *   - parentPostId (for threaded comments; null for top-level posts)
+ *   - author: { id, username, avatarUrl }
+ * Query params:
+ *   - page (default: 1)
+ *   - limit (default: 20)
+ */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { topicId } = params;
 
@@ -36,8 +49,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Fetch posts for the given topic, joining with users table to get author's username
     // Also fetch the total count for pagination calculation
-    const { data, error, count } = await supabase
-      .from('forum_posts')
+    const { data, error, count } = await (supabase as any)
+      .from('forum_posts_with_user')
       .select(`
         id,
         content,
@@ -45,7 +58,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         updated_at,
         parent_post_id,
         author_id,
-        author:profiles ( id, username, avatar_url )
+        username,
+        avatar_url
       `, { count: 'exact' }) // Request total count
       .eq('topic_id', topicId)
       .order('created_at', { ascending: true }) // Show oldest posts first
@@ -64,9 +78,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       updatedAt: post.updated_at,
       parentPostId: post.parent_post_id,
       author: {
-        id: post.author?.id ?? null,
-        username: post.author?.username ?? 'Unknown User',
-        avatarUrl: post.author?.avatar_url ?? null,
+        id: post.author_id ?? null,
+        username: post.username ?? 'Unknown User',
+        avatarUrl: post.avatar_url ?? null,
       }
       // TODO: Add vote counts later if needed by joining/querying forum_votes
     }));
@@ -92,7 +106,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 
   
-// POST /api/forum/topics/[topicId]/posts
+/**
+ * POST /api/forum/topics/[topicId]/posts
+ * Creates a new post in the topic.
+ * Request body:
+ *   - content (string, required)
+ *   - parentPostId (string, optional): If provided, the new post will be a reply to the given post.
+ * Response: The created post, including parentPostId.
+ */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const { topicId } = params;
 
@@ -124,7 +145,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid parentPostId' }, { status: 400 });
     }
 
-    const { data: newPost, error: postError } = await supabase
+    // Insert into forum_posts, then fetch from forum_posts_with_user for response
+    const { data: inserted, error: postError } = await supabase
       .from('forum_posts')
       .insert({
         content: content.trim(),
@@ -132,17 +154,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         author_id: userProfile.id,
         parent_post_id: parentPostId || null,
       })
-      .select(
-        `
-        id,
-        content,
-        created_at,
-        updated_at,
-        parent_post_id,
-        author_id,
-        author:users ( id, username, avatar_url )
-      `
-      )
+      .select('id')
       .single();
 
     if (postError) {
@@ -153,8 +165,28 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to create post', details: postError.message }, { status: 500 });
     }
 
-    if (!newPost) {
+    if (!inserted) {
       return NextResponse.json({ error: 'Failed to create post: No data returned' }, { status: 500 });
+    }
+
+    // Fetch the full post with user info from the view
+    const { data: newPost, error: fetchError } = await (supabase as any)
+      .from('forum_posts_with_user')
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        parent_post_id,
+        author_id,
+        username,
+        avatar_url
+      `)
+      .eq('id', inserted.id)
+      .single();
+
+    if (fetchError) {
+      return NextResponse.json({ error: 'Failed to fetch new post', details: fetchError.message }, { status: 500 });
     }
 
     const formattedPost = {
@@ -164,9 +196,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       updatedAt: newPost.updated_at,
       parentPostId: newPost.parent_post_id,
       author: {
-        id: newPost.author?.id ?? null,
-        username: newPost.author?.username ?? 'Unknown User',
-        avatarUrl: newPost.author?.avatar_url ?? null,
+        id: newPost.author_id ?? null,
+        username: newPost.username ?? 'Unknown User',
+        avatarUrl: newPost.avatar_url ?? null,
       },
     };
 
