@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         updated_at,
         parent_post_id,
         author_id,
-        author:users ( id, username, avatar_url )
+        author:profiles ( id, username, avatar_url )
       `, { count: 'exact' }) // Request total count
       .eq('topic_id', topicId)
       .order('created_at', { ascending: true }) // Show oldest posts first

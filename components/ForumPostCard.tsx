@@ -102,11 +102,30 @@ export default function ForumPostCard({
   };
   
   // Get author name regardless of author format
-  const authorName = typeof author === 'string' ? author : author.name;
-  const authorDetails = typeof author === 'string' ? null : author;
-  
+  let authorName: string;
+  let authorAvatar: string | undefined;
+  let authorDetails: typeof author extends string ? null : ForumPostProps['author'] | null;
+
+  if (!author) {
+    authorName = 'Anonymous';
+    authorAvatar = undefined;
+    authorDetails = null;
+  } else if (typeof author === 'string') {
+    authorName = author.trim() || 'Anonymous';
+    authorAvatar = undefined;
+    authorDetails = null;
+  } else {
+    authorName = author.name?.trim() || 'Anonymous';
+    authorAvatar = author.avatar;
+    authorDetails = author;
+  }
+
   // Calculate background color based on engagement
-  const bgColor = getPostEngagementColor({ upvotes: votes.upvotes, downvotes: votes.downvotes });
+  let bgColor = getPostEngagementColor({ upvotes: votes.upvotes, downvotes: votes.downvotes });
+  // Fallback to dark background if engagement color is too light or missing
+  if (!bgColor || bgColor === 'transparent' || bgColor === '#fff' || bgColor === '#ffffff' || bgColor === 'white') {
+    bgColor = 'rgba(30,30,30,0.8)';
+  }
   
   // Toggle bookmark
   const handleToggleBookmark = (e: React.MouseEvent) => {
@@ -125,7 +144,7 @@ export default function ForumPostCard({
       style={{
         marginLeft: `${depth * 2}rem`,
         maxWidth: `calc(100% - ${depth * 2}rem)`,
-        background: bgColor
+        backgroundColor: 'var(--bg-secondary, #181f2a)'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -177,9 +196,17 @@ export default function ForumPostCard({
                 )}
                 
                 <div className="flex items-center gap-2">
-                  <div className="avatar-wrapper w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
-                    {authorName.charAt(0).toUpperCase()}
-                  </div>
+                  {authorAvatar ? (
+                    <img
+                      src={authorAvatar}
+                      alt={authorName}
+                      className="avatar-wrapper w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="avatar-wrapper w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
+                      {authorName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-medium text-[var(--text-primary)] leading-tight author-name">{authorName}</h3>
                     {authorDetails?.role && (
@@ -226,7 +253,10 @@ export default function ForumPostCard({
             
             {/* Post Content */}
             <div 
-              className="mt-4 text-[var(--text-secondary)] prose prose-lg max-w-none post-content"
+              className="mt-4 prose prose-lg max-w-none post-content"
+              style={{
+                color: 'var(--text-secondary, #ddd)'
+              }}
             >
               <p>{content}</p>
             </div>

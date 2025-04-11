@@ -114,28 +114,45 @@ const ForumPageStatic: React.FC = () => {
     },
   };
 
-  const topics = [
-    {
-      title: 'Sustainability Workshop This Weekend',
-      content: 'Join us for a hands-on workshop on sustainable practices...',
-      meta: { author: 'Priya', category: 'Events', time: '2 hours ago', replies: 15 },
-    },
-    {
-      title: 'Welcome to the Auroville Community Forum',
-      content: 'Let’s discuss how we can make this forum a great place...',
-      meta: { author: 'Lucas', category: 'General', time: '1 day ago', replies: 8 },
-    },
-    {
-      title: 'Community Garden Initiative',
-      content: 'Proposing a new community garden project for Auroville...',
-      meta: { author: 'Amit', category: 'Sustainability', time: '3 days ago', replies: 12 },
-    },
-    {
-      title: 'Art Exhibition Next Month',
-      content: 'Join us for an art exhibition showcasing local talent...',
-      meta: { author: 'Sofia', category: 'Events', time: '5 days ago', replies: 5 },
-    },
-  ];
+  const [topics, setTopics] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        const supabase = createClientComponentClient();
+        const { data, error } = await supabase
+          .from('forum_topics')
+          .select('id, title, content, created_at, last_activity_at, author_id')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          console.error('Error fetching topics:', error);
+          return;
+        }
+
+        console.log('Raw topics data from Supabase:', data);
+
+        const formattedTopics = data.map((topic) => ({
+          title: topic.title,
+          content: topic.content,
+          meta: {
+            author: topic.author_id,
+            category: '', // Optionally fetch category info
+            time: new Date(topic.last_activity_at ?? topic.created_at ?? '').toLocaleString(),
+            replies: 0, // Optionally fetch replies count
+          },
+        }));
+
+        console.log('Fetched topics:', formattedTopics);
+        setTopics(formattedTopics);
+      } catch (err) {
+        console.error('Unexpected error fetching topics:', err);
+      }
+    };
+
+    fetchTopics();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#1a2b3c] text-white relative">

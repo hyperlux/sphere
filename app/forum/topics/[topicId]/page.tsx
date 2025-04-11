@@ -49,7 +49,30 @@ export default function TopicPage() {
         const response = await fetch(`/api/forum/topics/${topicId}/posts`);
         if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
         const data = await response.json();
-        setPosts(data);
+        console.log('API response for posts:', data);
+        console.log('Posts array:', data.posts);
+
+        const transformedPosts = (data.posts || []).map((p: any) => ({
+          id: p.id,
+          content: p.content,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          parentId: p.parentPostId ?? null,
+          upvotes: 0,
+          downvotes: 0,
+          reactions: [],
+          isSolution: false,
+          author: {
+            id: p.author?.id ?? '',
+            name: p.author?.username ?? 'Unknown User',
+            avatar: p.author?.avatarUrl ?? null,
+            role: '',
+            joinDate: '',
+            postCount: 0,
+          },
+        }));
+
+        setPosts(transformedPosts);
       } catch (err) {
         console.error(err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
