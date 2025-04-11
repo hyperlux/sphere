@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ForumPostCard from '@/components/ForumPostCard';
@@ -44,7 +44,10 @@ interface Topic {
 }
 
 export default function TopicPage() {
-  const { topicId } = useParams();
+  const params = useParams();
+  // Support both /topics/[topicId] and /topics/[topicId]/[slug]
+  const topicId = Array.isArray(params.topicId) ? params.topicId[0] : params.topicId;
+  const slug = params.slug ? (Array.isArray(params.slug) ? params.slug[0] : params.slug) : undefined;
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +57,7 @@ export default function TopicPage() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [topicLoading, setTopicLoading] = useState(true);
   const [topicError, setTopicError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTopic = async () => {
@@ -64,6 +68,11 @@ export default function TopicPage() {
         if (!response.ok) throw new Error(`Failed to fetch topic: ${response.statusText}`);
         const data = await response.json();
         setTopic(data);
+
+        // If slug is missing or incorrect, redirect to the canonical URL
+        if (data && data.slug && slug !== data.slug) {
+          router.replace(`/forum/topics/${topicId}/${data.slug}`);
+        }
       } catch (err) {
         setTopicError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
@@ -74,6 +83,7 @@ export default function TopicPage() {
     if (topicId) {
       fetchTopic();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
   useEffect(() => {
@@ -84,8 +94,6 @@ export default function TopicPage() {
         const response = await fetch(`/api/forum/topics/${topicId}/posts`);
         if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
         const data = await response.json();
-        console.log('API response for posts:', data);
-        console.log('Posts array:', data.posts);
 
         const transformedPosts = (data.posts || []).map((p: any) => ({
           id: p.id,
@@ -109,7 +117,6 @@ export default function TopicPage() {
 
         setPosts(transformedPosts);
       } catch (err) {
-        console.error(err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setIsLoading(false);
@@ -134,7 +141,6 @@ export default function TopicPage() {
       setPosts(prev => [...prev, newPost]);
       setShowReplyForm(false);
     } catch (err) {
-      console.error(err);
       alert('Failed to create post');
     } finally {
       setIsSubmitting(false);

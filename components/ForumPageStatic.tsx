@@ -95,7 +95,7 @@ const ForumPageStatic: React.FC = () => {
       console.log('Create topic API response:', newTopic);
       setShowCreateForm(false);
       // Optionally redirect to the new topic page
-      window.location.href = `/forum/topics/${newTopic.id}`;
+      window.location.href = `/forum/topics/${newTopic.id}/${newTopic.slug}`;
     } catch (err) {
       console.error(err);
       alert('Failed to create topic. Please try again.');
@@ -122,7 +122,7 @@ const ForumPageStatic: React.FC = () => {
         const supabase = createClientComponentClient();
         const { data, error } = await supabase
           .from('forum_topics')
-          .select('id, title, content, created_at, last_activity_at, author_id')
+          .select('id, slug, title, content, created_at, last_activity_at, author_id')
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -134,6 +134,8 @@ const ForumPageStatic: React.FC = () => {
         console.log('Raw topics data from Supabase:', data);
 
         const formattedTopics = data.map((topic) => ({
+          id: topic.id,
+          slug: topic.slug,
           title: topic.title,
           content: topic.content,
           meta: {
@@ -181,7 +183,7 @@ const ForumPageStatic: React.FC = () => {
               animate="visible"
             >
               {topics.map((topic, index) => (
-                <TopicItem key={index} {...topic} />
+                <TopicItem key={topic.id} {...topic} />
               ))}
             </motion.ul>
           </section>

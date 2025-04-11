@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 
 interface ForumTopicProps {
   id: string;
+  slug: string;
   title: string;
   content: string;
   author: {
@@ -31,6 +32,7 @@ interface ForumTopicProps {
 
 export default function ForumTopicCard({
   id,
+  slug,
   title,
   content,
   author,
@@ -135,7 +137,7 @@ export default function ForumTopicCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/forums/topics/${id}`} className="block h-full">
+      <Link href={`/forum/topics/${id}/${slug}`} className="block h-full">
         <div className={`${isMobile ? 'p-4' : isTablet ? 'p-5' : 'p-6'} flex flex-col h-full`}>
           <div className={`flex items-start ${isMobile ? 'gap-3' : 'gap-4'}`}>
             <div className={`avatar-wrapper ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-full flex items-center justify-center text-white font-semibold shadow-lg flex-shrink-0`} 

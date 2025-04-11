@@ -1,8 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 interface TopicItemProps {
+  id: string;
+  slug: string;
   title: string;
   content: string;
   meta: {
@@ -13,7 +16,7 @@ interface TopicItemProps {
   };
 }
 
-const TopicItem: React.FC<TopicItemProps> = ({ title, content, meta }) => {
+const TopicItem: React.FC<TopicItemProps> = ({ id, slug, title, content, meta }) => {
   return (
     <motion.li
       className="bg-[#2a3b4c] p-6 rounded-xl mb-4 shadow-md border border-[#3a4b5c]"
@@ -21,7 +24,9 @@ const TopicItem: React.FC<TopicItemProps> = ({ title, content, meta }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-white mb-2">
+        <Link href={`/forum/topics/${id}/${slug}`}>{title}</Link>
+      </h3>
       <p className="text-sm text-[#a0b0c0] mb-4">{content}</p>
       <div className="text-xs text-[#a0b0c0]">
         <span>Posted by {meta.author} in {meta.category}</span> • <span>{meta.time}</span> •{' '}

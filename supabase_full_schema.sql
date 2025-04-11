@@ -5,11 +5,24 @@
 
 -- ====== User Profile Table ======
 
+-- Updated User Profile Table to match Supabase "test" project
+
 CREATE TABLE IF NOT EXISTS public.users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id UUID UNIQUE,
   username TEXT UNIQUE NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  avatar_url TEXT,
+  bio TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  interests TEXT[],
+  skills TEXT[],
+  project_links JSONB
 );
+
+ALTER TABLE public.users
+  ADD CONSTRAINT users_auth_user_id_fkey FOREIGN KEY (auth_user_id) REFERENCES auth.users(id);
+
+-- Note: The "author" field in public.resources and "author_id" in forum tables reference public.users(id)
 
 -- (rest of the schema remains unchanged)
 CREATE TABLE IF NOT EXISTS public.resource_categories (
@@ -110,7 +123,7 @@ CREATE TABLE IF NOT EXISTS public.resources (
   description TEXT,
   url TEXT,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
-  author UUID REFERENCES auth.users(id),
+  author UUID REFERENCES public.users(id),
   type TEXT,
   tags JSONB
 );
@@ -121,7 +134,7 @@ CREATE TABLE IF NOT EXISTS public.forum_topics (
   slug TEXT NOT NULL,
   content TEXT,
   category_id uuid REFERENCES public.forum_categories(id),
-  author_id uuid REFERENCES auth.users(id),
+  author_id uuid REFERENCES public.users(id),
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
   last_activity_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
@@ -129,10 +142,13 @@ CREATE TABLE IF NOT EXISTS public.forum_topics (
 CREATE TABLE IF NOT EXISTS public.forum_posts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   topic_id uuid REFERENCES public.forum_topics(id),
-  author_id uuid REFERENCES auth.users(id),
+  author_id uuid REFERENCES public.users(id),
+  parent_post_id uuid REFERENCES public.forum_posts(id) NULL,
   content TEXT,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
+
+CREATE INDEX IF NOT EXISTS idx_forum_posts_parent_post_id ON public.forum_posts(parent_post_id);
 
 -- ====== Enable RLS ======
 
