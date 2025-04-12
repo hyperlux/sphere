@@ -68,6 +68,7 @@ jobs:
             # Pass staging keys explicitly to the build
             NEXT_PUBLIC_SUPABASE_URL=${{ env.SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
 
   deploy-staging:
     needs: test-and-build
