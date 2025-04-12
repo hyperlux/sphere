@@ -46,6 +46,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: `Invalid limit value (must be 1-${100})` }, { status: 400 });
   }
 
+  // Define the type for the data returned from the 'forum_posts_with_user' view/query
+  type ForumPostWithUser = {
+    id: string;
+    content: string;
+    created_at: string;
+    updated_at: string | null;
+    parent_post_id: string | null;
+    author_id: string | null;
+    username: string | null;
+    avatar_url: string | null;
+  };
+
   try {
     // Fetch posts for the given topic, joining with users table to get author's username
     // Also fetch the total count for pagination calculation
@@ -71,7 +83,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Format the response
-    const formattedData = data?.map(post => ({
+    const formattedData = data?.map((post: ForumPostWithUser) => ({
       id: post.id,
       content: post.content,
       createdAt: post.created_at,

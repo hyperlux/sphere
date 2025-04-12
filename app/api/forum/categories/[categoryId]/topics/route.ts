@@ -26,6 +26,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       .select(`
         id,
         title,
+        slug,
         content,
         created_at,
         last_activity_at,
@@ -64,6 +65,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const formattedData = topics?.map(topic => ({
       id: topic.id,
       title: topic.title,
+      slug: topic.slug,
       snippet: topic.content?.substring(0, 100) ?? '',
       createdAt: topic.created_at,
       lastActivityAt: topic.last_activity_at,

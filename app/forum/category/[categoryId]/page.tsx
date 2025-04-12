@@ -19,6 +19,7 @@ interface Category {
 interface Topic {
   id: string;
   title: string;
+  slug: string; // Added slug property
   content: string;
   author: {
     id: string;
