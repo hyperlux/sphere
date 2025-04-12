@@ -17,13 +17,24 @@ export function getSupabaseServerClient(req: Request): SupabaseClient<Database> 
     accessToken = authHeader.slice(7);
   }
 
-  // Fallback: try to extract from cookies (e.g., 'sb-access-token')
+  // Fallback: try to extract from cookies (e.g., 'sb-access-token' or 'sb-<project-ref>')
   if (!accessToken) {
     const cookieHeader = req.headers.get('cookie');
     if (cookieHeader) {
-      const match = cookieHeader.match(/sb-access-token=([^;]+)/);
+      // Try sb-access-token first
+      let match = cookieHeader.match(/sb-access-token=([^;]+)/);
       if (match) {
         accessToken = decodeURIComponent(match[1]);
+      } else {
+        // Try sb-<project-ref>
+        const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('https://')[1]?.split('.')[0];
+        if (projectRef) {
+          const projectCookieName = `sb-${projectRef}`;
+          match = cookieHeader.match(new RegExp(`${projectCookieName}=([^;]+)`));
+          if (match) {
+            accessToken = decodeURIComponent(match[1]);
+          }
+        }
       }
     }
   }

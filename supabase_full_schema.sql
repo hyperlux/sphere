@@ -24,6 +24,23 @@ ALTER TABLE public.users
 
 -- Note: The "author" field in public.resources and "author_id" in forum tables reference public.users(id)
 
+-- ====== Trigger: Sync public.users with auth.users ======
+CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Insert a new public.users row if it doesn't exist
+  INSERT INTO public.users (auth_user_id, username, created_at)
+  VALUES (NEW.id, NEW.email, NOW())
+  ON CONFLICT (auth_user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();
+
 -- (rest of the schema remains unchanged)
 CREATE TABLE IF NOT EXISTS public.resource_categories (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -183,6 +200,11 @@ CREATE POLICY "Authenticated can insert topics" ON public.forum_topics
 
 DROP POLICY IF EXISTS "Authenticated can insert posts" ON public.forum_posts;
 CREATE POLICY "Authenticated can insert posts" ON public.forum_posts
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (
+    auth.role() = 'authenticated'
+    AND author_id = (
+      SELECT id FROM public.users WHERE auth_user_id = auth.uid()
+    )
+  );
 
 -- Note: Adjust policies as needed for your app's authorization model.
