@@ -173,35 +173,64 @@ export default function TopicPage() {
           <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
         </div>
 
-        <main className="p-6 w-full pt-12 transition-all duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-              {topicLoading
-                ? 'Loading topic...'
-                : topicError
-                ? 'Error loading topic'
-                : topic?.title || 'Discussion'}
-            </h1>
-            {user && (
-              <button
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition"
-              >
-                {showReplyForm ? 'Cancel' : 'Reply'}
-              </button>
-            )}
+        {/* Further increase top padding to clear fixed header */}
+        <main className="p-6 w-full pt-36 transition-all duration-300">
+          {/* Forum Topic Header */}
+          <div className="mb-8">
+            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-8 shadow-md flex flex-col gap-2">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+                  {topic?.title?.charAt(0).toUpperCase() || "T"}
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] leading-tight">
+                    {topicLoading
+                      ? 'Loading topic...'
+                      : topicError
+                      ? 'Error loading topic'
+                      : topic?.title || 'Discussion'}
+                  </h1>
+                  {topic?.created_at && (
+                    <div className="text-xs text-[var(--text-muted)] mt-1">
+                      {new Date(topic.created_at).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  )}
+                </div>
+                {user && (
+                  <button
+                    onClick={() => setShowReplyForm(!showReplyForm)}
+                    className="ml-auto px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition"
+                  >
+                    {showReplyForm ? 'Cancel' : 'Reply'}
+                  </button>
+                )}
+              </div>
+              {topic && topic.content && (
+                <div className="prose prose-lg max-w-none text-[var(--text-secondary)] mt-2">
+                  {topic.content.split('\n').map((line, idx) => (
+                    <p key={idx}>{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {showReplyForm && (
             <div className="mb-6">
-<CreatePostForm
-  topicId={topicId as string}
-  onSubmit={async ({ content, topicId: _tid, parentId }) => {
-    await handleCreatePost(content, parentId ?? null);
-  }}
-  onCancel={() => setShowReplyForm(false)}
-  isLoading={isSubmitting}
-/>
+              <CreatePostForm
+                topicId={topicId as string}
+                onSubmit={async ({ content, topicId: _tid, parentId }) => {
+                  await handleCreatePost(content, parentId ?? null);
+                }}
+                onCancel={() => setShowReplyForm(false)}
+                isLoading={isSubmitting}
+              />
             </div>
           )}
 

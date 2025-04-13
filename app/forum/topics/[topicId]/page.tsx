@@ -157,59 +157,96 @@ export default function TopicPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
-
-      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
-        </div>
-
-        <main className="p-6 w-full pt-24 transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-              {topicLoading
-                ? 'Loading topic...'
-                : topicError
-                ? 'Error loading topic'
-                : topic?.title || 'Discussion'}
-            </h1>
-            {user && (
-              <button
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition"
-              >
-                {showReplyForm ? 'Cancel' : 'Reply'}
-              </button>
-            )}
-          </div>
-
-          {showReplyForm && (
-            <div className="mb-6">
-<CreatePostForm
-  topicId={topicId as string}
-  onSubmit={async ({ content, topicId: _tid, parentId }) => {
-    await handleCreatePost(content, parentId ?? null);
-  }}
-  onCancel={() => setShowReplyForm(false)}
-  isLoading={isSubmitting}
-/>
-            </div>
-          )}
-
-          {isLoading ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">Loading posts...</div>
-          ) : error ? (
-            <div className="text-center py-12 text-red-500">Error loading posts: {error}</div>
-          ) : posts.length === 0 ? (
-            <div className="text-center py-12 text-[var(--text-muted)]">No posts found.</div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {renderPosts()}
-            </div>
-          )}
-        </main>
+    <>
+      <div style={{ background: "red", color: "white", fontSize: "2rem", padding: "1rem", textAlign: "center", zIndex: 9999 }}>
+        DEBUG: [topicId]/page.tsx is rendering
       </div>
-    </div>
+      <div className="min-h-screen bg-[var(--bg-primary)]">
+        <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
+    
+        <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
+          <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+            <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
+          </div>
+    
+          <main className="p-6 w-full pt-24 transition-all duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+                {topicLoading
+                  ? 'Loading topic...'
+                  : topicError
+                  ? 'Error loading topic'
+                  : topic?.title || 'Discussion'}
+              </h1>
+              {/* DEBUG: Show raw topic and content value, always visible */}
+              <div className="text-xs text-yellow-400 mb-2">
+                <strong>DEBUG topic:</strong> {JSON.stringify(topic)}
+              </div>
+              {user && (
+                <button
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="px-4 py-2 rounded bg-[var(--auroville-teal)] text-white hover:bg-opacity-80 transition"
+                >
+                  {showReplyForm ? 'Cancel' : 'Reply'}
+                </button>
+              )}
+            </div>
+    
+            {/* Show topic content as the initial post */}
+            {topic && topic.content && (
+              <div className="mb-8">
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
+                      {topic.title?.charAt(0).toUpperCase() || "T"}
+                    </div>
+                    <span className="font-medium text-[var(--text-primary)]">Original Post</span>
+                    {topic.created_at && (
+                      <span className="ml-2 text-xs text-[var(--text-muted)]">
+                        {new Date(topic.created_at).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="prose prose-lg max-w-none text-[var(--text-secondary)]">
+                    <p>{topic.content}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+    
+            {showReplyForm && (
+              <div className="mb-6">
+    <CreatePostForm
+      topicId={topicId as string}
+      onSubmit={async ({ content, topicId: _tid, parentId }) => {
+        await handleCreatePost(content, parentId ?? null);
+      }}
+      onCancel={() => setShowReplyForm(false)}
+      isLoading={isSubmitting}
+    />
+              </div>
+            )}
+    
+            {isLoading ? (
+              <div className="text-center py-12 text-[var(--text-muted)]">Loading posts...</div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-500">Error loading posts: {error}</div>
+            ) : posts.length === 0 ? (
+              <div className="text-center py-12 text-[var(--text-muted)]">No posts found.</div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {renderPosts()}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </>
   );
 }
