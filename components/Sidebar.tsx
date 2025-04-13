@@ -46,7 +46,7 @@ export default function Sidebar({ user }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-[var(--bg-secondary)] fixed top-28 left-0 flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40 rounded-r-2xl rounded-b-2xl shadow-lg">
+    <aside className="w-64 bg-[var(--bg-secondary)] fixed top-28 left-0 flex flex-col border-r border-[var(--border-color)] overflow-x-hidden transition-all duration-300 z-40 rounded-r-2xl rounded-b-2xl rounded-tl-2xl shadow-lg">
       <div className="flex items-center py-2 pl-5 pb-5">
       </div>
 
@@ -97,27 +97,6 @@ className={`flex items-center text-sm py-2 px-2 rounded-lg transition-colors ${
         </div>
       </nav>
 
-      {user && (
-        <div className="p-4 mt-auto border-t border-[var(--border-color)] bg-[var(--bg-tertiary)] rounded-t-xl shadow-inner">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
-              <span className="text-sm text-white">
-                {/* Safely get initial: check name, then email, fallback */}
-                {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
-              </span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-[var(--text-primary)]">
-                {/* Revert to original logic */}
-                {user.name || 'Test Admin'} 
-              </p>
-              <p className="text-xs text-[var(--text-muted)]">
-                {t('community_member')}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </aside>
   );
 }

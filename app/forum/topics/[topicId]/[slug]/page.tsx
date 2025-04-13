@@ -165,13 +165,9 @@ export default function TopicPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)]">
+    <div className="min-h-screen bg-[var(--bg-primary)] flex pt-3 md:ml-64 sm:ml-20 transition-all duration-300">
       <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
-
-      {/* Removed fixed div containing the Header */}
-      <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-
-        {/* Removed specific pt-24; layout now handles top padding for fixed header */}
+      <div className="flex-1 flex flex-col">
         <main className="p-6 w-full transition-all duration-300">
           {/* Forum Topic Header */}
           <div className="mb-8">
