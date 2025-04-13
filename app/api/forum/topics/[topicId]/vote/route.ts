@@ -40,9 +40,8 @@ export async function POST(request: Request, { params }: RouteParams) {
         [
           {
             entity_type: 'topic',
-            entity_id: Number(topicId),
-            user_id: userProfile.id,
-            vote,
+            entity_id: topicId,
+            vote: vote === 1,
           },
         ],
         { onConflict: 'entity_type,entity_id,user_id' }
@@ -60,7 +59,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       .from('vote_totals')
       .select('total_votes')
       .eq('entity_type', 'topic')
-      .eq('entity_id', Number(topicId))
+      .eq('entity_id', topicId)
       .single();
 
     if (totalError) {

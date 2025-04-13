@@ -142,15 +142,16 @@ export default function Header({
               <CirclePlus size={16} />
               <span className="text-sm font-medium">New Topic</span>
             </button>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </button>
           </div>
         )}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+          </button>
+
 
 
         <div ref={notificationButtonRef} className="relative">

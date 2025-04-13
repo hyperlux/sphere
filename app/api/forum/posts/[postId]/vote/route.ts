@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         if (voteType === 0) {
             // Remove existing vote
             const { error: deleteError } = await supabase
-                .from('forum_votes') // Assuming your votes table is named 'forum_votes'
+                .from('votes') // Use the correct table name from schema
                 .delete()
                 .match({ user_id: userId, post_id: postId });
 
@@ -74,16 +74,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
              const isUpvote = voteType === 1;
 
              const { error: upsertError } = await supabase
-                .from('forum_votes')
+                .from('votes')
                 .upsert(
                     {
-                        user_id: userId,
-                        post_id: postId,
-                        vote_type: isUpvote, // Adapt to boolean schema
-                        // topic_id might be null if voting directly on posts
+                        entity_id: postId,
+                        entity_type: "post",
+                        vote: isUpvote, // Adapt to boolean schema
                     },
                     {
-                        onConflict: 'user_id, post_id', // Specify conflict columns based on your unique constraint
+                        onConflict: 'user_id, entity_id, entity_type', // Specify conflict columns based on your unique constraint
                     }
                 );
 

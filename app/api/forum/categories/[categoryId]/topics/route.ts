@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         created_at,
         last_activity_at,
         author_id,
-        author:users ( id, username ),
+        users!author_id ( id, username ),
         forum_categories ( id, name )
       `)
       .eq('category_id', categoryId)
@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to fetch topics', details: topicsError.message }, { status: 500 });
     }
 
-    const topicIds = topics?.map(t => Number(t.id)) ?? [];
+    const topicIds = topics?.map(t => String(t.id)) ?? [];
 
     let voteTotals: Record<string, number> = {};
 
@@ -75,8 +75,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         name: topic.forum_categories?.name ?? null,
       },
       author: {
-        id: topic.author?.id ?? null,
-        name: topic.author?.username ?? 'Unknown User',
+        id: topic.author_id ?? null
       }
     }));
 
