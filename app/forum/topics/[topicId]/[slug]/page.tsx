@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
+// Removed Header import
 import ForumPostCard from '@/components/ForumPostCard';
 import CreatePostForm from '@/components/CreatePostForm';
 import { useAuth } from '@/components/AuthProvider';
@@ -168,13 +168,11 @@ export default function TopicPage() {
     <div className="min-h-screen bg-[var(--bg-primary)]">
       <Sidebar user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} />
 
+      {/* Removed fixed div containing the Header */}
       <div className="flex flex-col min-h-screen md:ml-64 sm:ml-20 transition-all duration-300">
-        <div className="fixed top-0 md:left-64 sm:left-20 right-0 z-30 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-          <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
-        </div>
 
-        {/* Further increase top padding to clear fixed header */}
-        <main className="p-6 w-full pt-36 transition-all duration-300">
+        {/* Removed specific pt-24; layout now handles top padding for fixed header */}
+        <main className="p-6 w-full transition-all duration-300">
           {/* Forum Topic Header */}
           <div className="mb-8">
             <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-8 shadow-md flex flex-col gap-2">

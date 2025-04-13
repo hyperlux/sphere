@@ -109,9 +109,16 @@ function LayoutWithHeader({ children }: { children: React.ReactNode }) {
     : null;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen w-full">
-      <div className="flex flex-col w-full">
+    <div className="flex flex-col md:flex-row min-h-screen w-full relative"> {/* Add relative for potential absolute children if needed, though fixed is viewport-relative */}
+      {/* Apply fixed positioning directly to the Header container */}
+      {/* It spans full width (left-0 right-0) and stays on top (z-50) */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-primary)]"> {/* Added background */}
         <Header user={safeUser} />
+      </div>
+      {/* This container holds the main content, including page-specific sidebars */}
+      {/* Add padding-top to offset the fixed header height (e.g., pt-16 or pt-20) */}
+      <div className="flex flex-col w-full pt-20"> {/* Re-introduce padding-top */}
+        {/* The children (e.g., TopicPage) will render here, potentially including their own sidebar and layout adjustments */}
         {children}
       </div>
     </div>
