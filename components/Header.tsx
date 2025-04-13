@@ -48,11 +48,14 @@ export default function Header({
   const { signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for profile dropdown
   const notificationButtonRef = useRef(null);
+  const profileMenuRef = useRef(null); // Ref for profile dropdown
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useClickOutside(notificationButtonRef, () => setIsNotificationMenuOpen(false));
+  useClickOutside(profileMenuRef, () => setIsProfileMenuOpen(false)); // Close profile dropdown on outside click
 
   // Re-enable notification fetching
   useEffect(() => {
@@ -118,7 +121,7 @@ export default function Header({
           </span>
         </div>
 
-        {/* {showForumActions && (
+        {showForumActions && (
           <div className="flex items-center space-x-2">
             <form className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -139,16 +142,16 @@ export default function Header({
               <CirclePlus size={16} />
               <span className="text-sm font-medium">New Topic</span>
             </button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
           </div>
         )}
 
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-        </button> */}
 
         <div ref={notificationButtonRef} className="relative">
           <button
@@ -191,31 +194,50 @@ export default function Header({
           )}
         </div>
 
+        {/* Profile Section with Dropdown */}
         {user && (
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
-              <span className="text-sm text-white">
-                {/* Safely get initial: check name, then email, fallback */}
-                {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <p className="text-sm font-medium text-[var(--text-primary)]">
-                {/* Revert to original logic, expecting name directly on prop */}
-                {user.name || user.email}
-              </p>
-              {/* Revert role check */}
-              <p className="text-xs text-[var(--text-muted)]">{user.role || t('community_member')}</p>
-            </div>
+          <div ref={profileMenuRef} className="relative"> {/* Added ref and relative positioning */}
             <button
-              onClick={() => signOut()}
-              className="ml-4 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} // Toggle dropdown on click
+              className="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-[var(--bg-tertiary)] transition-colors" // Make it a button, add hover effect
             >
-              {t('Sign out')}
+              <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+                <span className="text-sm text-white">
+                  {/* Safely get initial: check name, then email, fallback */}
+                  {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
+                </span>
+              </div>
+              <div className="flex flex-col text-left"> {/* Ensure text aligns left */}
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {/* Revert to original logic, expecting name directly on prop */}
+                  {user.name || user.email}
+                </p>
+                {/* Revert role check */}
+                <p className="text-xs text-[var(--text-muted)]">{user.role || t('community_member')}</p>
+              </div>
             </button>
+
+            {/* Dropdown Menu */}
+            {isProfileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] py-1 z-10">
+                {/* Add other menu items here if needed, e.g., Profile Settings */}
+                {/* <a href="/settings" className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">
+                  {t('Settings')}
+                </a> */}
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsProfileMenuOpen(false); // Close menu after signing out
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-[var(--bg-tertiary)]" // Sign out styled differently
+                >
+                  {t('Sign out')}
+                </button>
+              </div>
+            )}
           </div>
         )}
-        </div>
+       </div>
       </div>
     </header>
   );

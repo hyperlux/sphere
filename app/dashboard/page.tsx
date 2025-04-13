@@ -7,8 +7,8 @@ import { createClientComponentClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/Sidebar';
 import ContentCard from '@/components/ContentCard';
 import RedirectToLogin from '@/components/RedirectToLogin';
-import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare, Megaphone, ChevronUp, Heart } from 'lucide-react';
-import { mockAurovillePosts, getNetScore } from '@/data/mockData';
+import { AlertTriangle, Info, Calendar, Clock, MapPin, MessageSquare, Megaphone } from 'lucide-react'; // Removed ChevronUp, Heart
+import TopicItem from '@/components/TopicItem'; // Added TopicItem
 
 interface DashboardData {
   announcements: any[];
@@ -25,6 +25,7 @@ export default function Dashboard() {
     events: [],
     resources: []
   });
+  const [latestTopics, setLatestTopics] = useState<any[]>([]); // Added state for topics
   // Create client instance within the component
   const [supabase] = useState(() => createClientComponentClient());
 
@@ -38,8 +39,8 @@ export default function Dashboard() {
         }
         setUser(session.user);
 
-        // Fetch dashboard data
-        const [eventsRes, resourcesRes] = await Promise.all([
+        // Fetch dashboard data (including latest topics)
+        const [eventsRes, resourcesRes, topicsRes] = await Promise.all([
           supabase
             .from('events')
             .select('*')
@@ -49,7 +50,12 @@ export default function Dashboard() {
             .from('resources')
             .select('*, author:users(username)') // Select username instead of name
             .order('created_at', { ascending: false })
-            .limit(5)
+            .limit(5),
+          supabase // Added query for forum topics
+            .from('forum_topics')
+            .select('id, slug, title, content, created_at, last_activity_at, author_id') // Select necessary fields
+            .order('last_activity_at', { ascending: false }) // Order by most recent activity
+            .limit(3) // Limit to 3 topics for the dashboard
         ]);
 
         setData({
@@ -57,7 +63,8 @@ export default function Dashboard() {
           events: eventsRes.data || [],
           resources: resourcesRes.data || []
         });
-      } catch (error) {
+        setLatestTopics(topicsRes.data || []); // Set the latest topics state
+      } catch (error) { // Moved the closing brace '}' from line 67 to here
         console.error('Error loading dashboard:', error);
       } finally {
         setLoading(false);
@@ -202,7 +209,7 @@ export default function Dashboard() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-[var(--text-secondary)] mb-0 flex items-center">
                   <MessageSquare className="mr-2" size={20} />
-                  {t('Latest Community Posts')}
+                  {t('Latest Community Topics')}
                 </h2>
                 <a href="/forums" className="view-all-link">
                   {t('view all')}
@@ -210,59 +217,28 @@ export default function Dashboard() {
                 </a>
               </div>
               <div className="space-y-6">
-                {/* Display the top 3 forum posts from our mock data, sorted by engagement */}
-                {mockAurovillePosts
-                  .sort((a, b) => getNetScore(b) - getNetScore(a))
-                  .slice(0, 3)
-                  .map((post) => (
-                    <div key={post.id} className="community-post forum-post-card">
-                      <div className="post-header">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-lg font-semibold">
-                          {post.author.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold text-[var(--text-primary)] post-title">{post.title}</h3>
-                              <p className="text-xs text-[var(--text-muted)]">{post.author}</p>
-                            </div>
-                            <span className="text-sm text-[var(--text-muted)] timestamp">
-                              {new Date(post.timestamp).toLocaleDateString(undefined, { 
-                                month: 'short', 
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <p className="mt-2 text-[var(--text-secondary)] post-content line-clamp-3">
-                        {post.content}
-                      </p>
-
-                      <div className="post-actions">
-                        <div className="post-action">
-                          <ChevronUp size={18} className={getNetScore(post) > 0 ? 'text-amber-500' : ''} />
-                          <span className={getNetScore(post) > 0 ? 'text-amber-500 font-medium' : ''}>{getNetScore(post)}</span>
-                        </div>
-
-                        <div className="post-action">
-                          <MessageSquare size={18} />
-                          <span>{post.replies?.length || 0}</span>
-                        </div>
-
-                        <a href={`/forums/topics/${post.topicId}`} className="post-action text-amber-500 hover:underline">
-                          <span>View Discussion →</span>
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                
-                {data.resources.map((resource) => (
-                  <ContentCard key={resource.id} post={resource} />
-                ))}
+                {/* Display the latest 3 forum topics */}
+                {latestTopics.length > 0 ? (
+                  latestTopics.map((topic) => {
+                    // Format data for TopicItem props
+                    // Note: author, category, and replies are placeholders as they aren't fetched in this query
+                    const topicData = {
+                      id: topic.id,
+                      slug: topic.slug,
+                      title: topic.title,
+                      content: topic.content, // TopicItem expects content, might need truncation later
+                      meta: {
+                        author: topic.author_id || 'Unknown User', // Placeholder - ideally fetch username
+                        category: 'General', // Placeholder - category info not fetched
+                        time: new Date(topic.last_activity_at || topic.created_at).toLocaleString(),
+                        replies: 0, // Placeholder - replies count not fetched
+                      },
+                    };
+                    return <TopicItem key={topic.id} {...topicData} />;
+                  })
+                ) : (
+                  <p className="text-[var(--text-muted)]">No topics found.</p>
+                )}
               </div>
             </div>
           </section>

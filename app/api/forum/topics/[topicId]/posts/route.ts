@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { Database } from '@/lib/db/database.types';
-import { getSupabaseServerClient } from '@/lib/supabase/serverClient';
+import { createSupabaseServerClient } from '@/lib/supabase/ssrCookieHelper';
 import { getUserProfile } from '@/lib/auth/getUserProfile';
 
 type RouteParams = {
@@ -28,7 +28,7 @@ const DEFAULT_PAGE_LIMIT = 20; // Number of posts per page
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { topicId } = params;
 
-  const supabase = getSupabaseServerClient(request);
+  const supabase = createSupabaseServerClient();
 
   // Get pagination parameters from query string
   const url = new URL(request.url);
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const { topicId } = params;
 
-  const supabase = getSupabaseServerClient(request);
+  const supabase = createSupabaseServerClient();
 
   const userProfile = await getUserProfile(supabase);
 
@@ -155,6 +155,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
     if (parentPostId && typeof parentPostId !== 'string') {
       return NextResponse.json({ error: 'Invalid parentPostId' }, { status: 400 });
+    }
+
+    // Set the user ID in session context for RLS policy using database function
+    console.log(`Setting user ID in session context: ${userProfile.id}`);
+    // @ts-ignore: TypeScript doesn't recognize the newly created function
+    const { error: configError } = await supabase.rpc('set_current_user_id', { user_id: userProfile.id });
+    
+    if (configError) {
+      console.error(`Error setting user ID in session context for user ${userProfile.id}:`, configError);
+      console.error(`Error setting user ID in session context for user ${userProfile.id}:`, configError);
+      return NextResponse.json({ error: 'Failed to set user context', details: configError.message }, { status: 500 });
     }
 
     // Insert into forum_posts, then fetch from forum_posts_with_user for response

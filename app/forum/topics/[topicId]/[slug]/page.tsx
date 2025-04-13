@@ -86,43 +86,44 @@ export default function TopicPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
+  // Move fetchPosts outside useEffect so it can be called elsewhere
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/forum/topics/${topicId}/posts`);
+      if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
+      const data = await response.json();
+
+      const transformedPosts = (data.posts || []).map((p: any) => ({
+        id: p.id,
+        content: p.content,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        parentId: p.parentPostId ?? null,
+        upvotes: 0,
+        downvotes: 0,
+        reactions: [],
+        isSolution: false,
+        author: {
+          id: p.author?.id ?? '',
+          name: p.author?.username ?? 'Unknown User',
+          avatar: p.author?.avatarUrl ?? null,
+          role: '',
+          joinDate: '',
+          postCount: 0,
+        },
+      }));
+
+      setPosts(transformedPosts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/forum/topics/${topicId}/posts`);
-        if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
-        const data = await response.json();
-
-        const transformedPosts = (data.posts || []).map((p: any) => ({
-          id: p.id,
-          content: p.content,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
-          parentId: p.parentPostId ?? null,
-          upvotes: 0,
-          downvotes: 0,
-          reactions: [],
-          isSolution: false,
-          author: {
-            id: p.author?.id ?? '',
-            name: p.author?.username ?? 'Unknown User',
-            avatar: p.author?.avatarUrl ?? null,
-            role: '',
-            joinDate: '',
-            postCount: 0,
-          },
-        }));
-
-        setPosts(transformedPosts);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (topicId) {
       fetchPosts();
     }
@@ -138,7 +139,8 @@ export default function TopicPage() {
       });
       if (!response.ok) throw new Error(`Failed to create post: ${response.statusText}`);
       const newPost = await response.json();
-      setPosts(prev => [...prev, newPost]);
+      // After successful post, re-fetch posts to update UI
+      await fetchPosts();
       setShowReplyForm(false);
     } catch (err) {
       alert('Failed to create post');
@@ -171,8 +173,8 @@ export default function TopicPage() {
           <Header user={user ? { email: user.email || '', name: user.user_metadata?.name || '' } : null} visitorCount={1247} />
         </div>
 
-        <main className="p-6 w-full pt-24 transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
+        <main className="p-6 w-full pt-12 transition-all duration-300">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold text-[var(--text-primary)]">
               {topicLoading
                 ? 'Loading topic...'
