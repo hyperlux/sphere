@@ -37,6 +37,38 @@ body {
   height: 100vh;
   z-index: 40;
 }
+/* Threaded forum post indentation */
+.forum-thread-indent {
+  position: relative;
+  transition: margin-left 0.2s;
+  margin-left: calc(var(--thread-indent, 16px) * var(--depth, 0));
+}
+
+@media (max-width: 600px) {
+  .forum-thread-indent {
+    margin-left: calc(var(--thread-indent-mobile, 8px) * var(--depth, 0));
+  }
+}
+
+/* Connector line for replies */
+.forum-thread-connector {
+  position: absolute;
+  left: -8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e0e0e0;
+  border-radius: 1px;
+  z-index: 1;
+  content: '';
+  display: block;
+}
+
+/* Thread hover highlight */
+.forum-thread-hover {
+  background: rgba(200, 200, 255, 0.07);
+  transition: background 0.2s;
+}
 
 /* Sidebar collapsed state - using !important only when necessary */
 body.sidebar-collapsed #content-wrapper {

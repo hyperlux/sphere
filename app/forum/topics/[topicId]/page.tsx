@@ -47,6 +47,14 @@ export default function TopicPage() {
   const { topicId } = useParams();
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [collapsedPosts, setCollapsedPosts] = useState<{ [postId: string]: boolean }>({});
+
+  const handleToggleCollapse = (postId: string) => {
+    setCollapsedPosts(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -81,6 +89,7 @@ export default function TopicPage() {
       setIsLoading(true);
       setError(null);
       try {
+        console.log('topicId:', topicId);
         const response = await fetch(`/api/forum/topics/${topicId}/posts`);
         if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
         const data = await response.json();
@@ -106,6 +115,18 @@ export default function TopicPage() {
             postCount: 0,
           },
         }));
+        setPosts(transformedPosts);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch posts');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (topicId) {
+      fetchPosts();
+    }
+  }, [topicId]);
 
         setPosts(transformedPosts);
       } catch (err) {
@@ -144,16 +165,23 @@ export default function TopicPage() {
   const renderPosts = (parentId: string | null = null, depth = 0) => {
     return posts
       .filter(p => p.parentId === parentId)
-      .map(p => (
-        <div key={p.id}>
-          <ForumPostCard
-            {...p}
-            depth={depth}
-            onReply={() => setShowReplyForm(true)}
-          />
-          {renderPosts(p.id, depth + 1)}
-        </div>
-      ));
+      .map(p => {
+        const hasChildren = posts.some(child => child.parentId === p.id);
+        const isCollapsed = collapsedPosts[p.id] ?? false;
+        return (
+          <div key={p.id}>
+            <ForumPostCard
+              {...p}
+              depth={depth}
+              hasChildren={hasChildren}
+              isCollapsed={isCollapsed}
+              onToggleCollapse={() => handleToggleCollapse(p.id)}
+              onReply={() => setShowReplyForm(true)}
+            />
+            {!isCollapsed && renderPosts(p.id, depth + 1)}
+          </div>
+        );
+      });
   };
 
   return (

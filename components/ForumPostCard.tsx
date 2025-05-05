@@ -36,9 +36,15 @@ interface ForumPostProps {
   onMarkSolution?: (postId: string) => void;
   onUpvote?: (postId: string) => void;
   onDownvote?: (postId: string) => void;
+  hasChildren?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export default function ForumPostCard({
+  hasChildren,
+  isCollapsed,
+  onToggleCollapse,
   id,
   title,
   content,
@@ -135,22 +141,32 @@ export default function ForumPostCard({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: depth * 0.1 }}
-      className={`forum-post-card rounded-xl overflow-hidden border border-opacity-40 transition-all duration-300 ${
-        isSolution ? 'border-l-4 border-l-emerald-500' : ''
-      } ${isTrending ? 'pulse-effect' : ''} ${getMoodClass()}`}
+    <div
+      className="forum-thread-indent"
       style={{
-        marginLeft: `${depth * 2}rem`,
-        maxWidth: `calc(100% - ${depth * 2}rem)`,
-        backgroundColor: 'var(--bg-secondary, #181f2a)'
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+        '--depth': depth ?? 0,
+        '--thread-indent': '16px',
+        '--thread-indent-mobile': '8px',
+        position: 'relative'
+      } as React.CSSProperties}
     >
-      <div className="p-6">
+      {depth > 0 && (
+        <div className="forum-thread-connector" aria-hidden="true" />
+      )}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: depth * 0.1 }}
+        className={`forum-post-card rounded-xl overflow-hidden border border-opacity-40 transition-all duration-300 ${
+          isSolution ? 'border-l-4 border-l-emerald-500' : ''
+        } ${isTrending ? 'pulse-effect' : ''} ${getMoodClass()}${isHovered ? ' forum-thread-hover' : ''}`}
+        style={{
+          backgroundColor: 'var(--bg-secondary, #181f2a)'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="p-6">
         <div className="flex items-start gap-4">
           {/* Vote Section */}
           <div className="vote-section flex flex-col items-center gap-1 pt-2">
@@ -207,6 +223,29 @@ export default function ForumPostCard({
                     <div className="avatar-wrapper w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
                       {authorName.charAt(0).toUpperCase()}
                     </div>
+                  )}
+                  {/* Collapse/Expand Button */}
+                  {hasChildren && (
+                    <button
+                      onClick={onToggleCollapse}
+                      aria-label={isCollapsed ? "Expand thread" : "Collapse thread"}
+                      className="ml-2 p-1 rounded hover:bg-gray-200 transition"
+                      style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                          transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s'
+                        }}
+                      >
+                        <path d="M6 8l4 4 4-4" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                   )}
                   <div>
                     <h3 className="font-medium text-[var(--text-primary)] leading-tight author-name">{authorName}</h3>
@@ -349,11 +388,12 @@ export default function ForumPostCard({
                   {/* Example: import CreatePostForm from './CreatePostForm'; */}
                   <CreatePostForm
                     topicId={id /* or pass the correct topicId from parent context */}
-                    parentId={id}
+                    parentId={typeof id === 'string' ? id : undefined}
                     isReply={true}
                     replyingTo={authorName}
                     onCancel={() => setShowReplyPreview(false)}
                     onSubmit={async (data: { content: string; topicId: string; parentId?: string }) => {
+                      console.log('CreatePostForm onSubmit data:', data);
                       // Map parentId to parentPostId for API
                       const { content, topicId, parentId } = data;
                       await fetch(`/api/forum/topics/${topicId}/posts`, {
@@ -375,5 +415,6 @@ export default function ForumPostCard({
         </div>
       </div>
     </motion.div>
+    </div>
   );
 }
