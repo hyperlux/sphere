@@ -7,21 +7,13 @@ import { useTheme } from '@/components/ThemeProvider';
 import { Search, Bell, Sun, Moon, Users, Filter, CirclePlus } from 'lucide-react';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import Image from 'next/image';
-// Remove old import
-// import { supabase } from '@/lib/supabase';
-// Import the new client creation function
-import { createClientComponentClient } from '@/lib/supabase/client';
+// Supabase client import removed
+// import { createClientComponentClient } from '@/lib/supabase/client'; 
 import { formatDistanceToNow } from 'date-fns';
 
+// Remove HeaderProps if user is no longer a prop
 interface HeaderProps {
-  user: {
-    // Revert to original: email is required string, no user_metadata
-    email: string; 
-    name?: string; 
-    role?: string;
-    avatar_url?: string;
-    // Remove user_metadata from here
-  } | null;
+  // user prop removed, will use useAuth()
   visitorCount?: number;
   siteStats?: {
     totalUsers: number;
@@ -39,13 +31,14 @@ interface Notification {
 }
 
 export default function Header({
-  user, 
+  // user prop removed
   visitorCount = 1247,
   siteStats = { totalUsers: 5432, activeSessions: 89 },
   showForumActions = false // Default to false for Dashboard page
 }: HeaderProps) {
   const { t } = useTranslation();
-  const { signOut } = useAuth();
+  // Get user, isAuthenticated, and signOut from useAuth
+  const { user, isAuthenticated, signOut, isLoading: isLoadingAuth } = useAuth(); 
   const { theme, toggleTheme } = useTheme();
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for profile dropdown
@@ -57,26 +50,31 @@ export default function Header({
   useClickOutside(notificationButtonRef, () => setIsNotificationMenuOpen(false));
   useClickOutside(profileMenuRef, () => setIsProfileMenuOpen(false)); // Close profile dropdown on outside click
 
-  // Re-enable notification fetching
+  // Notification fetching (Commented out for now - requires new API endpoint)
+  /*
   useEffect(() => {
     const fetchNotifications = async () => {
-      // Use the client component client instance
-      const supabase = createClientComponentClient(); // Need to create client instance here
-      const { data, error } = await supabase
-        .from('events') // Assuming 'events' table now exists in types
-        .select('id, title, description, created_at, type') // Removed isRead, which does not exist
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) {
+      if (!isAuthenticated) { // Only fetch if logged in
+        setNotifications([]);
+        return;
+      }
+      try {
+        // TODO: Replace with fetch to your new /api/notifications endpoint
+        // const response = await fetch('/api/notifications');
+        // if (!response.ok) throw new Error('Failed to fetch notifications');
+        // const data = await response.json();
+        // setNotifications(data.notifications || []);
+        console.warn('Notification fetching needs to be implemented with a new API endpoint.');
+        setNotifications([]); // Placeholder
+      } catch (error) {
         console.error('Error fetching notifications:', error);
-      } else {
-        setNotifications(data || []);
+        setNotifications([]);
       }
     };
 
     fetchNotifications();
-  }, []); // Removed supabase dependency as it's created inside
+  }, [isAuthenticated]);
+  */
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,48 +193,56 @@ export default function Header({
           )}
         </div>
 
-        {/* Profile Section with Dropdown */}
-        {user && (
-          <div ref={profileMenuRef} className="relative"> {/* Added ref and relative positioning */}
+        {/* Profile Section with Dropdown - Show only if authenticated */}
+        {!isLoadingAuth && isAuthenticated && user && (
+          <div ref={profileMenuRef} className="relative"> 
             <button
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} // Toggle dropdown on click
-              className="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-[var(--bg-tertiary)] transition-colors" // Make it a button, add hover effect
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} 
+              className="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-[var(--bg-tertiary)] transition-colors" 
             >
               <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
                 <span className="text-sm text-white">
-                  {/* Safely get initial: check name, then email, fallback */}
-                  {user.name ? user.name.charAt(0) : (user.email ? user.email.charAt(0) : '?')}
+                  {/* Use username from new AppUser, fallback to email */}
+                  {user.username ? user.username.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : '?')}
                 </span>
               </div>
-              <div className="flex flex-col text-left"> {/* Ensure text aligns left */}
+              <div className="flex flex-col text-left"> 
                 <p className="text-sm font-medium text-[var(--text-primary)]">
-                  {/* Revert to original logic, expecting name directly on prop */}
-                  {user.name || user.email}
+                  {/* Display username or email from AppUser */}
+                  {user.username || user.email}
                 </p>
-                {/* Revert role check */}
-                <p className="text-xs text-[var(--text-muted)]">{user.role || t('community_member')}</p>
+                {/* Role is not in AppUser by default, can be added if needed */}
+                {/* <p className="text-xs text-[var(--text-muted)]">{user.role || t('community_member')}</p> */}
               </div>
             </button>
 
             {/* Dropdown Menu */}
             {isProfileMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] py-1 z-10">
-                {/* Add other menu items here if needed, e.g., Profile Settings */}
-                {/* <a href="/settings" className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">
-                  {t('Settings')}
-                </a> */}
+                {/* Example: Link to settings page if user object has id */}
+                {user.id && (
+                    <a href={`/settings/account`} className="block px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]">
+                        {t('Settings')}
+                    </a>
+                )}
                 <button
                   onClick={() => {
                     signOut();
                     setIsProfileMenuOpen(false); // Close menu after signing out
                   }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-[var(--bg-tertiary)]" // Sign out styled differently
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-[var(--bg-tertiary)]" 
                 >
                   {t('Sign out')}
                 </button>
               </div>
             )}
           </div>
+        )}
+        {/* Optionally, show a Login button if not authenticated */}
+        {!isLoadingAuth && !isAuthenticated && (
+            <Link href="/login" className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600">
+                {t('Sign In')}
+            </Link>
         )}
        </div>
       </div>

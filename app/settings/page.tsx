@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import RedirectToLogin from '@/components/RedirectToLogin';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -43,35 +44,41 @@ export default function SettingsPage() {
 
         {/* Add settings options here */}
         <div className="mt-8 space-y-4">
-          <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-              {t('account settings')}
-            </h2>
-            <p className="text-[var(--text-secondary)]">
-              {t('update your profile information')}
-            </p>
-            {/* Add account settings form or options here */}
-          </div>
+          <Link href="/settings/account" className="block">
+            <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4 cursor-pointer">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                {t('account settings')}
+              </h2>
+              <p className="text-[var(--text-secondary)]">
+                {t('update your profile information')}
+              </p>
+              {/* Add account settings form or options here */}
+            </div>
+          </Link>
 
-          <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-              {t('notification settings')}
-            </h2>
-            <p className="text-[var(--text-secondary)]">
-              {t('manage your email and push notifications')}
-            </p>
-            {/* Add notification settings form or options here */}
-          </div>
+          <Link href="/settings/notifications" className="block">
+            <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4 cursor-pointer">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                {t('notification settings')}
+              </h2>
+              <p className="text-[var(--text-secondary)]">
+                {t('manage your email and push notifications')}
+              </p>
+              {/* Add notification settings form or options here */}
+            </div>
+          </Link>
 
-          <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4">
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-              {t('privacy settings')}
-            </h2>
-            <p className="text-[var(--text-secondary)]">
-              {t('control your data sharing preferences')}
-            </p>
-            {/* Add privacy settings form or options here */}
-          </div>
+          <Link href="/settings/privacy" className="block">
+            <div className="bg-[var(--bg-secondary)] rounded-lg shadow-md p-4 cursor-pointer">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                {t('privacy settings')}
+              </h2>
+              <p className="text-[var(--text-secondary)]">
+                {t('control your data sharing preferences')}
+              </p>
+              {/* Add privacy settings form or options here */}
+            </div>
+          </Link>
         </div>
       </main>
     </div>

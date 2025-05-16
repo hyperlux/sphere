@@ -9,43 +9,44 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed from isLoading to avoid conflict
   const router = useRouter();
   const searchParams = useSearchParams(); // Hook to get query parameters
-  const { login, session, loading } = useAuth(); // Get login function and session/loading state
+  // Use the new properties from useAuth
+  const { login, isAuthenticated, isLoading: isLoadingAuth } = useAuth(); 
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!loading && session) {
+    // Check isAuthenticated and ensure auth loading is complete
+    if (!isLoadingAuth && isAuthenticated) {
       const redirectPath = searchParams.get('redirect') || '/dashboard';
       router.replace(redirectPath);
     }
-  }, [session, loading, router, searchParams]);
+  }, [isAuthenticated, isLoadingAuth, router, searchParams]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setIsSubmitting(true); // Use isSubmitting for form state
 
     try {
-      await login({ email, password });
-      // Login success will trigger the useEffect above to redirect
-      // Get the redirect path from query param or default to dashboard
-      const redirectPath = searchParams.get('redirect') || '/dashboard';
-      router.replace(redirectPath); // Explicit redirect after login attempt
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
+      await login({ email, password }); // Call the new login function
+      // AuthProvider's login will update isAuthenticated, triggering the useEffect for redirect.
+      // If not, an explicit redirect can be placed here after successful auth context update.
+      // For now, relying on AuthProvider and useEffect.
+      // Optionally: router.replace(searchParams.get('redirect') || '/dashboard');
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please check your credentials.');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Don't render the form if loading auth state or already logged in
-  if (loading || session) {
+  // Don't render the form if auth state is loading or user is already authenticated
+  if (isLoadingAuth || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        {/* Optional: Add a loading spinner */}
-        <p className="text-white">Loading...</p>
+        <p className="text-gray-700 dark:text-gray-300">Loading...</p>
       </div>
     );
   }
@@ -119,12 +120,12 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting} // Use isSubmitting for form disabled state
               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${ // Updated styles
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
 

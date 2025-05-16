@@ -1,6 +1,21 @@
 version: '3.9'
 
 services:
+  postgres: # New PostgreSQL service
+    image: postgres:15 # Using PostgreSQL version 15
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin # Replace with your desired username
+      POSTGRES_PASSWORD: password # Replace with your desired strong password
+      POSTGRES_DB: sphere_db # Replace with your desired database name
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Exposes PostgreSQL on port 5432
+    networks:
+      - web # Or a new dedicated database network if you prefer
+
   traefik:
     image: traefik:v2.10
     container_name: traefik
@@ -18,14 +33,22 @@ services:
       - web
 
   auronet-prod:
-    image: ${DOCKER_USERNAME:-user}/auronet:main
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://placeholder.supabase.co}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-placeholderkey}
+        SUPABASE_URL: ${SUPABASE_URL:-http://placeholder.supabase.co}
+        SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-placeholderkey}
     container_name: auronet-prod
     restart: unless-stopped
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://admin:password@postgres_db:5432/sphere_db # Updated DATABASE_URL
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    depends_on: # Ensures PostgreSQL starts before the app
+      - postgres
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 10s
@@ -51,3 +74,6 @@ services:
 networks:
   web:
     driver: bridge
+
+volumes: # New volumes section
+  postgres_data:

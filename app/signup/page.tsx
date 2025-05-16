@@ -1,25 +1,33 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-// Import the new client creation function
-import { createClientComponentClient } from '@/lib/supabase/client';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import ResendConfirmation from '@/components/ResendConfirmation'; // Keep this if used in success message
+import { useAuth } from '@/components/AuthProvider'; // Import the new AuthProvider hook
+// import ResendConfirmation from '@/components/ResendConfirmation'; // Supabase specific, can be removed
 
-export default function SignUpPage() { // Renamed component for clarity
+export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { signup, isAuthenticated, isLoading: isLoadingAuth } = useAuth(); // Use new auth context
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    name: ''
+    name: '' // Assuming 'name' is used as 'username' in your signup API
   });
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  // Create client instance within the component
-  const [supabase] = useState(() => createClientComponentClient());
+  // const [success, setSuccess] = useState(false); // Success state managed by redirect via isAuthenticated
+
+  // Redirect if already logged in or after successful signup
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated) {
+      const redirectPath = searchParams.get('redirect') || '/dashboard'; // Or any other default page
+      router.replace(redirectPath);
+    }
+  }, [isAuthenticated, isLoadingAuth, router, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -36,76 +44,40 @@ export default function SignUpPage() { // Renamed component for clarity
       setError("Passwords don't match");
       return;
     }
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return;
+    }
 
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Call the signup function from AuthProvider
+      // Ensure your signup function in AuthProvider and API expects `name` as `username`
+      await signup({
         email: formData.email,
+        username: formData.name, // API expects username
         password: formData.password,
-        options: {
-          emailRedirectTo: 'http://localhost:3000/auth/callback', // <-- update this to your production URL in prod
-          data: {
-            name: formData.name
-          }
-        }
       });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        setSuccess(true);
-        setFormData({
-          email: '',
-          password: '',
-          confirmPassword: '',
-          name: ''
-        });
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      // On successful signup, AuthProvider updates isAuthenticated, triggering useEffect for redirect.
+      // No need to set success or clear form here, redirect will handle it.
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during signup.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Apply dark theme styling to the success message
-  if (success) {
+  // Show loading indicator if auth state is loading or user is already authenticated (and about to be redirected)
+  if (isLoadingAuth || isAuthenticated) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 text-center">
-           <img
-            className="mx-auto h-12 w-auto"
-            src="/logodark.png"
-            alt="Auroville"
-          />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Check your email
-          </h2>
-          <div className="mt-8 bg-transparent py-8 px-4 sm:px-10"> {/* Removed white bg and shadow */}
-            <div className="text-center">
-              <p className="mb-4 text-gray-300"> {/* Adjusted text color */}
-                We've sent a confirmation link to <strong className="text-orange-500">{/* Use original email state if needed, or remove if not available */}</strong>
-              </p>
-              <p className="text-sm text-gray-400 mb-4"> {/* Adjusted text color */}
-                Click the link in your email to complete your registration.
-              </p>
-              {/* Consider if ResendConfirmation needs dark theme styling */}
-              {/* <ResendConfirmation email={formData.email} /> */}
-              <button
-                onClick={() => router.push('/login')}
-                className="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500" // Use orange button style
-              >
-                Go to Login
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <p className="text-gray-700 dark:text-gray-300">Loading...</p>
       </div>
     );
   }
-
-  // Apply dark theme styling and layout matching login page
+  
+  // Main signup form UI (styles largely kept from original, ensure they match login page if desired)
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -199,13 +171,13 @@ export default function SignUpPage() { // Renamed component for clarity
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isSubmitting}
               // Use button style from login
               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>
 

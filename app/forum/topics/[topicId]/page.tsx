@@ -128,20 +128,6 @@ export default function TopicPage() {
     }
   }, [topicId]);
 
-        setPosts(transformedPosts);
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (topicId) {
-      fetchPosts();
-    }
-  }, [topicId]);
-
   const handleCreatePost = async (content: string, parentId?: string | null) => {
     setIsSubmitting(true);
     try {
